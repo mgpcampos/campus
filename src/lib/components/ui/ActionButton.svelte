@@ -1,0 +1,71 @@
+<script lang="ts">
+	import { Button } from '$lib/components/ui/button/index.js';
+	import LoadingSpinner from './LoadingSpinner.svelte';
+
+	let {
+		variant = 'default',
+		size = 'default',
+		loading = false,
+		disabled = false,
+		href,
+		type = 'button',
+		onclick = () => {},
+		children,
+		icon,
+		iconPosition = 'left',
+		class: className = '',
+		loadingText = 'Loading...',
+		ariaLabel
+	}: {
+		variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
+		size?: 'default' | 'sm' | 'lg' | 'icon';
+		loading?: boolean;
+		disabled?: boolean;
+		href?: string;
+		type?: 'button' | 'submit' | 'reset';
+		onclick?: (event: MouseEvent) => void;
+		children?: any;
+		icon?: any;
+		iconPosition?: 'left' | 'right';
+		class?: string;
+		loadingText?: string;
+		ariaLabel?: string;
+	} = $props();
+
+	function handleClick(event: MouseEvent) {
+		if (!loading && !disabled) {
+			onclick(event);
+		}
+	}
+
+	const isDisabled = disabled || loading;
+</script>
+
+<Button
+	{variant}
+	{size}
+	{href}
+	{type}
+	disabled={isDisabled}
+	class={className}
+	onclick={handleClick}
+	aria-label={ariaLabel}
+	aria-busy={loading}
+>
+	{#if loading}
+		<LoadingSpinner size="sm" class="mr-2" />
+		{loadingText}
+	{:else}
+		{#if icon && iconPosition === 'left'}
+			{@const IconComponent = icon}
+			<IconComponent class="w-4 h-4 mr-2" aria-hidden="true" />
+		{/if}
+		
+		{@render children?.()}
+		
+		{#if icon && iconPosition === 'right'}
+			{@const IconComponent = icon}
+			<IconComponent class="w-4 h-4 ml-2" aria-hidden="true" />
+		{/if}
+	{/if}
+</Button>

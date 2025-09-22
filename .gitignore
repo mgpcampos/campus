@@ -1,6 +1,9 @@
 node_modules
-.kiro
+
+# Editor-specific
+.github
 .idea
+.kiro
 .vscode
 
 # Output
