@@ -12,7 +12,18 @@ import { pb } from '../pocketbase.js';
  * @param {string} content - Comment content
  * @returns {Promise<Object>} Created comment
  */
-export async function createComment(postId, content) {
+/**
+ * Create a new (possibly nested) comment
+ * @param {string} postId
+ * @param {string} content
+ * @param {string | undefined} parentId optional parent comment id
+ */
+/**
+ * @param {string} postId
+ * @param {string} content
+ * @param {string | undefined} parentId
+ */
+export async function createComment(postId, content, parentId) {
 	if (!pb.authStore.model?.id) {
 		throw new Error('User must be authenticated to comment');
 	}
@@ -23,11 +34,26 @@ export async function createComment(postId, content) {
 
 	try {
 		// Create the comment
-		const comment = await pb.collection('comments').create({
+		/** @type {{post:string; author:string; content:string; parent?:string}} */
+		const createData = {
 			post: postId,
 			author: pb.authStore.model.id,
 			content: content.trim()
-		});
+		};
+		if (parentId) {
+			// Basic server-side validation of parent linkage ownership to same post
+			try {
+				const parent = await pb.collection('comments').getOne(parentId);
+				if (parent.post !== postId) {
+					throw new Error('Parent comment does not belong to the same post');
+				}
+				createData.parent = parentId;
+			} catch (e) {
+				console.warn('Invalid parent comment supplied, ignoring:', e);
+			}
+		}
+
+		const comment = await pb.collection('comments').create(createData);
 
 		// Update post comment count
 		const post = await pb.collection('posts').getOne(postId);
@@ -58,15 +84,67 @@ export async function createComment(postId, content) {
  * @param {{page?:number, perPage?:number}} [options]
  * @returns {Promise<ListResult>}
  */
+/**
+ * @param {string} postId
+ * @param {{page?:number, perPage?:number, includeReplies?:boolean}} [options]
+ */
 export async function getComments(postId, options = {}) {
-	const { page = 1, perPage = 50 } = options;
+	// Default includeReplies false to preserve previous behavior for existing tests
+	const { page = 1, perPage = 50, includeReplies = false } = /** @type {any} */(options);
 
 	try {
-		return await pb.collection('comments').getList(page, perPage, {
-			filter: `post = "${postId}"`,
+		// Backwards compatibility: when includeReplies is false preserve original filter semantics
+		const baseFilter = includeReplies ? `post = "${postId}" && (parent = null || parent = "")` : `post = "${postId}"`;
+		const topLevel = await pb.collection('comments').getList(page, perPage, {
+			filter: baseFilter,
 			sort: 'created',
 			expand: 'author'
 		});
+
+		if (!includeReplies || topLevel.items.length === 0) {
+			return topLevel;
+		}
+
+		// Collect ids to fetch children for (1 level deep for now)
+		const ids = topLevel.items.map(c => c.id);
+		if (ids.length === 0) return topLevel;
+
+		let children = [];
+		const filter = `post = "${postId}" && parent != null && parent.id in [${ids.map(id => '"'+id+'"').join(',')}]`;
+		const commentsCollection = pb.collection('comments');
+		if (typeof commentsCollection.getFullList === 'function') {
+			children = await commentsCollection.getFullList({
+				filter,
+				sort: 'created',
+				expand: 'author,parent'
+			});
+		} else {
+			// Fallback: page through using getList until fewer than perPage results
+			let childPage = 1;
+			const childPerPage = 50;
+			while (true) {
+				const batch = await /** @type {any} */(commentsCollection).getList(childPage, childPerPage, { filter, sort: 'created', expand: 'author,parent' });
+				children.push(...batch.items);
+				if (batch.items.length < childPerPage) break;
+				childPage++;
+				if (childPage > 10) break; // safety cap
+			}
+		}
+
+		// Attach children array to each parent
+		/** @type {Record<string, any[]>} */
+		const childrenByParent = {};
+		for (const child of children) {
+			const p = child.parent || child.expand?.parent?.id;
+			if (!p) continue;
+			if (!childrenByParent[p]) childrenByParent[p] = [];
+			childrenByParent[p].push(child);
+		}
+		for (const item of topLevel.items) {
+			(item /** @type {any} */).replies = childrenByParent[item.id] || [];
+		}
+
+		return topLevel;
 	} catch (error) {
 		console.error('Error getting comments:', error);
 		throw error;
