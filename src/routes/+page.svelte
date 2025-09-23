@@ -2,7 +2,22 @@
 	import { currentUser } from '$lib/pocketbase.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
+	import PostForm from '$lib/components/forms/PostForm.svelte';
+	import Feed from '$lib/components/feed/Feed.svelte';
 	import { MessageSquare, Users, Plus } from 'lucide-svelte';
+
+	let feedComponent: any;
+	let refreshTrigger = 0;
+
+	function handlePostCreated(event: CustomEvent) {
+		const newPost = event.detail;
+		// Add the new post to the feed
+		if (feedComponent) {
+			feedComponent.addPost(newPost);
+		}
+		// Trigger a refresh to get updated data from server
+		refreshTrigger++;
+	}
 </script>
 
 <div class="max-w-4xl mx-auto py-8">
@@ -14,13 +29,41 @@
 	</div>
 	
 	{#if $currentUser}
-		<div class="bg-white rounded-lg shadow-sm border p-6 mb-6">
-			<h2 class="text-2xl font-semibold mb-2">Welcome back, {$currentUser.name}!</h2>
-			<p class="text-gray-600 mb-4">You're successfully connected to Campus.</p>
-			<div class="space-x-4">
-				<Button>View Feed</Button>
-				<Button variant="outline">Browse Spaces</Button>
+		<!-- Post creation form -->
+		<Card.Root class="mb-6">
+			<Card.Header>
+				<Card.Title class="text-lg">Share an update</Card.Title>
+			</Card.Header>
+			<Card.Content>
+				<PostForm on:postCreated={handlePostCreated} />
+			</Card.Content>
+		</Card.Root>
+
+		<!-- Global feed -->
+		<div class="space-y-6">
+			<div class="flex items-center justify-between">
+				<h2 class="text-2xl font-semibold">Global Feed</h2>
+				<div class="flex space-x-2">
+					<Button variant="outline" size="sm">
+						<MessageSquare size={16} class="mr-1" />
+						Latest
+					</Button>
+					<Button href="/spaces" variant="outline" size="sm">
+						<Users size={16} class="mr-1" />
+						Browse Spaces
+					</Button>
+				</div>
 			</div>
+			
+			<Feed 
+				bind:this={feedComponent}
+				scope="global" 
+				{refreshTrigger}
+				on:like={(e) => console.log('Like:', e.detail)}
+				on:comment={(e) => console.log('Comment:', e.detail)}
+				on:edit={(e) => console.log('Edit:', e.detail)}
+				on:delete={(e) => console.log('Delete:', e.detail)}
+			/>
 		</div>
 	{:else}
 		<Card.Root class="max-w-2xl mx-auto">

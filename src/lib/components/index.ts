@@ -7,6 +7,11 @@ export { default as Sidebar } from './layout/Sidebar.svelte';
 export { default as ProfileCard } from './profile/ProfileCard.svelte';
 export { default as ProfileForm } from './profile/ProfileForm.svelte';
 
+// Feed Components
+export { default as PostForm } from './forms/PostForm.svelte';
+export { default as PostCard } from './feed/PostCard.svelte';
+export { default as Feed } from './feed/Feed.svelte';
+
 // UI Components
 export { default as LoadingSpinner } from './ui/LoadingSpinner.svelte';
 export { default as EmptyState } from './ui/EmptyState.svelte';

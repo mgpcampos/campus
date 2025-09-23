@@ -36,6 +36,7 @@
 		"@tailwindcss/vite": "^4.0.0",
 		"@testing-library/jest-dom": "^6.8.0",
 		"@testing-library/svelte": "^5.2.8",
+		"@types/linkify-it": "^5.0.0",
 		"@types/node": "^22",
 		"bits-ui": "^2.11.0",
 		"clsx": "^2.1.1",
