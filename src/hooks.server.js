@@ -20,14 +20,18 @@ export async function handle({ event, resolve }) {
 	}
 	
 	const response = await resolve(event);
-	
-	// Send back the auth cookie to the client
+
+	// Send back the auth cookie to the client. We keep it httpOnly for security so JS can't read it.
+	// For realtime client subscriptions requiring access to the token, consider a separate non-httpOnly
+	// derived mechanism instead of exposing the auth cookie itself.
+	const isProd = process.env.NODE_ENV === 'production';
 	response.headers.append(
 		'set-cookie',
 		event.locals.pb.authStore.exportToCookie({
-			secure: false, // Set to true in production with HTTPS
-			httpOnly: false,
+			secure: isProd,
+			httpOnly: true,
 			sameSite: 'lax',
+			path: '/',
 			maxAge: 60 * 60 * 24 * 7 // 1 week
 		})
 	);

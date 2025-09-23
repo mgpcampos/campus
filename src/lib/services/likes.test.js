@@ -12,9 +12,9 @@ vi.mock('$lib/pocketbase.js', () => ({
 }));
 
 describe('Likes Service', () => {
-	let mockLikesCollection;
-	let mockPostsCollection;
-	let mockPb;
+	/** @type {any} */ let mockLikesCollection;
+	/** @type {any} */ let mockPostsCollection;
+	/** @type {any} */ let mockPb;
 
 	beforeEach(async () => {
 		vi.clearAllMocks();
@@ -23,8 +23,8 @@ describe('Likes Service', () => {
 		const { pb } = await import('$lib/pocketbase.js');
 		mockPb = pb;
 		
-		// Reset auth state
-		mockPb.authStore.model = { id: 'user123' };
+		// Reset auth state (cast to any to bypass readonly typing)
+		/** @type {any} */(mockPb.authStore).model = { id: 'user123' };
 		
 		mockLikesCollection = {
 			getFirstListItem: vi.fn(),
@@ -38,7 +38,7 @@ describe('Likes Service', () => {
 			update: vi.fn()
 		};
 
-		mockPb.collection.mockImplementation((name) => {
+		mockPb.collection.mockImplementation((/** @type {any} */ name) => {
 			if (name === 'likes') return mockLikesCollection;
 			if (name === 'posts') return mockPostsCollection;
 			return {};

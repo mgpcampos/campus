@@ -72,15 +72,14 @@
 		
 		loading = true;
 		try {
-			const result = await getComments(postId, { page, perPage: 20 });
-			
-			if (page === 1) {
-				comments = result.items;
-			} else {
-				comments = [...comments, ...result.items];
-			}
-			
-			hasMore = result.page < result.totalPages;
+				// The PocketBase SDK returns a ListResult; cast for TS clarity
+				const result = /** @type {{items:any[],page:number,totalPages:number}} */(await getComments(postId, { page, perPage: 20 }));
+				if (page === 1) {
+					comments = result.items;
+				} else {
+					comments = [...comments, ...result.items];
+				}
+				hasMore = result.page < result.totalPages;
 		} catch (error) {
 			console.error('Error loading comments:', error);
 			toast.error('Failed to load comments');

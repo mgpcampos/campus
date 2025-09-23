@@ -5,6 +5,13 @@ const updateCommentSchema = z.object({
 	content: z.string().min(1, 'Comment content is required').max(1000, 'Comment too long')
 });
 
+/**
+ * @param {any} locals
+ */
+function getUserId(locals) {
+	return locals?.pb?.authStore?.model?.id || null;
+}
+
 /** @type {import('./$types').RequestHandler} */
 export async function PUT({ params, locals, request }) {
 	if (!locals.pb.authStore.isValid) {
@@ -12,7 +19,8 @@ export async function PUT({ params, locals, request }) {
 	}
 
 	const commentId = params.id;
-	const userId = locals.pb.authStore.model.id;
+	const userId = getUserId(locals);
+	if (!userId) throw error(401, 'Authentication required');
 
 	try {
 		// Check if comment exists and user owns it
@@ -35,10 +43,10 @@ export async function PUT({ params, locals, request }) {
 		if (err instanceof z.ZodError) {
 			throw error(400, err.errors[0].message);
 		}
-		if (err.status) {
-			throw err;
+		if (/** @type {any} */(err)?.status) {
+			throw /** @type {any} */(err);
 		}
-		console.error('Error updating comment:', err);
+		console.error('Error updating comment:', err instanceof Error ? err.message : err);
 		throw error(500, 'Failed to update comment');
 	}
 }
@@ -50,7 +58,8 @@ export async function DELETE({ params, locals }) {
 	}
 
 	const commentId = params.id;
-	const userId = locals.pb.authStore.model.id;
+	const userId = getUserId(locals);
+	if (!userId) throw error(401, 'Authentication required');
 
 	try {
 		// Check if comment exists and user owns it
@@ -70,10 +79,10 @@ export async function DELETE({ params, locals }) {
 
 		return json({ success: true });
 	} catch (err) {
-		if (err.status) {
-			throw err;
+		if (/** @type {any} */(err)?.status) {
+			throw /** @type {any} */(err);
 		}
-		console.error('Error deleting comment:', err);
+		console.error('Error deleting comment:', err instanceof Error ? err.message : err);
 		throw error(500, 'Failed to delete comment');
 	}
 }

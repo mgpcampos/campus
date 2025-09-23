@@ -1,5 +1,12 @@
 import { json, error } from '@sveltejs/kit';
-import { pb } from '$lib/pocketbase.js';
+/**
+ * Safely extracts current authenticated user id from locals
+ * @param {any} locals
+ * @returns {string | null}
+ */
+function getUserId(locals) {
+	return locals?.pb?.authStore?.model?.id || null;
+}
 
 /** @type {import('./$types').RequestHandler} */
 export async function POST({ params, locals }) {
@@ -8,7 +15,8 @@ export async function POST({ params, locals }) {
 	}
 
 	const postId = params.id;
-	const userId = locals.pb.authStore.model.id;
+	const userId = getUserId(locals);
+	if (!userId) throw error(401, 'Authentication required');
 
 	try {
 		// Check if user already liked this post
@@ -41,7 +49,7 @@ export async function POST({ params, locals }) {
 			return json({ liked: true, likeCount: newLikeCount });
 		}
 	} catch (err) {
-		console.error('Error toggling like:', err);
+		console.error('Error toggling like:', err instanceof Error ? err.message : err);
 		throw error(500, 'Failed to toggle like');
 	}
 }
@@ -53,7 +61,8 @@ export async function GET({ params, locals }) {
 	}
 
 	const postId = params.id;
-	const userId = locals.pb.authStore.model.id;
+	const userId = getUserId(locals);
+	if (!userId) throw error(401, 'Authentication required');
 
 	try {
 		// Check if user has liked this post
@@ -72,7 +81,7 @@ export async function GET({ params, locals }) {
 			likeCount 
 		});
 	} catch (err) {
-		console.error('Error getting like status:', err);
+		console.error('Error getting like status:', err instanceof Error ? err.message : err);
 		throw error(500, 'Failed to get like status');
 	}
 }

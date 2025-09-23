@@ -13,17 +13,17 @@ vi.mock('$lib/pocketbase.js', () => ({
 }));
 
 describe('Post Interactions Integration', () => {
-	let mockLikesCollection;
-	let mockCommentsCollection;
-	let mockPostsCollection;
-	let mockPb;
+	/** @type {any} */ let mockLikesCollection;
+	/** @type {any} */ let mockCommentsCollection;
+	/** @type {any} */ let mockPostsCollection;
+	/** @type {any} */ let mockPb;
 
 	beforeEach(async () => {
 		vi.clearAllMocks();
 		
 		const { pb } = await import('$lib/pocketbase.js');
 		mockPb = pb;
-		mockPb.authStore.model = { id: 'user123' };
+		/** @type {any} */(mockPb.authStore).model = { id: 'user123' };
 		
 		mockLikesCollection = {
 			getFirstListItem: vi.fn(),
@@ -43,7 +43,7 @@ describe('Post Interactions Integration', () => {
 			update: vi.fn()
 		};
 
-		mockPb.collection.mockImplementation((name) => {
+		mockPb.collection.mockImplementation((/** @type {any} */ name) => {
 			if (name === 'likes') return mockLikesCollection;
 			if (name === 'comments') return mockCommentsCollection;
 			if (name === 'posts') return mockPostsCollection;

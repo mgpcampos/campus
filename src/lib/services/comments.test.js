@@ -12,9 +12,9 @@ vi.mock('$lib/pocketbase.js', () => ({
 }));
 
 describe('Comments Service', () => {
-	let mockCommentsCollection;
-	let mockPostsCollection;
-	let mockPb;
+	/** @type {any} */ let mockCommentsCollection;
+	/** @type {any} */ let mockPostsCollection;
+	/** @type {any} */ let mockPb;
 
 	beforeEach(async () => {
 		vi.clearAllMocks();
@@ -24,7 +24,7 @@ describe('Comments Service', () => {
 		mockPb = pb;
 		
 		// Reset auth state
-		mockPb.authStore.model = { id: 'user123' };
+		(mockPb.authStore).model = { id: 'user123' };
 		
 		mockCommentsCollection = {
 			create: vi.fn(),
@@ -39,7 +39,7 @@ describe('Comments Service', () => {
 			update: vi.fn()
 		};
 
-		mockPb.collection.mockImplementation((name) => {
+		mockPb.collection.mockImplementation((/** @type {any} */ name) => {
 			if (name === 'comments') return mockCommentsCollection;
 			if (name === 'posts') return mockPostsCollection;
 			return {};
@@ -70,14 +70,14 @@ describe('Comments Service', () => {
 		});
 
 		it('should throw error when user is not authenticated', async () => {
-			mockPb.authStore.model = null;
+			(mockPb.authStore).model = null;
 
 			await expect(createComment('post123', 'test')).rejects.toThrow('User must be authenticated to comment');
 		});
 
 		it('should throw error when content is empty', async () => {
 			// Ensure user is authenticated
-			mockPb.authStore.model = { id: 'user123' };
+			(mockPb.authStore).model = { id: 'user123' };
 			
 			await expect(createComment('post123', '')).rejects.toThrow('Comment content cannot be empty');
 			await expect(createComment('post123', '   ')).rejects.toThrow('Comment content cannot be empty');
@@ -89,7 +89,7 @@ describe('Comments Service', () => {
 			const trimmedContent = 'This is a test comment';
 			
 			// Ensure user is authenticated
-			mockPb.authStore.model = { id: 'user123' };
+			(mockPb.authStore).model = { id: 'user123' };
 			
 			mockCommentsCollection.create.mockResolvedValue({ id: 'comment123' });
 			mockCommentsCollection.getOne.mockResolvedValue({ id: 'comment123', content: trimmedContent });

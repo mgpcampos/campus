@@ -28,27 +28,28 @@
 	$: linkedContent = linkifyContent(post.content);
 	$: canInteract = $currentUser !== null;
 
-	onMount(async () => {
-		// Check if user has liked this post
-		if ($currentUser) {
-			try {
-				isLiked = await hasUserLikedPost(post.id);
-			} catch (error) {
-				console.error('Error checking like status:', error);
+	onMount(() => {
+		let unsubscribeFn = () => {};
+		(async () => {
+			if ($currentUser) {
+				try {
+					isLiked = await hasUserLikedPost(post.id);
+				} catch (error) {
+					console.error('Error checking like status:', error);
+				}
 			}
-		}
-
-		// Subscribe to real-time updates for this post
-		pb.collection('posts').subscribe(post.id, (e) => {
-			if (e.action === 'update') {
-				likeCount = e.record.likeCount || 0;
-				commentCount = e.record.commentCount || 0;
-			}
-		});
-
-		return () => {
-			pb.collection('posts').unsubscribe(post.id);
-		};
+			const unsub = await pb.collection('posts').subscribe(post.id, (e) => {
+				if (e.action === 'update') {
+					likeCount = e.record.likeCount || 0;
+					commentCount = e.record.commentCount || 0;
+				}
+			});
+			unsubscribeFn = () => {
+				try { unsub(); } catch {}
+				try { pb.collection('posts').unsubscribe(post.id); } catch {}
+			};
+		})();
+		return () => unsubscribeFn();
 	});
 
 	function linkifyContent(content: string) {

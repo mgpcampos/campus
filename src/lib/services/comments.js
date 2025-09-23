@@ -1,6 +1,11 @@
 import { pb } from '$lib/pocketbase.js';
 
 /**
+ * @typedef {import('pocketbase').RecordModel} RecordModel
+ * @typedef {import('pocketbase').ListResult<RecordModel>} ListResult
+ */
+
+/**
  * Create a new comment on a post
  * @param {string} postId - Post ID
  * @param {string} content - Comment content
@@ -45,6 +50,12 @@ export async function createComment(postId, content) {
  * @param {number} [options.page=1] - Page number
  * @param {number} [options.perPage=50] - Items per page
  * @returns {Promise<Object>} Comments with pagination info
+ */
+/**
+ * Get a paginated list of comments for a post
+ * @param {string} postId
+ * @param {{page?:number, perPage?:number}} [options]
+ * @returns {Promise<ListResult>}
  */
 export async function getComments(postId, options = {}) {
 	const { page = 1, perPage = 50 } = options;
@@ -109,6 +120,11 @@ export async function deleteComment(commentId, postId) {
  * Get comment count for a post
  * @param {string} postId - Post ID
  * @returns {Promise<number>} Number of comments
+ */
+/**
+ * Count comments for a post
+ * @param {string} postId
+ * @returns {Promise<number>}
  */
 export async function getCommentCount(postId) {
 	try {

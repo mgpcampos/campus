@@ -30,6 +30,7 @@ vite.config.ts.timestamp-*
 
 # PocketBase
 pb_data
+pb_migrations
 
 # AI-related
 AGENTS.md

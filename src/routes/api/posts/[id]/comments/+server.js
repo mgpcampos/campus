@@ -5,6 +5,10 @@ const commentSchema = z.object({
 	content: z.string().min(1, 'Comment content is required').max(1000, 'Comment too long')
 });
 
+function getUserId(/** @type {any} */ locals) {
+	return locals?.pb?.authStore?.model?.id || null;
+}
+
 /** @type {import('./$types').RequestHandler} */
 export async function GET({ params, locals, url }) {
 	if (!locals.pb.authStore.isValid) {
@@ -24,7 +28,7 @@ export async function GET({ params, locals, url }) {
 
 		return json(comments);
 	} catch (err) {
-		console.error('Error getting comments:', err);
+		console.error('Error getting comments:', err instanceof Error ? err.message : err);
 		throw error(500, 'Failed to get comments');
 	}
 }
@@ -36,7 +40,8 @@ export async function POST({ params, locals, request }) {
 	}
 
 	const postId = params.id;
-	const userId = locals.pb.authStore.model.id;
+	const userId = getUserId(locals);
+	if (!userId) throw error(401, 'Authentication required');
 
 	try {
 		const body = await request.json();
@@ -64,7 +69,7 @@ export async function POST({ params, locals, request }) {
 		if (err instanceof z.ZodError) {
 			throw error(400, err.errors[0].message);
 		}
-		console.error('Error creating comment:', err);
+		console.error('Error creating comment:', err instanceof Error ? err.message : err);
 		throw error(500, 'Failed to create comment');
 	}
 }

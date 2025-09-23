@@ -1,4 +1,8 @@
 import { pb } from '$lib/pocketbase.js';
+/**
+ * @typedef {import('pocketbase').RecordModel} RecordModel
+ * @typedef {import('pocketbase').ListResult<RecordModel>} ListResult
+ */
 
 /**
  * Toggle like on a post
