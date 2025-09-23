@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createComment, getComments, updateComment, deleteComment, getCommentCount } from './comments.js';
 
 // Mock PocketBase
-vi.mock('$lib/pocketbase.js', () => ({
+vi.mock('../pocketbase.js', () => ({
 	pb: {
 		authStore: {
 			model: { id: 'user123' }
@@ -20,7 +20,7 @@ describe('Comments Service', () => {
 		vi.clearAllMocks();
 		
 		// Import the mocked module
-		const { pb } = await import('$lib/pocketbase.js');
+		const { pb } = await import('../pocketbase.js');
 		mockPb = pb;
 		
 		// Reset auth state

@@ -3,7 +3,7 @@ import { toggleLike } from './likes.js';
 import { createComment, getComments } from './comments.js';
 
 // Mock PocketBase
-vi.mock('$lib/pocketbase.js', () => ({
+vi.mock('../pocketbase.js', () => ({
 	pb: {
 		authStore: {
 			model: { id: 'user123' }
@@ -21,7 +21,7 @@ describe('Post Interactions Integration', () => {
 	beforeEach(async () => {
 		vi.clearAllMocks();
 		
-		const { pb } = await import('$lib/pocketbase.js');
+		const { pb } = await import('../pocketbase.js');
 		mockPb = pb;
 		/** @type {any} */(mockPb.authStore).model = { id: 'user123' };
 		

@@ -1,4 +1,5 @@
-import { pb } from '$lib/pocketbase.js';
+// Using relative import to avoid alias resolution issues in Vitest
+import { pb } from '../pocketbase.js';
 
 /**
  * Create a new post

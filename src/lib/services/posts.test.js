@@ -9,7 +9,7 @@ const mockCollection = {
 	delete: vi.fn()
 };
 
-vi.mock('$lib/pocketbase.js', () => ({
+vi.mock('../pocketbase.js', () => ({
 	pb: {
 		authStore: {
 			model: { id: 'user123' }
