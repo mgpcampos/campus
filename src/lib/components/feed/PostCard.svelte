@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
+	import { createEventDispatcher, onMount } from 'svelte';
 	import { currentUser, pb } from '$lib/pocketbase.js';
 	import { formatDistanceToNow } from 'date-fns';
 	import { Button } from '$lib/components/ui/button/index.js';
@@ -7,6 +7,9 @@
 	import { Heart, MessageCircle, MoreHorizontal, Edit, Trash2 } from 'lucide-svelte';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import linkifyIt from 'linkify-it';
+	import { toggleLike, hasUserLikedPost } from '$lib/services/likes.js';
+	import CommentSection from './CommentSection.svelte';
+	import { toast } from 'svelte-sonner';
 
 	export let post: any;
 	export let showActions = true;
@@ -14,10 +17,39 @@
 	const dispatch = createEventDispatcher();
 	const linkify = new linkifyIt();
 
+	let isLiked = false;
+	let likeCount = post.likeCount || 0;
+	let commentCount = post.commentCount || 0;
+	let likePending = false;
+
 	$: author = post.expand?.author;
 	$: isOwner = $currentUser && author && $currentUser.id === author.id;
 	$: formattedDate = formatDistanceToNow(new Date(post.created), { addSuffix: true });
 	$: linkedContent = linkifyContent(post.content);
+	$: canInteract = $currentUser !== null;
+
+	onMount(async () => {
+		// Check if user has liked this post
+		if ($currentUser) {
+			try {
+				isLiked = await hasUserLikedPost(post.id);
+			} catch (error) {
+				console.error('Error checking like status:', error);
+			}
+		}
+
+		// Subscribe to real-time updates for this post
+		pb.collection('posts').subscribe(post.id, (e) => {
+			if (e.action === 'update') {
+				likeCount = e.record.likeCount || 0;
+				commentCount = e.record.commentCount || 0;
+			}
+		});
+
+		return () => {
+			pb.collection('posts').unsubscribe(post.id);
+		};
+	});
 
 	function linkifyContent(content: string) {
 		const matches = linkify.match(content);
@@ -38,8 +70,32 @@
 		return result;
 	}
 
-	function handleLike() {
-		dispatch('like', { postId: post.id });
+	async function handleLike() {
+		if (!canInteract || likePending) return;
+
+		// Optimistic update
+		const wasLiked = isLiked;
+		const oldCount = likeCount;
+		
+		isLiked = !isLiked;
+		likeCount = isLiked ? likeCount + 1 : Math.max(0, likeCount - 1);
+		likePending = true;
+
+		try {
+			const result = await toggleLike(post.id);
+			isLiked = result.liked;
+			likeCount = result.likeCount;
+		} catch (error) {
+			// Revert optimistic update on error
+			isLiked = wasLiked;
+			likeCount = oldCount;
+			console.error('Error toggling like:', error);
+			toast.error('Failed to update like');
+		} finally {
+			likePending = false;
+		}
+
+		dispatch('like', { postId: post.id, liked: isLiked, likeCount });
 	}
 
 	function handleComment() {
@@ -54,6 +110,10 @@
 		if (confirm('Are you sure you want to delete this post?')) {
 			dispatch('delete', { postId: post.id });
 		}
+	}
+
+	function handleCommentCountChanged(event: CustomEvent) {
+		commentCount = event.detail.count;
 	}
 
 	function getFileUrl(filename: string) {
@@ -133,15 +193,16 @@
 	
 	{#if showActions}
 		<Card.Footer class="pt-3">
-			<div class="flex items-center space-x-4">
+			<div class="flex items-center space-x-4 mb-3">
 				<Button
 					variant="ghost"
 					size="sm"
 					onclick={handleLike}
-					class="text-gray-600 hover:text-red-500 transition-colors"
+					disabled={!canInteract || likePending}
+					class="text-gray-600 hover:text-red-500 transition-colors {isLiked ? 'text-red-500' : ''}"
 				>
-					<Heart size={16} class="mr-1" />
-					{post.likeCount || 0}
+					<Heart size={16} class="mr-1 {isLiked ? 'fill-current' : ''}" />
+					{likeCount}
 				</Button>
 				
 				<Button
@@ -151,9 +212,16 @@
 					class="text-gray-600 hover:text-blue-500 transition-colors"
 				>
 					<MessageCircle size={16} class="mr-1" />
-					{post.commentCount || 0}
+					{commentCount}
 				</Button>
 			</div>
+
+			<!-- Comment Section -->
+			<CommentSection 
+				postId={post.id} 
+				initialCommentCount={commentCount}
+				on:commentCountChanged={handleCommentCountChanged}
+			/>
 		</Card.Footer>
 	{/if}
 </Card.Root>
