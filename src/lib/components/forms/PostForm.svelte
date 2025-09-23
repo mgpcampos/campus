@@ -12,6 +12,7 @@
 	import { toast } from 'svelte-sonner';
 
 	export let initialData = { content: '', scope: 'global' };
+	export let spaceId: string | null = null; // if provided, posts go to that space
 	export let disabled = false;
 
 	const dispatch = createEventDispatcher();
@@ -28,11 +29,12 @@
 			isSubmitting = true;
 			
 			try {
-				const postData = {
+				const postData: any = {
 					content: $form.content,
-					scope: $form.scope as 'global' | 'space' | 'group',
+					scope: spaceId ? 'space' : ($form.scope as 'global' | 'space' | 'group'),
 					attachments: files
 				};
+				if (spaceId) postData.space = spaceId;
 				
 				const newPost = await createPost(postData);
 				
@@ -92,6 +94,9 @@
 </script>
 
 <form method="POST" use:enhance class="space-y-4">
+	{#if spaceId}
+		<input type="hidden" name="space" value={spaceId} />
+	{/if}
 	<div class="space-y-2">
 		<Label for="content">What's on your mind?</Label>
 		<Textarea

@@ -11,6 +11,7 @@ A lightweight, Twitter-like social network designed specifically for the educati
 - User authentication and profiles
 - Real-time updates
 - Responsive design with accessibility support
+ - Role-based Space memberships (owner, moderator, member)
 
 ## Tech Stack
 
@@ -64,6 +65,46 @@ src/
 │   └── types.js         # Type definitions
 ├── routes/              # SvelteKit routes
 └── hooks.server.js      # Server-side hooks for auth
+```
+
+## Spaces & Memberships
+
+Spaces allow organizing content around institutions or thematic communities. Each Space has:
+
+- Visibility: public (joinable by any authenticated user) or private (future enhancement)
+- Owners: users with full administrative control
+- Moderators: users who can manage description and moderate content (future moderation tools)
+- Members: regular participants
+
+Memberships are stored in the `space_members` collection with a unique `(space, user)` constraint and a `role` field (`member | moderator | owner`). An owner membership is automatically created when a Space is created.
+
+### Creating a Space
+1. Navigate to `/spaces/create`
+2. Provide name, slug, optional description, and public flag
+3. Submit the form – you become the owner
+
+### Browsing Spaces
+The `/spaces` page lists spaces with member counts and supports basic search.
+
+### Space Detail & Feed
+`/spaces/[id]` displays:
+- Space metadata
+- Join/Leave button based on membership state
+- Member count
+- Posts scoped to that space
+
+### Management
+Owners and moderators can edit the description at `/spaces/[id]/manage`.
+
+### Posting Into a Space
+When on a Space page, new posts created via the post form are automatically scoped to that Space.
+
+## Testing
+
+Vitest is configured for unit and integration tests. Added tests cover membership service logic (join, leave, role retrieval). Run:
+
+```sh
+npm test
 ```
 
 ## Development
