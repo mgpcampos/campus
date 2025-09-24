@@ -4,6 +4,7 @@
 	import { formatDistanceToNow } from 'date-fns';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
+	import ImageAttachment from '$lib/components/media/ImageAttachment.svelte';
 	import { Heart, MessageCircle, MoreHorizontal, Edit, Trash2 } from 'lucide-svelte';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import linkifyIt from 'linkify-it';
@@ -207,11 +208,11 @@
 		{#if post.attachments && post.attachments.length > 0}
 			<div class="mt-3 grid gap-2 {post.attachments.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}">
 				{#each post.attachments as attachment}
-					<img
-						src={getFileUrl(attachment)}
-						alt="Post attachment"
-						class="rounded-md border object-cover w-full {post.attachments.length === 1 ? 'max-h-96' : 'h-32'}"
-						loading="lazy"
+					<!-- Using dedicated component for future responsive sources -->
+					<ImageAttachment 
+						src={getFileUrl(attachment)} 
+						alt="Post attachment" 
+						className={post.attachments.length === 1 ? 'max-h-96' : 'h-32'}
 					/>
 				{/each}
 			</div>

@@ -10,6 +10,7 @@
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { ImagePlus, X, Loader2 } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
+	import { validateImages, MAX_ATTACHMENTS } from '$lib/utils/media.js';
 
 	export let initialData = { content: '', scope: 'global' };
 	export let spaceId: string | null = null; // if provided, posts go to that space
@@ -57,31 +58,16 @@
 	function handleFileSelect(event: Event) {
 		const target = event.target as HTMLInputElement;
 		const selectedFiles = Array.from(target.files || []);
-		
-		// Validate file types
-		const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-		const invalidFiles = selectedFiles.filter(file => !validTypes.includes(file.type));
-		
-		if (invalidFiles.length > 0) {
-			toast.error('Only JPEG, PNG, WebP, and GIF images are allowed');
+
+		const prospective = [...files, ...selectedFiles];
+		const { valid, errors } = validateImages(prospective);
+		if (!valid) {
+			errors.slice(0,3).forEach(e => toast.error(e));
 			return;
 		}
-		
-		// Validate file sizes (10MB max)
-		const maxSize = 10 * 1024 * 1024;
-		const oversizedFiles = selectedFiles.filter(file => file.size > maxSize);
-		
-		if (oversizedFiles.length > 0) {
-			toast.error('Files must be smaller than 10MB');
-			return;
-		}
-		
-		// Add to existing files, max 4 total
-		const newFiles = [...files, ...selectedFiles].slice(0, 4);
-		files = newFiles;
-		
-		if (files.length >= 4) {
-			toast.info('Maximum 4 images allowed per post');
+		files = prospective.slice(0, MAX_ATTACHMENTS);
+		if (files.length >= MAX_ATTACHMENTS) {
+			toast.info(`Maximum ${MAX_ATTACHMENTS} images allowed per post`);
 		}
 	}
 

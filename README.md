@@ -12,6 +12,7 @@ A lightweight, Twitter-like social network designed specifically for the educati
 - Real-time updates
 - Responsive design with accessibility support
  - Role-based Space memberships (owner, moderator, member)
+ - Image attachments on posts with validation & previews (Task 10)
 
 ## Tech Stack
 

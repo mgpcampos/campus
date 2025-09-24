@@ -1,6 +1,8 @@
 <script>
+  /** @type {{ space:any; memberCount:number; membershipRole:string|null; member:boolean; posts:any }} */
   export let data;
-  let { space, memberCount, membershipRole, member, posts } = data;
+  let { space, memberCount, membershipRole, member } = data;
+  const posts = /** @type {{ items: Array<any> }} */ (data.posts);
   let joining = false;
   /** @param {SubmitEvent} e */
   async function join(e) {

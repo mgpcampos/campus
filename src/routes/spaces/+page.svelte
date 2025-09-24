@@ -1,6 +1,9 @@
 <script>
+  /** @type {{ spaces: { items: Array<any> }, search: string }} */
   export let data;
-  const { spaces, search } = data;
+  // Cast items to include expected properties for template assistance
+  const spaces = /** @type {{ items: Array<{ id:string; name?:string; description?:string; memberCount?:number }>}} */ (data.spaces);
+  const search = data.search;
 </script>
 
 <h1 class="text-2xl font-bold mb-4">Spaces</h1>
