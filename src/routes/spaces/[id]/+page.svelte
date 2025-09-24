@@ -25,6 +25,9 @@
     <h1 class="text-2xl font-bold">{space.name}</h1>
     <div class="text-gray-600">{space.description}</div>
     <div class="text-sm mt-1">Members: {memberCount}</div>
+    <div class="text-sm mt-1">
+      <a class="text-blue-600 underline" href={`/spaces/${space.id}/groups`}>View Groups</a>
+    </div>
     <div class="mt-3 flex gap-2">
       {#if member}
         <form on:submit|preventDefault={leave}>
