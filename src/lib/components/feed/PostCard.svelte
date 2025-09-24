@@ -137,22 +137,27 @@
 	<Card.Header class="pb-3">
 		<div class="flex items-start justify-between">
 			<div class="flex items-center space-x-3">
-				{#if author?.avatar}
-					<img
-						src={pb.files.getUrl(author, author.avatar, { thumb: '40x40' })}
-						alt="{author.name}'s avatar"
-						class="w-10 h-10 rounded-full object-cover"
-					/>
-				{:else}
-					<div class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
-						<span class="text-gray-600 font-medium">
-							{author?.name?.charAt(0)?.toUpperCase() || '?'}
-						</span>
-					</div>
-				{/if}
-				
+				<a href={author ? `/profile/${author.username}` : '#'} class="group focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full">
+					{#if author?.avatar}
+						<img
+							src={pb.files.getUrl(author, author.avatar, { thumb: '40x40' })}
+							alt="{author.name}'s avatar"
+							class="w-10 h-10 rounded-full object-cover ring-2 ring-transparent group-hover:ring-blue-200 transition"
+						/>
+					{:else}
+						<div class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center ring-2 ring-transparent group-hover:ring-blue-200 transition">
+							<span class="text-gray-600 font-medium">
+								{author?.name?.charAt(0)?.toUpperCase() || '?'}
+							</span>
+						</div>
+					{/if}
+				</a>
 				<div>
-					<h3 class="font-semibold text-sm">{author?.name || 'Unknown User'}</h3>
+					<h3 class="font-semibold text-sm">
+						<a href={author ? `/profile/${author.username}` : '#'} class="hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-sm">
+							{author?.name || 'Unknown User'}
+						</a>
+					</h3>
 					<p class="text-xs text-gray-500">@{author?.username || 'unknown'}</p>
 				</div>
 			</div>
