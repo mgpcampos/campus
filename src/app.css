@@ -130,4 +130,31 @@
   .text-muted-foreground {
     color: #64748b;
   }
+
+  /* High contrast media query adjustments */
+  @media (prefers-contrast: more) {
+    :root {
+      --ring: oklch(0.3 0.05 285);
+      --border: oklch(0.3 0.05 285);
+    }
+    a, button, [role="button"], [tabindex="0"] {
+      outline: 2px solid var(--ring);
+      outline-offset: 2px;
+    }
+  }
+
+  /* Custom focus utility for better visibility */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+/* Utility class for visually-hidden but focusable text */
+.sr-only-focusable:focus:not(:focus-visible) {
+  position: static;
+  width: auto;
+  height: auto;
+  clip: auto;
+  white-space: normal;
 }

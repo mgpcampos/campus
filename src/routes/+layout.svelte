@@ -39,14 +39,13 @@
 			<Sidebar class="w-64 flex-shrink-0" />
 		{/if}
 
-		<!-- Main Content -->
-		<main 
-			id="main-content"
-			class="flex-1 container mx-auto px-4 py-6 max-w-6xl"
-			aria-label="Main content"
-		>
-			{@render children?.()}
-		</main>
+		<!-- Main Content (single unique <main>, aria-label unnecessary) -->
+			<main 
+				id="main-content"
+				class="flex-1 container mx-auto px-4 py-6 max-w-6xl"
+			>
+				{@render children?.()}
+			</main>
 	</div>
 
 	<!-- Footer -->

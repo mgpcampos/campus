@@ -20,10 +20,10 @@
 		"linkify-it": "^5.0.0",
 		"lucide-svelte": "^0.544.0",
 		"pocketbase": "^0.26.2",
-		"sveltekit-superforms": "^2.27.1",
-		"zod": "^3.25.76",
+		"sanitize-html": "^2.17.0",
 		"sharp": "^0.33.5",
-		"sanitize-html": "^2.17.0"
+		"sveltekit-superforms": "^2.27.1",
+		"zod": "^3.25.76"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.2.5",
@@ -40,6 +40,7 @@
 		"@testing-library/svelte": "^5.2.8",
 		"@types/linkify-it": "^5.0.0",
 		"@types/node": "^22",
+		"axe-core": "^4.10.3",
 		"bits-ui": "^2.11.0",
 		"clsx": "^2.1.1",
 		"eslint": "^9.22.0",
