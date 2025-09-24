@@ -1,7 +1,8 @@
 <script>
   export let data;
-  let { space, groups } = data;
+  let { space, groups, search } = data;
   let creating = false;
+
   /** @param {SubmitEvent} e */
   async function createGroupAction(e) {
     e.preventDefault();
@@ -15,6 +16,21 @@
 </script>
 
 <h1 class="text-2xl font-bold mb-4">Groups in {space.name}</h1>
+
+<!-- Search groups -->
+<form method="GET" class="flex gap-2 mb-6 items-center">
+  <input
+    type="text"
+    name="q"
+    placeholder="Search groups..."
+    value={search}
+    class="border rounded px-2 py-1 text-sm flex-1"
+  />
+  <button class="bg-gray-200 px-3 py-1 rounded text-sm" type="submit">Search</button>
+  {#if search}
+    <a href="." class="text-xs text-blue-600 underline">Clear</a>
+  {/if}
+</form>
 
 <form on:submit|preventDefault={createGroupAction} class="space-y-2 mb-6 border p-4 rounded">
   <div>

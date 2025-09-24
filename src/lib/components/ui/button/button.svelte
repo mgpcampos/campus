@@ -40,41 +40,51 @@
 </script>
 
 <script lang="ts">
-	let {
-		class: className,
-		variant = "default",
-		size = "default",
-		ref = $bindable(null),
-		href = undefined,
-		type = "button",
-		disabled,
-		children,
-		...restProps
-	}: ButtonProps = $props();
+import { createEventDispatcher } from 'svelte';
+
+let {
+class: className,
+variant = "default",
+size = "default",
+ref = $bindable(null),
+href = undefined,
+type = "button",
+disabled,
+children,
+...restProps
+}: ButtonProps = $props();
+
+// Forward native click events so parent components can use on:click
+const dispatch = createEventDispatcher<{ click: MouseEvent }>();
+function forwardClick(event: MouseEvent) {
+  dispatch('click', event);
+}
 </script>
 
 {#if href}
-	<a
-		bind:this={ref}
-		data-slot="button"
-		class={cn(buttonVariants({ variant, size }), className)}
-		href={disabled ? undefined : href}
-		aria-disabled={disabled}
-		role={disabled ? "link" : undefined}
-		tabindex={disabled ? -1 : undefined}
-		{...restProps}
-	>
+<a
+bind:this={ref}
+data-slot="button"
+class={cn(buttonVariants({ variant, size }), className)}
+href={disabled ? undefined : href}
+aria-disabled={disabled}
+role={disabled ? "link" : undefined}
+tabindex={disabled ? -1 : undefined}
+on:click={forwardClick}
+{...restProps}
+>
 		{@render children?.()}
 	</a>
 {:else}
-	<button
-		bind:this={ref}
-		data-slot="button"
-		class={cn(buttonVariants({ variant, size }), className)}
-		{type}
-		{disabled}
-		{...restProps}
-	>
+<button
+bind:this={ref}
+data-slot="button"
+class={cn(buttonVariants({ variant, size }), className)}
+{type}
+{disabled}
+on:click={forwardClick}
+{...restProps}
+>
 		{@render children?.()}
 	</button>
 {/if}

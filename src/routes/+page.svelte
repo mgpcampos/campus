@@ -9,6 +9,30 @@
 	let feedComponent: any;
 	let refreshTrigger = 0;
 
+// Feed discovery controls
+let feedSearch: string = '';
+let feedSort: 'new' | 'top' | 'trending' = 'new';
+let timeframeHours: number = 48;
+
+// Simple debounce for search input
+let searchDebounce: any;
+function handleSearchInput(e: Event) {
+  const value = (e.target as HTMLInputElement).value;
+  clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(() => {
+    feedSearch = value.trim();
+  }, 250);
+}
+
+function changeSort(s: 'new' | 'top' | 'trending') {
+  feedSort = s;
+}
+
+function changeTimeframe(e: Event) {
+  const v = Number((e.target as HTMLSelectElement).value);
+  timeframeHours = v;
+}
+
 	function handlePostCreated(event: CustomEvent) {
 		const newPost = event.detail;
 		// Add the new post to the feed
@@ -43,27 +67,78 @@
 		<div class="space-y-6">
 			<div class="flex items-center justify-between">
 				<h2 class="text-2xl font-semibold">Global Feed</h2>
-				<div class="flex space-x-2">
-					<Button variant="outline" size="sm">
-						<MessageSquare size={16} class="mr-1" />
-						Latest
-					</Button>
-					<Button href="/spaces" variant="outline" size="sm">
-						<Users size={16} class="mr-1" />
-						Browse Spaces
-					</Button>
-				</div>
+<div class="flex flex-wrap gap-2 items-center">
+  <!-- Search -->
+  <input
+    type="text"
+    placeholder="Search posts..."
+    class="border px-2 py-1 rounded text-sm"
+    on:input={handleSearchInput}
+  />
+
+  <!-- Sort buttons -->
+  <div class="flex gap-1">
+    <Button
+      variant={feedSort === 'new' ? 'default' : 'outline'}
+      size="sm"
+      on:click={() => changeSort('new')}
+      aria-pressed={feedSort === 'new'}
+    >
+      <MessageSquare size={16} class="mr-1" />
+      New
+    </Button>
+    <Button
+      variant={feedSort === 'top' ? 'default' : 'outline'}
+      size="sm"
+      on:click={() => changeSort('top')}
+      aria-pressed={feedSort === 'top'}
+    >
+      Top
+    </Button>
+    <Button
+      variant={feedSort === 'trending' ? 'default' : 'outline'}
+      size="sm"
+      on:click={() => changeSort('trending')}
+      aria-pressed={feedSort === 'trending'}
+    >
+      Trending
+    </Button>
+  </div>
+
+  {#if feedSort === 'trending'}
+    <select
+      class="border px-2 py-1 rounded text-sm"
+      on:change={changeTimeframe}
+      aria-label="Trending timeframe"
+      bind:value={timeframeHours}
+    >
+      <option value="6">6h</option>
+      <option value="12">12h</option>
+      <option value="24">24h</option>
+      <option value="48">48h</option>
+      <option value="72">72h</option>
+    </select>
+  {/if}
+
+  <Button href="/spaces" variant="outline" size="sm" class="ml-auto">
+    <Users size={16} class="mr-1" />
+    Browse Spaces
+  </Button>
+</div>
 			</div>
 			
-			<Feed 
-				bind:this={feedComponent}
-				scope="global" 
-				{refreshTrigger}
-				on:like={(e) => console.log('Like:', e.detail)}
-				on:comment={(e) => console.log('Comment:', e.detail)}
-				on:edit={(e) => console.log('Edit:', e.detail)}
-				on:delete={(e) => console.log('Delete:', e.detail)}
-			/>
+<Feed
+  bind:this={feedComponent}
+  scope="global"
+  {refreshTrigger}
+  q={feedSearch}
+  sort={feedSort}
+  timeframeHours={timeframeHours}
+  on:like={(e) => console.log('Like:', e.detail)}
+  on:comment={(e) => console.log('Comment:', e.detail)}
+  on:edit={(e) => console.log('Edit:', e.detail)}
+  on:delete={(e) => console.log('Delete:', e.detail)}
+/>
 		</div>
 	{:else}
 		<Card.Root class="max-w-2xl mx-auto">

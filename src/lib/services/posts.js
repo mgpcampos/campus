@@ -40,40 +40,97 @@ export async function createPost(postData) {
 }
 
 /**
- * Get posts with pagination and filtering
- * @param {Object} options - Query options
- * @param {number} [options.page=1] - Page number
- * @param {number} [options.perPage=20] - Items per page
- * @param {'global'|'space'|'group'} [options.scope] - Filter by scope
- * @param {string} [options.space] - Filter by space ID
- * @param {string} [options.group] - Filter by group ID
+ * @typedef {Object} GetPostsOptions
+ * @property {number} [page=1] Page number
+ * @property {number} [perPage=20] Items per page
+ * @property {'global'|'space'|'group'} [scope]
+ * @property {string} [space]
+ * @property {string} [group]
+ * @property {string} [q] Free-text content search query
+ * @property {'new'|'top'|'trending'} [sort='new'] Sort mode
+ * @property {number} [timeframeHours=48] Recency window (hours) for trending
+ */
+
+/**
+ * Get posts with pagination, search and discovery options
+ * @param {GetPostsOptions} [options]
  * @returns {Promise<Object>} Posts with pagination info
  */
-export async function getPosts(options = {}) {
-	const { page = 1, perPage = 20, scope, space, group } = options;
-	let filter = '';
-	const filterParts = [];
-	if (scope) filterParts.push(`scope = "${scope}"`);
-	if (space) filterParts.push(`space = "${space}"`);
-	if (group) filterParts.push(`group = "${group}"`);
-	if (filterParts.length > 0) filter = filterParts.join(' && ');
+export async function getPosts(options = /** @type {GetPostsOptions} */({})) {
+const {
+page = 1,
+perPage = 20,
+scope,
+space,
+group,
+q,
+sort = 'new',
+timeframeHours = 48
+} = options;
 
-	const useCache = page === 1 && !space && !group && (scope === 'global' || !scope);
-	const cacheKey = `posts:p${page}:pp${perPage}:f${filter || 'none'}`;
-	if (!useCache) {
-		return await pb.collection('posts').getList(page, perPage, {
-			filter,
-			sort: '-created',
-			expand: 'author,space,group'
-		});
-	}
-	return await getOrSet(serverCaches.lists, cacheKey, async () => {
-		return await pb.collection('posts').getList(page, perPage, {
-			filter,
-			sort: '-created',
-			expand: 'author,space,group'
-		});
-	}, { ttlMs: 10_000 });
+/**
+ * Build PocketBase filter
+ */
+const filterParts = [];
+if (scope) filterParts.push(`scope = "${scope}"`);
+if (space) filterParts.push(`space = "${space}"`);
+if (group) filterParts.push(`group = "${group}"`);
+if (q) {
+const safe = q.replace(/"/g, '\\"');
+filterParts.push(`(content ~ "%${safe}%" )`);
+}
+// Trending timeframe restriction
+let timeframeSinceIso = null;
+if (sort === 'trending') {
+const since = new Date(Date.now() - timeframeHours * 3600 * 1000);
+timeframeSinceIso = since.toISOString();
+filterParts.push(`created >= "${timeframeSinceIso}"`);
+}
+const filter = filterParts.join(' && ');
+
+/**
+ * Determine base sort for PocketBase query
+ * - new: chronological
+ * - top: likeCount then recent
+ * - trending: initial coarse sort by likeCount then refinement in JS
+ */
+let sortExpr = '-created';
+if (sort === 'top') {
+sortExpr = '-likeCount,-created';
+} else if (sort === 'trending') {
+sortExpr = '-likeCount,-commentCount,-created';
+}
+
+const cacheableDefault = sort === 'new' && !q && !space && !group && (scope === 'global' || !scope);
+const useCache = page === 1 && cacheableDefault;
+const cacheKey = `posts:p${page}:pp${perPage}:sort${sort}:q${q || 'none'}:f${filter || 'none'}`;
+
+async function fetchList() {
+const list = await pb.collection('posts').getList(page, perPage, {
+filter,
+sort: sortExpr,
+expand: 'author,space,group'
+});
+// Post-processing for trending: compute engagement score and re-sort
+if (sort === 'trending') {
+const now = Date.now();
+const scored = list.items.map(p => {
+const likeCount = p.likeCount || 0;
+const commentCount = p.commentCount || 0;
+const createdMs = Date.parse(p.created);
+const ageHours = Math.max(1, (now - createdMs) / 3600_000);
+const score = (likeCount * 2 + commentCount * 3) / Math.pow(ageHours, 0.6);
+return { p, score };
+}).sort((a, b) => b.score - a.score);
+list.items = scored.map(s => s.p);
+}
+return list;
+}
+
+if (!useCache) {
+return await fetchList();
+}
+return await getOrSet(serverCaches.lists, cacheKey, fetchList, { ttlMs: 10_000 });
 }
 
 /**

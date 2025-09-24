@@ -14,11 +14,16 @@ export async function createGroup(data) {
   return await pb.collection('groups').create(formData);
 }
 
-/** List groups for a space */
-/** @param {string} spaceId @param {{page?:number, perPage?:number}} [opts] */
-export async function getGroups(spaceId, { page = 1, perPage = 50 } = {}) {
+/** List groups for a space (optional name/description search) */
+/** @param {string} spaceId @param {{page?:number, perPage?:number, search?:string}} [opts] */
+export async function getGroups(spaceId, { page = 1, perPage = 50, search = '' } = {}) {
+  let filter = `space = "${spaceId}"`;
+  if (search) {
+    const safe = search.replace(/"/g, '\\"');
+    filter += ` && (name ~ "%${safe}%" || description ~ "%${safe}%")`;
+  }
   return await pb.collection('groups').getList(page, perPage, {
-    filter: `space = "${spaceId}"`,
+    filter,
     sort: '-created'
   });
 }
@@ -51,13 +56,30 @@ export async function getGroupMemberCount(groupId) {
   return result.totalItems;
 }
 
-/** List group members */
-/** @param {string} groupId @param {{page?:number, perPage?:number}} [opts] */
-export async function getGroupMembers(groupId, { page = 1, perPage = 50 } = {}) {
-  return await pb.collection('group_members').getList(page, perPage, {
+/** List group members (optional user search) */
+/** @param {string} groupId @param {{page?:number, perPage?:number, search?:string}} [opts] */
+export async function getGroupMembers(groupId, { page = 1, perPage = 50, search = '' } = {}) {
+  const result = await pb.collection('group_members').getList(page, perPage, {
     filter: `group = "${groupId}"`,
     expand: 'user'
   });
+  if (!search) return result;
+  const s = search.toLowerCase();
+  const filtered = result.items.filter(m => {
+    const u = m.expand?.user;
+    if (!u) return false;
+    return (
+      (u.username && u.username.toLowerCase().includes(s)) ||
+      (u.name && u.name.toLowerCase().includes(s))
+    );
+  });
+  return {
+    ...result,
+    items: filtered,
+    totalItems: filtered.length,
+    totalPages: 1,
+    page: 1
+  };
 }
 
 /** Get current user's membership role in a group */

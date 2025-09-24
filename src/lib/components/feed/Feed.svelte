@@ -7,19 +7,23 @@
 	import { Loader2, RefreshCw } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 
-	export let scope = 'global';
-	export let space: string | null = null;
-	export let group: string | null = null;
-	export let refreshTrigger = 0; // External trigger for refresh
+export let scope = 'global';
+export let space: string | null = null;
+export let group: string | null = null;
+export let refreshTrigger = 0; // External trigger for refresh
+export let q: string = '';
+export let sort: 'new' | 'top' | 'trending' = 'new';
+export let timeframeHours: number = 48;
 
 	const dispatch = createEventDispatcher();
 
 	let posts: any[] = [];
-	let loading = false;
-	let loadingMore = false;
-	let hasMore = true;
-	let currentPage = 1;
-	let error: string | undefined = undefined;
+let loading = false;
+let loadingMore = false;
+let hasMore = true;
+let currentPage = 1;
+let error: string | undefined = undefined;
+let lastQueryKey = '';
 
 	const perPage = 20;
 
@@ -43,10 +47,22 @@
 		return () => { unsub(); unsubPosts(); };
 	});
 
-	// Watch for refresh trigger changes
-	$: if (refreshTrigger > 0) {
-		refreshFeed();
-	}
+ // Watch for refresh trigger changes
+$: if (refreshTrigger > 0) {
+  refreshFeed();
+}
+
+// Reactive refresh when query parameters change
+$: {
+  const key = `${scope}|${space}|${group}|${q}|${sort}|${timeframeHours}`;
+  if (key !== lastQueryKey && !loading && !loadingMore) {
+    lastQueryKey = key;
+    // Avoid double initial load (onMount already loads)
+    if (posts.length > 0) {
+      refreshFeed();
+    }
+  }
+}
 
 	async function loadPosts(page = 1, append = false) {
 		if (loading || loadingMore) return;
@@ -59,13 +75,16 @@
 		}
 
 		try {
-			const result = await getPosts({
-				page,
-				perPage,
-				scope: scope as any,
-				space: space ?? undefined,
-				group: group ?? undefined
-			});
+const result = await getPosts({
+  page,
+  perPage,
+  scope: scope as any,
+  space: space ?? undefined,
+  group: group ?? undefined,
+  q: q || undefined,
+  sort,
+  timeframeHours
+});
 
 			if (append) {
 				posts = [...posts, ...(result as any).items];

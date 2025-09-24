@@ -3,11 +3,12 @@ import { getSpace } from '$lib/services/spaces.js';
 import { getGroups, createGroup } from '$lib/services/groups.js';
 import { createGroupSchema } from '$lib/schemas/group.js';
 
-export async function load({ params, locals }) {
+export async function load({ params, locals, url }) {
   if (!locals.user) throw redirect(302, '/auth/login');
   const space = await getSpace(params.id);
-  const groups = await getGroups(params.id);
-  return { space, groups };
+  const search = url.searchParams.get('q') || '';
+  const groups = await getGroups(params.id, { search });
+  return { space, groups, search };
 }
 
 export const actions = {

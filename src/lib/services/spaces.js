@@ -78,10 +78,31 @@ export async function getSpaceMemberCount(spaceId) {
   }, { ttlMs: 20_000 });
 }
 
-/** List members of a space @param {string} spaceId */
-export async function getSpaceMembers(spaceId, { page = 1, perPage = 50 } = {}) {
-  return await pb.collection('space_members').getList(page, perPage, {
+/** List members of a space with optional search over user fields
+ * @param {string} spaceId
+ * @param {{ page?: number; perPage?: number; search?: string }} [opts]
+ */
+export async function getSpaceMembers(spaceId, { page = 1, perPage = 50, search = '' } = {}) {
+  // Always expand user for potential filtering
+  const result = await pb.collection('space_members').getList(page, perPage, {
     filter: `space = "${spaceId}"`,
     expand: 'user'
   });
+  if (!search) return result;
+  const s = search.toLowerCase();
+  const filtered = result.items.filter(m => {
+    const u = m.expand?.user;
+    if (!u) return false;
+    return (
+      (u.username && u.username.toLowerCase().includes(s)) ||
+      (u.name && u.name.toLowerCase().includes(s))
+    );
+  });
+  return {
+    ...result,
+    items: filtered,
+    totalItems: filtered.length,
+    totalPages: 1,
+    page: 1
+  };
 }

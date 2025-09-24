@@ -7,13 +7,23 @@ import { validateImages } from '$lib/utils/media.js';
 /** @type {import('./$types').RequestHandler} */
 export async function GET({ url }) {
 	try {
-		const queryParams = Object.fromEntries(url.searchParams);
-		const validatedQuery = postQuerySchema.parse(queryParams);
+const queryParams = Object.fromEntries(url.searchParams);
+// Allow either ?q= or legacy ?search= param
+if (!queryParams.q && queryParams.search) {
+  queryParams.q = queryParams.search;
+}
+const validatedQuery = postQuerySchema.parse(queryParams);
 		
 		const result = await getPosts(validatedQuery);
 		// Add short-lived HTTP cache for anonymous global first page to leverage CDN/browser caching
 		const headers = new Headers();
-		const isCacheable = (!validatedQuery.scope || validatedQuery.scope === 'global') && !validatedQuery.space && !validatedQuery.group && (validatedQuery.page == null || Number(validatedQuery.page) === 1);
+		const isCacheable =
+  (!validatedQuery.scope || validatedQuery.scope === 'global') &&
+  !validatedQuery.space &&
+  !validatedQuery.group &&
+  (validatedQuery.page == null || Number(validatedQuery.page) === 1) &&
+  !validatedQuery.q &&
+  (!validatedQuery.sort || validatedQuery.sort === 'new');
 		if (isCacheable) {
 			headers.set('Cache-Control', 'public, max-age=5, stale-while-revalidate=30');
 		}
