@@ -1,4 +1,5 @@
 import { json, error } from '@sveltejs/kit';
+import { createNotification } from '$lib/services/notifications.js';
 /**
  * Safely extracts current authenticated user id from locals
  * @param {any} locals
@@ -41,10 +42,17 @@ export async function POST({ params, locals }) {
 				user: userId
 			});
 			
-			// Update post like count
+			// Update post like count & fetch post with author for notification
 			const post = await locals.pb.collection('posts').getOne(postId);
 			const newLikeCount = (post.likeCount || 0) + 1;
 			await locals.pb.collection('posts').update(postId, { likeCount: newLikeCount });
+
+			// Notification (avoid notifying self)
+			try {
+				if (post.author && post.author !== userId) {
+					await createNotification({ user: post.author, actor: userId, type: 'like', post: postId });
+				}
+			} catch (e) { console.warn('like notification failed', e); }
 			
 			return json({ liked: true, likeCount: newLikeCount });
 		}

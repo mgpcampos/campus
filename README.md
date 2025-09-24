@@ -168,3 +168,17 @@ Testing:
 - `images.test.js` covers URL & srcset generation.
 - Additional feed / route benchmarks can be added using Vitest + synthetic timers or Playwright traces.
 
+## Realtime Feed & Notifications (Task 14)
+
+Implemented a realtime layer for post feed updates and a user notifications system:
+
+- Feed subscription listens to all `posts` events and filters client-side by current context (global / space / group).
+- Heartbeat monitors event freshness; lack of events >30s triggers a 15s polling fallback until realtime resumes.
+- Notifications collection stores like, comment, and mention events with indexes for `(user, read)` and chronological retrieval.
+- Server endpoints emit notifications on like toggle, comment creation, and detected `@mentions` (regex based, duplicate-safe).
+- Client subscription maintains a capped in-memory list (50) and an unread counter with mark single / mark all functionality.
+- Accessible dropdown UI with keyboard support and axe-tested semantics.
+
+Detailed architecture & extension guidance: `docs/realtime-notifications.md`.
+
+

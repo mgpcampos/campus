@@ -3,6 +3,7 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import { User, LogOut, Settings, Menu, X } from 'lucide-svelte';
+	import NotificationsDropdown from '$lib/components/notifications/NotificationsDropdown.svelte';
 	import { page } from '$app/stores';
 	import { onMount, onDestroy } from 'svelte';
 
@@ -119,6 +120,7 @@
 			<!-- User Menu -->
 			<nav class="flex items-center gap-2">
 				{#if $currentUser}
+					<NotificationsDropdown />
 					<DropdownMenu.Root>
 						<DropdownMenu.Trigger>
 							{#snippet child({ props })}

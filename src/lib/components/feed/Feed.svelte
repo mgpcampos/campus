@@ -1,14 +1,15 @@
 <script lang="ts">
 	import { onMount, createEventDispatcher } from 'svelte';
 	import { getPosts } from '$lib/services/posts.js';
+	import { subscribeFeed, enablePolling, disablePolling, realtimeStatus, feedPosts } from '$lib/services/realtime.js';
 	import PostCard from './PostCard.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Loader2, RefreshCw } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 
 	export let scope = 'global';
-	export let space: string | undefined = undefined;
-	export let group: string | undefined = undefined;
+	export let space: string | null = null;
+	export let group: string | null = null;
 	export let refreshTrigger = 0; // External trigger for refresh
 
 	const dispatch = createEventDispatcher();
@@ -23,7 +24,23 @@
 	const perPage = 20;
 
 	onMount(() => {
-		loadPosts();
+		loadPosts().then(() => {
+			// Subscribe realtime after initial load
+			subscribeFeed({ scope, space, group });
+		});
+		const unsub = realtimeStatus.subscribe(status => {
+			if (!status.connected) {
+				enablePolling(async () => { await refreshFeed(); });
+			} else {
+				disablePolling();
+			}
+		});
+		// Keep posts in sync with feedPosts store
+		const unsubPosts = feedPosts.subscribe(fp => {
+			// Merge updates only if same context
+			posts = fp;
+		});
+		return () => { unsub(); unsubPosts(); };
 	});
 
 	// Watch for refresh trigger changes
@@ -46,8 +63,8 @@
 				page,
 				perPage,
 				scope: scope as any,
-				space,
-				group
+				space: space ?? undefined,
+				group: group ?? undefined
 			});
 
 			if (append) {
