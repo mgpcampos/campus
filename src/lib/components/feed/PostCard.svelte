@@ -9,7 +9,15 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import linkifyIt from 'linkify-it';
 	import { toggleLike, hasUserLikedPost } from '$lib/services/likes.js';
-	import CommentSection from './CommentSection.svelte';
+	// Lazy loaded comment section to reduce initial bundle size
+	let CommentSectionPromise: Promise<any> | null = null;
+	let CommentSectionModule: any = null;
+	async function loadCommentSection() {
+		if (!CommentSectionPromise) {
+			CommentSectionPromise = import('./CommentSection.svelte').then(m => { CommentSectionModule = m.default; return m; });
+		}
+		return CommentSectionPromise;
+	}
 	import { toast } from 'svelte-sonner';
 
 	export let post: any;
@@ -112,6 +120,7 @@
 	}
 
 	function handleComment() {
+		loadCommentSection();
 		dispatch('comment', { postId: post.id });
 	}
 
@@ -244,12 +253,16 @@
 				</Button>
 			</div>
 
-			<!-- Comment Section -->
-			<CommentSection 
-				postId={post.id} 
-				initialCommentCount={commentCount}
-				on:commentCountChanged={handleCommentCountChanged}
-			/>
+			<!-- Comment Section (lazy) -->
+			{#if CommentSectionModule}
+				<svelte:component this={CommentSectionModule}
+					postId={post.id}
+					initialCommentCount={commentCount}
+					on:commentCountChanged={handleCommentCountChanged}
+				/>
+			{:else}
+				<button class="text-xs text-blue-600 hover:underline" on:click={loadCommentSection} type="button">Load comments...</button>
+			{/if}
 		</Card.Footer>
 	{/if}
 </Card.Root>

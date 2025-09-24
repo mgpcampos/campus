@@ -1,4 +1,5 @@
 import { pb } from '../pocketbase.js';
+import { serverCaches, getOrSet } from '../utils/cache.js';
 
 /**
  * Create a new space and assign owner membership
@@ -40,10 +41,14 @@ export async function getSpaces({ page = 1, perPage = 20, search = '' } = {}) {
     // Basic name/slug search
     filter = `(name ~ "%${search}%" || slug ~ "%${search}%")`;
   }
-  return await pb.collection('spaces').getList(page, perPage, {
-    filter,
-    sort: '-created'
-  });
+  const useCache = page === 1 && !search; // only cache first page unfiltered list
+  const cacheKey = `spaces:p${page}:pp${perPage}:f${filter || 'none'}`;
+  if (!useCache) {
+    return await pb.collection('spaces').getList(page, perPage, { filter, sort: '-created' });
+  }
+  return await getOrSet(serverCaches.lists, cacheKey, async () => {
+    return await pb.collection('spaces').getList(page, perPage, { filter, sort: '-created' });
+  }, { ttlMs: 30_000 });
 }
 
 /** @param {string} id */
@@ -63,11 +68,14 @@ export async function deleteSpace(id) {
 
 /** Get membership count for a space @param {string} spaceId */
 export async function getSpaceMemberCount(spaceId) {
-  const result = await pb.collection('space_members').getList(1, 1, {
-    filter: `space = "${spaceId}"`,
-    totalCount: true
-  });
-  return result.totalItems;
+  const cacheKey = `spaceMemberCount:${spaceId}`;
+  return await getOrSet(serverCaches.lists, cacheKey, async () => {
+    const result = await pb.collection('space_members').getList(1, 1, {
+      filter: `space = "${spaceId}"`,
+      totalCount: true
+    });
+    return result.totalItems;
+  }, { ttlMs: 20_000 });
 }
 
 /** List members of a space @param {string} spaceId */

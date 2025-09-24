@@ -1,5 +1,6 @@
 // Using relative import to avoid alias resolution issues in Vitest
 import { pb } from '../pocketbase.js';
+import { serverCaches, getOrSet } from '../utils/cache.js';
 
 /**
  * Create a new post
@@ -50,31 +51,29 @@ export async function createPost(postData) {
  */
 export async function getPosts(options = {}) {
 	const { page = 1, perPage = 20, scope, space, group } = options;
-	
 	let filter = '';
 	const filterParts = [];
-	
-	if (scope) {
-		filterParts.push(`scope = "${scope}"`);
+	if (scope) filterParts.push(`scope = "${scope}"`);
+	if (space) filterParts.push(`space = "${space}"`);
+	if (group) filterParts.push(`group = "${group}"`);
+	if (filterParts.length > 0) filter = filterParts.join(' && ');
+
+	const useCache = page === 1 && !space && !group && (scope === 'global' || !scope);
+	const cacheKey = `posts:p${page}:pp${perPage}:f${filter || 'none'}`;
+	if (!useCache) {
+		return await pb.collection('posts').getList(page, perPage, {
+			filter,
+			sort: '-created',
+			expand: 'author,space,group'
+		});
 	}
-	
-	if (space) {
-		filterParts.push(`space = "${space}"`);
-	}
-	
-	if (group) {
-		filterParts.push(`group = "${group}"`);
-	}
-	
-	if (filterParts.length > 0) {
-		filter = filterParts.join(' && ');
-	}
-	
-	return await pb.collection('posts').getList(page, perPage, {
-		filter,
-		sort: '-created',
-		expand: 'author,space,group'
-	});
+	return await getOrSet(serverCaches.lists, cacheKey, async () => {
+		return await pb.collection('posts').getList(page, perPage, {
+			filter,
+			sort: '-created',
+			expand: 'author,space,group'
+		});
+	}, { ttlMs: 10_000 });
 }
 
 /**

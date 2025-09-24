@@ -11,8 +11,13 @@ export async function GET({ url }) {
 		const validatedQuery = postQuerySchema.parse(queryParams);
 		
 		const result = await getPosts(validatedQuery);
-		
-		return json(result);
+		// Add short-lived HTTP cache for anonymous global first page to leverage CDN/browser caching
+		const headers = new Headers();
+		const isCacheable = (!validatedQuery.scope || validatedQuery.scope === 'global') && !validatedQuery.space && !validatedQuery.group && (validatedQuery.page == null || Number(validatedQuery.page) === 1);
+		if (isCacheable) {
+			headers.set('Cache-Control', 'public, max-age=5, stale-while-revalidate=30');
+		}
+		return json(result, { headers });
 	} catch (err) {
 		console.error('Error fetching posts:', err);
 		return error(500, 'Failed to fetch posts');

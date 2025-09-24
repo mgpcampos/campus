@@ -139,3 +139,32 @@ Planned / recommended production enhancements:
 - Structured audit logging for moderation actions
 - Optional virus scanning (e.g., ClamAV) for file uploads
 
+## Performance & Caching (Task 12)
+
+Implemented optimizations:
+
+- Server-side in-memory LRU+TTL cache (`src/lib/utils/cache.js`) for: 
+	- First page of global posts feed (10s TTL)
+	- First page of spaces listing (30s TTL)
+	- Space member counts (20s TTL)
+- Client-side stale-while-revalidate query cache store (`src/lib/stores/queryCache.ts`) for lightweight response reuse without bringing a full query lib.
+- PocketBase collection indexes migration (`pb_migrations/1758635000_add_performance_indexes.js`) adding composite indexes for common filters & uniqueness constraints.
+- Lazy loading of comment section in `PostCard.svelte` via dynamic import to reduce initial bundle.
+- Responsive image URL helpers with PocketBase thumbs (`src/lib/utils/images.js`) generating `srcset` for avatars & attachments.
+- Simple perf instrumentation (`src/lib/utils/perf.js`) to warn on slow ops (>200ms) and optional cache miss logging.
+
+Next recommendations for production scale:
+
+- Replace in-process cache with Redis / KV store for horizontal scaling.
+- Add HTTP caching headers (ETag/Last-Modified) and CDN edge caching for public assets and first feed page.
+- Precompute denormalized counters (already partially stored as like/comment counts) via PocketBase before hooks or background jobs.
+- Add bundle analyzer and track JS payload budgets (<150KB gzipped initial route).
+- Implement image format negotiation (WebP/AVIF) and add width-based placeholder (LQIP) pipeline.
+- Add Service Worker for offline caching of shell & last feed snapshot.
+
+Testing:
+
+- `cache.test.js` validates LRU + TTL semantics and getOrSet helper.
+- `images.test.js` covers URL & srcset generation.
+- Additional feed / route benchmarks can be added using Vitest + synthetic timers or Playwright traces.
+
