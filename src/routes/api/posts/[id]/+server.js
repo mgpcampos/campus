@@ -1,6 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import { updatePostSchema } from '$lib/schemas/post.js';
 import { getPost, updatePost, deletePost } from '$lib/services/posts.js';
+import { sanitizeContent } from '$lib/utils/sanitize.js';
 
 /** @type {import('./$types').RequestHandler} */
 export async function GET({ params, locals }) {
@@ -32,6 +33,7 @@ export async function PUT({ params, request, locals }) {
 
 		const body = await request.json();
 		const validatedData = updatePostSchema.parse(body);
+		validatedData.content = sanitizeContent(validatedData.content);
 		
 		const updatedPost = await updatePost(params.id, validatedData);
 		

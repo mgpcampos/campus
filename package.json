@@ -22,7 +22,8 @@
 		"pocketbase": "^0.26.2",
 		"sveltekit-superforms": "^2.27.1",
 		"zod": "^3.25.76",
-		"sharp": "^0.33.5"
+		"sharp": "^0.33.5",
+		"sanitize-html": "^2.17.0"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.2.5",

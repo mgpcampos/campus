@@ -120,3 +120,22 @@ npm test
 ## Environment Variables
 
 - `PUBLIC_POCKETBASE_URL` - PocketBase server URL (default: http://127.0.0.1:8090)
+
+## Security & Validation
+
+The platform implements multiple layers of content safety (Task 11):
+
+- Server-side HTML sanitization via `sanitize-html` (`sanitizeContent`) for posts, comments, and bios
+- Zod schemas for all major entities (`posts`, `comments`, `spaces`, `groups`, `profile`) with length and pattern constraints
+- File upload validation (type, size, count) in `media.js`
+- In-memory rate limiting for write API endpoints (30 write ops/min/IP) in `hooks.server.ts` (replace with Redis for production)
+- Hardened auth cookies: httpOnly, Secure (in production), path-wide, SameSite Lax (Strict on auth routes)
+- Consistent trimming & normalization of whitespace to mitigate hidden payload obfuscation
+
+Planned / recommended production enhancements:
+
+- Redis or Upstash-backed distributed rate limiting
+- CSP headers & security headers (Helmet-equivalent) middleware
+- Structured audit logging for moderation actions
+- Optional virus scanning (e.g., ClamAV) for file uploads
+

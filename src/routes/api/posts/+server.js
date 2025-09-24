@@ -1,5 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import { createPostSchema, postQuerySchema } from '$lib/schemas/post.js';
+import { sanitizeContent } from '$lib/utils/sanitize.js';
 import { createPost, getPosts } from '$lib/services/posts.js';
 import { validateImages } from '$lib/utils/media.js';
 
@@ -46,6 +47,9 @@ export async function POST({ request, locals }) {
 		};
 
 		const validatedData = createPostSchema.parse(postData);
+
+		// Sanitize content to prevent XSS (defense in depth; UI should treat as plain text)
+		validatedData.content = sanitizeContent(validatedData.content);
 
 		// For now, we directly forward files to PocketBase. (Optional future: optimize server-side via sharp.)
 		const newPost = await createPost(validatedData);

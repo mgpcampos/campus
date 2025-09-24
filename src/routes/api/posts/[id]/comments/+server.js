@@ -1,5 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import { z } from 'zod';
+import { sanitizeContent } from '$lib/utils/sanitize.js';
 
 const commentSchema = z.object({
 	content: z.string().min(1, 'Comment content is required').max(1000, 'Comment too long')
@@ -47,11 +48,13 @@ export async function POST({ params, locals, request }) {
 		const body = await request.json();
 		const { content } = commentSchema.parse(body);
 
+		const safeContent = sanitizeContent(content);
+
 		// Create the comment
 		const comment = await locals.pb.collection('comments').create({
 			post: postId,
 			author: userId,
-			content: content.trim()
+			content: safeContent
 		});
 
 		// Update post comment count

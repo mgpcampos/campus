@@ -3,6 +3,7 @@ import { zod } from 'sveltekit-superforms/adapters';
 import { fail, redirect } from '@sveltejs/kit';
 import { profileSchema } from '$lib/utils/validation.js';
 import { getErrorMessage } from '$lib/utils/errors.js';
+import { sanitizeContent } from '$lib/utils/sanitize.js';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ locals }) {
@@ -54,7 +55,7 @@ export const actions = {
 			await locals.pb.collection('users').update(userId, {
 				name: form.data.name,
 				username: form.data.username,
-				bio: form.data.bio || ''
+				bio: sanitizeContent(form.data.bio || '')
 			});
 
 			return message(form, {
