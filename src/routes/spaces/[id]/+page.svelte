@@ -2,6 +2,7 @@
   export let data;
   let { space, memberCount, membershipRole, member, posts } = data;
   let joining = false;
+  /** @param {SubmitEvent} e */
   async function join(e) {
     e.preventDefault();
     joining = true;
@@ -10,6 +11,7 @@
     if (res.ok) location.reload();
     joining = false;
   }
+  /** @param {SubmitEvent} e */
   async function leave(e) {
     e.preventDefault();
     joining = true;

@@ -2,6 +2,8 @@
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { currentUser, pb } from '$lib/pocketbase.js';
 	import { getComments, createComment, deleteComment } from '$lib/services/comments.js';
+	import { canModerateComment } from '$lib/services/permissions.js';
+	import { reportContent } from '$lib/services/reports.js';
 	import { formatDistanceToNow } from 'date-fns';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Textarea } from '$lib/components/ui/textarea/index.js';
@@ -100,7 +102,7 @@
 
 		submitting = true;
 		try {
-			const comment = await createComment(postId, newCommentContent);
+			const comment = await createComment(postId, newCommentContent, undefined);
 			
 			// Add to local state (will also be handled by real-time update)
 			comments = [...comments, comment];
@@ -259,15 +261,40 @@
 										</p>
 									</div>
 									
-									{#if $currentUser && comment.expand?.author?.id === $currentUser.id}
-										<Button
-											variant="ghost"
-											size="sm"
-											onclick={() => handleDeleteComment(comment.id)}
-											class="h-6 w-6 p-0 text-gray-400 hover:text-red-500"
-										>
-											<Trash2 size={12} />
-										</Button>
+									{#if $currentUser}
+										<!-- Determine ownership and moderation -->
+										{#if comment.expand?.author?.id === $currentUser.id}
+											<Button
+												variant="ghost"
+												size="sm"
+												onclick={() => handleDeleteComment(comment.id)}
+												class="h-6 w-6 p-0 text-gray-400 hover:text-red-500"
+											>
+												<Trash2 size={12} />
+											</Button>
+										{:else}
+											<!-- Show delete if moderator -->
+											{#await canModerateComment(comment) then allowed}
+												{#if allowed}
+													<Button
+														variant="ghost"
+														size="sm"
+														onclick={() => handleDeleteComment(comment.id)}
+														class="h-6 w-6 p-0 text-gray-400 hover:text-red-500"
+													>
+														<Trash2 size={12} />
+													</Button>
+												{/if}
+											{/await}
+											<Button
+												variant="ghost"
+												size="sm"
+												onclick={async () => { try { await reportContent({ targetType: 'comment', targetId: comment.id, reason: 'inappropriate' }); toast.success('Reported'); } catch(e){ toast.error('Report failed'); } }}
+												class="h-6 w-6 p-0 text-gray-400 hover:text-yellow-500"
+											>
+												<Trash2 size={12} />
+											</Button>
+										{/if}
 									{/if}
 								</div>
 								

@@ -6,7 +6,8 @@ declare global {
 	namespace App {
 		// interface Error {}
 		interface Locals {
-			pb: PocketBase;
+				pb: PocketBase;
+				user?: import('pocketbase').RecordModel | null;
 		}
 		// interface PageData {}
 		// interface PageState {}

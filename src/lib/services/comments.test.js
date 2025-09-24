@@ -58,7 +58,7 @@ describe('Comments Service', () => {
 			mockPostsCollection.getOne.mockResolvedValue({ id: postId, commentCount: 5 });
 			mockPostsCollection.update.mockResolvedValue({ id: postId, commentCount: 6 });
 
-			const result = await createComment(postId, content);
+			const result = await createComment(postId, content, undefined);
 
 			expect(mockCommentsCollection.create).toHaveBeenCalledWith({
 				post: postId,
@@ -72,15 +72,15 @@ describe('Comments Service', () => {
 		it('should throw error when user is not authenticated', async () => {
 			(mockPb.authStore).model = null;
 
-			await expect(createComment('post123', 'test')).rejects.toThrow('User must be authenticated to comment');
+			await expect(createComment('post123', 'test', undefined)).rejects.toThrow('User must be authenticated to comment');
 		});
 
 		it('should throw error when content is empty', async () => {
 			// Ensure user is authenticated
 			(mockPb.authStore).model = { id: 'user123' };
 			
-			await expect(createComment('post123', '')).rejects.toThrow('Comment content cannot be empty');
-			await expect(createComment('post123', '   ')).rejects.toThrow('Comment content cannot be empty');
+			await expect(createComment('post123', '', undefined)).rejects.toThrow('Comment content cannot be empty');
+			await expect(createComment('post123', '   ', undefined)).rejects.toThrow('Comment content cannot be empty');
 		});
 
 		it('should trim whitespace from content', async () => {
@@ -96,7 +96,7 @@ describe('Comments Service', () => {
 			mockPostsCollection.getOne.mockResolvedValue({ id: postId, commentCount: 0 });
 			mockPostsCollection.update.mockResolvedValue({ id: postId, commentCount: 1 });
 
-			await createComment(postId, content);
+			await createComment(postId, content, undefined);
 
 			expect(mockCommentsCollection.create).toHaveBeenCalledWith({
 				post: postId,

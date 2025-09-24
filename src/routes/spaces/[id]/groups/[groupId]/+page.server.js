@@ -2,7 +2,7 @@ import { redirect, fail } from '@sveltejs/kit';
 import { getGroup, getGroupMemberCount, getGroupMembershipRole, joinGroup, leaveGroup } from '$lib/services/groups.js';
 import { getPosts } from '$lib/services/posts.js';
 
-/** @param {{ params:any, locals:any }} ctx */
+/** @type {import('./$types').PageServerLoad} */
 export async function load({ params, locals }) {
   if (!locals.user) throw redirect(302, '/auth/login');
   const group = await getGroup(params.groupId);
@@ -13,14 +13,13 @@ export async function load({ params, locals }) {
   return { group, memberCount, membershipRole, member, posts };
 }
 
+/** @type {import('./$types').Actions} */
 export const actions = {
-  /** @param {{ params:any, locals:any }} ctx */
   join: async ({ params, locals }) => {
     if (!locals.user) throw redirect(302, '/auth/login');
     try { await joinGroup(params.groupId); } catch { return fail(400, { error: 'Failed to join group' }); }
     return { success: true };
   },
-  /** @param {{ params:any, locals:any }} ctx */
   leave: async ({ params, locals }) => {
     if (!locals.user) throw redirect(302, '/auth/login');
     try { await leaveGroup(params.groupId); } catch { return fail(400, { error: 'Failed to leave group' }); }

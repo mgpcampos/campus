@@ -1,8 +1,9 @@
 import { redirect, fail } from '@sveltejs/kit';
-import { getSpace, getSpaceMembers, getSpaceMemberCount } from '$lib/services/spaces.js';
-import { joinSpace, leaveSpace, getMembershipRole, isMember } from '$lib/services/memberships.js';
+import { getSpace, getSpaceMemberCount } from '$lib/services/spaces.js';
+import { joinSpace, leaveSpace, getMembershipRole } from '$lib/services/memberships.js';
 import { getPosts } from '$lib/services/posts.js';
 
+/** @type {import('./$types').PageServerLoad} */
 export async function load({ params, locals }) {
   if (!locals.user) throw redirect(302, '/auth/login');
   const id = params.id;
@@ -14,12 +15,13 @@ export async function load({ params, locals }) {
   return { space, memberCount, membershipRole, member, posts };
 }
 
+/** @type {import('./$types').Actions} */
 export const actions = {
   join: async ({ params, locals }) => {
     if (!locals.user) throw redirect(302, '/auth/login');
     try {
       await joinSpace(params.id);
-    } catch (e) {
+    } catch {
       return fail(400, { error: 'Failed to join space' });
     }
     return { success: true };
@@ -28,7 +30,7 @@ export const actions = {
     if (!locals.user) throw redirect(302, '/auth/login');
     try {
       await leaveSpace(params.id);
-    } catch (e) {
+    } catch {
       return fail(400, { error: 'Failed to leave space' });
     }
     return { success: true };

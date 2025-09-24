@@ -93,7 +93,7 @@ describe('Post Interactions Integration', () => {
 		mockPostsCollection.getOne.mockResolvedValue({ id: postId, commentCount: 0 });
 		mockPostsCollection.update.mockResolvedValueOnce({ id: postId, commentCount: 1 });
 
-		const commentResult = await createComment(postId, commentContent);
+		const commentResult = await createComment(postId, commentContent, undefined);
 		expect(commentResult).toEqual(expandedComment);
 
 		// Test getting comments
@@ -149,6 +149,6 @@ describe('Post Interactions Integration', () => {
 		// Test comment error handling
 		mockCommentsCollection.create.mockRejectedValue(new Error('Database error'));
 
-		await expect(createComment(postId, 'test comment')).rejects.toThrow('Database error');
+		await expect(createComment(postId, 'test comment', undefined)).rejects.toThrow('Database error');
 	});
 });

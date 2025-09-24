@@ -24,6 +24,17 @@
 
 	$: author = post.expand?.author;
 	$: isOwner = $currentUser && author && $currentUser.id === author.id;
+	let canModerate = false;
+	import { canModeratePost } from '$lib/services/permissions.js';
+	import { reportContent } from '$lib/services/reports.js';
+
+	onMount(async () => {
+		if ($currentUser) {
+			try {
+				canModerate = await canModeratePost(post);
+			} catch (e) { console.warn('perm check failed', e); }
+		}
+	});
 	$: formattedDate = formatDistanceToNow(new Date(post.created), { addSuffix: true });
 	$: linkedContent = linkifyContent(post.content);
 	$: canInteract = $currentUser !== null;
@@ -149,7 +160,7 @@
 			<div class="flex items-center space-x-2">
 				<span class="text-xs text-gray-500">{formattedDate}</span>
 				
-				{#if isOwner && showActions}
+				{#if (isOwner || canModerate) && showActions}
 					<DropdownMenu.Root>
 						<DropdownMenu.Trigger>
 							<Button variant="ghost" size="sm" class="h-8 w-8 p-0">
@@ -157,14 +168,24 @@
 							</Button>
 						</DropdownMenu.Trigger>
 						<DropdownMenu.Content align="end">
-							<DropdownMenu.Item onclick={handleEdit}>
-								<Edit size={16} class="mr-2" />
-								Edit
-							</DropdownMenu.Item>
-							<DropdownMenu.Item onclick={handleDelete} class="text-red-600">
-								<Trash2 size={16} class="mr-2" />
-								Delete
-							</DropdownMenu.Item>
+							{#if isOwner}
+								<DropdownMenu.Item onclick={handleEdit}>
+									<Edit size={16} class="mr-2" />
+									Edit
+								</DropdownMenu.Item>
+							{/if}
+							{#if canModerate}
+								<DropdownMenu.Item onclick={handleDelete} class="text-red-600">
+									<Trash2 size={16} class="mr-2" />
+									Delete
+								</DropdownMenu.Item>
+							{/if}
+							{#if !isOwner}
+								<DropdownMenu.Item onclick={async () => { try { await reportContent({ targetType: 'post', targetId: post.id, reason: 'inappropriate' }); toast.success('Reported'); } catch(e){ toast.error('Report failed'); } }}>
+									<Trash2 size={16} class="mr-2" />
+									Report
+								</DropdownMenu.Item>
+							{/if}
 						</DropdownMenu.Content>
 					</DropdownMenu.Root>
 				{/if}
