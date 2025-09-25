@@ -19,11 +19,9 @@ export async function isSpaceOwner(spaceId) {
 export async function isSpaceModerator(spaceId) {
 	const uid = currentUserId();
 	if (!uid) return false;
-	const res = await pb
-		.collection('space_members')
-		.getList(1, 1, {
-			filter: `space = "${spaceId}" && user = "${uid}" && (role = "moderator" || role = "owner")`
-		});
+	const res = await pb.collection('space_members').getList(1, 1, {
+		filter: `space = "${spaceId}" && user = "${uid}" && (role = "moderator" || role = "owner")`
+	});
 	return res.items.length > 0;
 }
 /** @param {string} groupId */

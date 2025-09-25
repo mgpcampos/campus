@@ -15,6 +15,8 @@ export default defineConfig(({ mode }) => ({
 		conditions: mode === 'test' ? ['browser'] : []
 	},
 	test: {
+		include: ['src/**/*.{test,spec}.{js,ts}', 'tests/integration/**/*.{test,spec}.{js,ts}'],
+		exclude: ['tests/e2e/**/*', 'node_modules/**/*'],
 		environment: 'jsdom',
 		setupFiles: ['./vitest-setup-client.ts']
 	}

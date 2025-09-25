@@ -18,12 +18,10 @@
 		}
 		try {
 			// Fetch posts by current user that have attachments
-			const result = await pb
-				.collection('posts')
-				.getList(1, 50, {
-					filter: `author = "${$currentUser.id}" && attachments != ''`,
-					sort: '-created'
-				});
+			const result = await pb.collection('posts').getList(1, 50, {
+				filter: `author = "${$currentUser.id}" && attachments != ''`,
+				sort: '-created'
+			});
 			posts = result.items.filter((p) => Array.isArray(p.attachments) && p.attachments.length > 0);
 		} catch (e: any) {
 			error = 'Failed to load uploads';
