@@ -1,6 +1,7 @@
 node_modules
 
 # Editor-specific
+.clinerules
 .github
 .idea
 .kiro

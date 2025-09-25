@@ -1,35 +1,26 @@
 import { describe, it, expect } from 'vitest';
-import { 
-	emailSchema, 
-	passwordSchema, 
-	usernameSchema, 
-	registerSchema, 
-	loginSchema, 
-	profileSchema 
+import {
+	emailSchema,
+	passwordSchema,
+	usernameSchema,
+	registerSchema,
+	loginSchema,
+	profileSchema
 } from './validation.js';
 
 describe('Email validation', () => {
 	it('should accept valid email addresses', () => {
-		const validEmails = [
-			'test@example.com',
-			'user.name@domain.co.uk',
-			'student@university.edu'
-		];
+		const validEmails = ['test@example.com', 'user.name@domain.co.uk', 'student@university.edu'];
 
-		validEmails.forEach(email => {
+		validEmails.forEach((email) => {
 			expect(() => emailSchema.parse(email)).not.toThrow();
 		});
 	});
 
 	it('should reject invalid email addresses', () => {
-		const invalidEmails = [
-			'invalid-email',
-			'@domain.com',
-			'user@',
-			''
-		];
+		const invalidEmails = ['invalid-email', '@domain.com', 'user@', ''];
 
-		invalidEmails.forEach(email => {
+		invalidEmails.forEach((email) => {
 			expect(() => emailSchema.parse(email)).toThrow();
 		});
 	});
@@ -37,25 +28,17 @@ describe('Email validation', () => {
 
 describe('Password validation', () => {
 	it('should accept passwords with 8+ characters', () => {
-		const validPasswords = [
-			'password123',
-			'mySecurePass',
-			'12345678'
-		];
+		const validPasswords = ['password123', 'mySecurePass', '12345678'];
 
-		validPasswords.forEach(password => {
+		validPasswords.forEach((password) => {
 			expect(() => passwordSchema.parse(password)).not.toThrow();
 		});
 	});
 
 	it('should reject passwords with less than 8 characters', () => {
-		const invalidPasswords = [
-			'short',
-			'1234567',
-			''
-		];
+		const invalidPasswords = ['short', '1234567', ''];
 
-		invalidPasswords.forEach(password => {
+		invalidPasswords.forEach((password) => {
 			expect(() => passwordSchema.parse(password)).toThrow();
 		});
 	});
@@ -63,14 +46,9 @@ describe('Password validation', () => {
 
 describe('Username validation', () => {
 	it('should accept valid usernames', () => {
-		const validUsernames = [
-			'user123',
-			'test_user',
-			'JohnDoe',
-			'abc'
-		];
+		const validUsernames = ['user123', 'test_user', 'JohnDoe', 'abc'];
 
-		validUsernames.forEach(username => {
+		validUsernames.forEach((username) => {
 			expect(() => usernameSchema.parse(username)).not.toThrow();
 		});
 	});
@@ -85,7 +63,7 @@ describe('Username validation', () => {
 			''
 		];
 
-		invalidUsernames.forEach(username => {
+		invalidUsernames.forEach((username) => {
 			expect(() => usernameSchema.parse(username)).toThrow();
 		});
 	});

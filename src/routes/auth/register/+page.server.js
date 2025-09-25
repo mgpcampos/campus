@@ -33,10 +33,7 @@ export const actions = {
 			const user = await locals.pb.collection('users').create(userData);
 
 			// Automatically log in the user after registration
-			await locals.pb.collection('users').authWithPassword(
-				form.data.email,
-				form.data.password
-			);
+			await locals.pb.collection('users').authWithPassword(form.data.email, form.data.password);
 
 			throw redirect(302, '/');
 		} catch (error) {

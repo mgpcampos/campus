@@ -14,11 +14,15 @@
 	let CommentSectionModule: any = null;
 	async function loadCommentSection() {
 		if (!CommentSectionPromise) {
-			CommentSectionPromise = import('./CommentSection.svelte').then(m => { CommentSectionModule = m.default; return m; });
+			CommentSectionPromise = import('./CommentSection.svelte').then((m) => {
+				CommentSectionModule = m.default;
+				return m;
+			});
 		}
 		return CommentSectionPromise;
 	}
 	import { toast } from 'svelte-sonner';
+	import { notifyError, withErrorToast } from '$lib/utils/errors.js';
 
 	export let post: any;
 	export let showActions = true;
@@ -41,7 +45,9 @@
 		if ($currentUser) {
 			try {
 				canModerate = await canModeratePost(post);
-			} catch (e) { console.warn('perm check failed', e); }
+			} catch (e) {
+				console.warn('perm check failed', e);
+			}
 		}
 	});
 	$: formattedDate = formatDistanceToNow(new Date(post.created), { addSuffix: true });
@@ -65,8 +71,12 @@
 				}
 			});
 			unsubscribeFn = () => {
-				try { unsub(); } catch {}
-				try { pb.collection('posts').unsubscribe(post.id); } catch {}
+				try {
+					unsub();
+				} catch {}
+				try {
+					pb.collection('posts').unsubscribe(post.id);
+				} catch {}
 			};
 		})();
 		return () => unsubscribeFn();
@@ -83,7 +93,7 @@
 			const before = result.slice(0, match.index + offset);
 			const after = result.slice(match.lastIndex + offset);
 			const link = `<a href="${match.url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">${match.text}</a>`;
-			
+
 			result = before + link + after;
 			offset += link.length - match.text.length;
 		});
@@ -97,7 +107,7 @@
 		// Optimistic update
 		const wasLiked = isLiked;
 		const oldCount = likeCount;
-		
+
 		isLiked = !isLiked;
 		likeCount = isLiked ? likeCount + 1 : Math.max(0, likeCount - 1);
 		likePending = true;
@@ -110,8 +120,7 @@
 			// Revert optimistic update on error
 			isLiked = wasLiked;
 			likeCount = oldCount;
-			console.error('Error toggling like:', error);
-			toast.error('Failed to update like');
+			await notifyError(error, { context: 'toggleLike' });
 		} finally {
 			likePending = false;
 		}
@@ -147,34 +156,42 @@
 	<Card.Header class="pb-3">
 		<div class="flex items-start justify-between">
 			<div class="flex items-center space-x-3">
-				<a href={author ? `/profile/${author.username}` : '#'} class="group focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full">
+				<a
+					href={author ? `/profile/${author.username}` : '#'}
+					class="group rounded-full focus:ring-2 focus:ring-blue-500 focus:outline-none"
+				>
 					{#if author?.avatar}
 						<img
 							src={pb.files.getUrl(author, author.avatar, { thumb: '40x40' })}
 							alt="{author.name}'s avatar"
-							class="w-10 h-10 rounded-full object-cover ring-2 ring-transparent group-hover:ring-blue-200 transition"
+							class="h-10 w-10 rounded-full object-cover ring-2 ring-transparent transition group-hover:ring-blue-200"
 						/>
 					{:else}
-						<div class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center ring-2 ring-transparent group-hover:ring-blue-200 transition">
-							<span class="text-gray-600 font-medium">
+						<div
+							class="flex h-10 w-10 items-center justify-center rounded-full bg-gray-300 ring-2 ring-transparent transition group-hover:ring-blue-200"
+						>
+							<span class="font-medium text-gray-600">
 								{author?.name?.charAt(0)?.toUpperCase() || '?'}
 							</span>
 						</div>
 					{/if}
 				</a>
 				<div>
-					<h3 class="font-semibold text-sm">
-						<a href={author ? `/profile/${author.username}` : '#'} class="hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-sm">
+					<h3 class="text-sm font-semibold">
+						<a
+							href={author ? `/profile/${author.username}` : '#'}
+							class="rounded-sm hover:underline focus:ring-2 focus:ring-blue-500 focus:outline-none"
+						>
 							{author?.name || 'Unknown User'}
 						</a>
 					</h3>
 					<p class="text-xs text-gray-500">@{author?.username || 'unknown'}</p>
 				</div>
 			</div>
-			
+
 			<div class="flex items-center space-x-2">
 				<span class="text-xs text-gray-500">{formattedDate}</span>
-				
+
 				{#if (isOwner || canModerate) && showActions}
 					<DropdownMenu.Root>
 						<DropdownMenu.Trigger>
@@ -196,7 +213,20 @@
 								</DropdownMenu.Item>
 							{/if}
 							{#if !isOwner}
-								<DropdownMenu.Item onclick={async () => { try { await reportContent({ targetType: 'post', targetId: post.id, reason: 'inappropriate' }); toast.success('Reported'); } catch(e){ toast.error('Report failed'); } }}>
+								<DropdownMenu.Item
+									onclick={async () => {
+										try {
+											await reportContent({
+												targetType: 'post',
+												targetId: post.id,
+												reason: 'inappropriate'
+											});
+											toast.success('Reported');
+										} catch (e) {
+											await notifyError(e, { context: 'reportPost' });
+										}
+									}}
+								>
 									<Trash2 size={16} class="mr-2" />
 									Report
 								</DropdownMenu.Item>
@@ -207,46 +237,46 @@
 			</div>
 		</div>
 	</Card.Header>
-	
+
 	<Card.Content class="pt-0">
 		<div class="prose prose-sm max-w-none">
 			{@html linkedContent}
 		</div>
-		
+
 		<!-- Image attachments -->
 		{#if post.attachments && post.attachments.length > 0}
 			<div class="mt-3 grid gap-2 {post.attachments.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}">
 				{#each post.attachments as attachment}
 					<!-- Using dedicated component for future responsive sources -->
-					<ImageAttachment 
-						src={getFileUrl(attachment)} 
-						alt="Post attachment" 
+					<ImageAttachment
+						src={getFileUrl(attachment)}
+						alt="Post attachment"
 						className={post.attachments.length === 1 ? 'max-h-96' : 'h-32'}
 					/>
 				{/each}
 			</div>
 		{/if}
 	</Card.Content>
-	
+
 	{#if showActions}
 		<Card.Footer class="pt-3">
-			<div class="flex items-center space-x-4 mb-3">
+			<div class="mb-3 flex items-center space-x-4">
 				<Button
 					variant="ghost"
 					size="sm"
 					onclick={handleLike}
 					disabled={!canInteract || likePending}
-					class="text-gray-600 hover:text-red-500 transition-colors {isLiked ? 'text-red-500' : ''}"
+					class="text-gray-600 transition-colors hover:text-red-500 {isLiked ? 'text-red-500' : ''}"
 				>
 					<Heart size={16} class="mr-1 {isLiked ? 'fill-current' : ''}" />
 					{likeCount}
 				</Button>
-				
+
 				<Button
 					variant="ghost"
 					size="sm"
 					onclick={handleComment}
-					class="text-gray-600 hover:text-blue-500 transition-colors"
+					class="text-gray-600 transition-colors hover:text-blue-500"
 				>
 					<MessageCircle size={16} class="mr-1" />
 					{commentCount}
@@ -255,13 +285,18 @@
 
 			<!-- Comment Section (lazy) -->
 			{#if CommentSectionModule}
-				<svelte:component this={CommentSectionModule}
+				<svelte:component
+					this={CommentSectionModule}
 					postId={post.id}
 					initialCommentCount={commentCount}
 					on:commentCountChanged={handleCommentCountChanged}
 				/>
 			{:else}
-				<button class="text-xs text-blue-600 hover:underline" on:click={loadCommentSection} type="button">Load comments...</button>
+				<button
+					class="text-xs text-blue-600 hover:underline"
+					onclick={loadCommentSection}
+					type="button">Load comments...</button
+				>
 			{/if}
 		</Card.Footer>
 	{/if}

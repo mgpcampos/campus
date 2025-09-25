@@ -10,16 +10,16 @@ const SLOW_THRESHOLD_MS = 200; // adjust as needed
  * @param {() => Promise<T>} fn
  * @returns {Promise<T>}
  */
-export async function timed(label, fn){
-  const start = performance.now();
-  try {
-    return await fn();
-  } finally {
-    const dur = performance.now() - start;
-    if (dur > SLOW_THRESHOLD_MS) {
-      console.warn(`[perf] slow operation '${label}' ${dur.toFixed(1)}ms`);
-    }
-  }
+export async function timed(label, fn) {
+	const start = performance.now();
+	try {
+		return await fn();
+	} finally {
+		const dur = performance.now() - start;
+		if (dur > SLOW_THRESHOLD_MS) {
+			console.warn(`[perf] slow operation '${label}' ${dur.toFixed(1)}ms`);
+		}
+	}
 }
 
 /** Log cache miss if provided flag */
@@ -27,6 +27,6 @@ export async function timed(label, fn){
  * @param {string} cacheName
  * @param {string} key
  */
-export function logCacheMiss(cacheName, key){
-  console.debug(`[cache] miss ${cacheName} -> ${key}`);
+export function logCacheMiss(cacheName, key) {
+	console.debug(`[cache] miss ${cacheName} -> ${key}`);
 }

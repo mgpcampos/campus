@@ -13,17 +13,20 @@ export async function load({ locals }) {
 	}
 
 	const user = locals.pb.authStore.model;
-	
+
 	if (!user) {
 		throw redirect(302, '/auth/login?returnUrl=/profile');
 	}
-	
+
 	// Pre-populate form with current user data
-	const form = await superValidate({
-		name: user.name || '',
-		username: user.username || '',
-		bio: user.bio || ''
-	}, zod(profileSchema));
+	const form = await superValidate(
+		{
+			name: user.name || '',
+			username: user.username || '',
+			bio: user.bio || ''
+		},
+		zod(profileSchema)
+	);
 
 	return {
 		form,

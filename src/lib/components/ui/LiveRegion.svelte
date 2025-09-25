@@ -11,7 +11,14 @@
 		message?: string;
 		priority?: 'polite' | 'assertive';
 		atomic?: boolean;
-		relevant?: 'additions' | 'removals' | 'text' | 'additions text' | 'additions removals' | 'removals text' | 'all';
+		relevant?:
+			| 'additions'
+			| 'removals'
+			| 'text'
+			| 'additions text'
+			| 'additions removals'
+			| 'removals text'
+			| 'all';
 		class?: string;
 	} = $props();
 
@@ -22,12 +29,12 @@
 		if (regionElement) {
 			// Clear first to ensure screen readers pick up the change
 			regionElement.textContent = '';
-			
+
 			// Set the priority if different
 			if (urgency !== priority) {
 				regionElement.setAttribute('aria-live', urgency);
 			}
-			
+
 			// Small delay to ensure screen readers detect the change
 			setTimeout(() => {
 				regionElement.textContent = text;

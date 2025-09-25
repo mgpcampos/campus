@@ -4,9 +4,9 @@
 </script>
 
 <div class="p-8">
-	<h1 class="text-4xl font-bold mb-4">Test Page</h1>
-	<p class="text-lg text-muted-foreground mb-6">This is a test to see if components are working.</p>
-	
+	<h1 class="mb-4 text-4xl font-bold">Test Page</h1>
+	<p class="mb-6 text-lg text-muted-foreground">This is a test to see if components are working.</p>
+
 	<Card.Root class="max-w-md">
 		<Card.Header>
 			<Card.Title>Test Card</Card.Title>

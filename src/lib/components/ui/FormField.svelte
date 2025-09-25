@@ -61,7 +61,10 @@
 </script>
 
 <div class="space-y-2 {className}">
-	<Label for={inputId} class={required ? "after:content-['*'] after:ml-0.5 after:text-destructive" : ''}>
+	<Label
+		for={inputId}
+		class={required ? "after:ml-0.5 after:text-destructive after:content-['*']" : ''}
+	>
 		{label}
 	</Label>
 
@@ -95,7 +98,10 @@
 				{disabled}
 				{readonly}
 				maxlength={maxLength}
-				class="{error ? 'border-destructive focus-visible:ring-destructive' : ''} {type === 'password' ? 'pr-10' : ''} {inputClass}"
+				class="{error ? 'border-destructive focus-visible:ring-destructive' : ''} {type ===
+				'password'
+					? 'pr-10'
+					: ''} {inputClass}"
 				aria-describedby="{error ? errorId : ''} {helpText ? helpId : ''}"
 				aria-invalid={error ? 'true' : 'false'}
 				oninput={handleInput}
@@ -108,7 +114,7 @@
 					type="button"
 					variant="ghost"
 					size="sm"
-					class="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+					class="absolute top-0 right-0 h-full px-3 py-2 hover:bg-transparent"
 					onclick={togglePasswordVisibility}
 					aria-label={showPassword ? 'Hide password' : 'Show password'}
 				>
@@ -136,7 +142,7 @@
 	{/if}
 
 	{#if maxLength && type === 'textarea'}
-		<p class="text-xs text-muted-foreground text-right">
+		<p class="text-right text-xs text-muted-foreground">
 			{value.toString().length}/{maxLength}
 		</p>
 	{/if}

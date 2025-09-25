@@ -51,7 +51,7 @@
 </script>
 
 <Dialog.Root bind:open onOpenChange={handleOpenChange}>
-	<Dialog.Content 
+	<Dialog.Content
 		class="{sizeClasses[size]} {className}"
 		onInteractOutside={closeOnOutsideClick ? undefined : (e) => e.preventDefault()}
 		onEscapeKeydown={closeOnEscape ? undefined : (e) => e.preventDefault()}
@@ -66,11 +66,11 @@
 						<Dialog.Description>{description}</Dialog.Description>
 					{/if}
 				</div>
-				
+
 				{#if showCloseButton}
 					<Dialog.Close>
-						<Button 
-							variant="ghost" 
+						<Button
+							variant="ghost"
 							size="sm"
 							class="h-6 w-6 p-0"
 							onclick={handleClose}
@@ -82,7 +82,7 @@
 				{/if}
 			</Dialog.Header>
 		{/if}
-		
+
 		{@render children?.()}
 	</Dialog.Content>
 </Dialog.Root>

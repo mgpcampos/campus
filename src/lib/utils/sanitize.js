@@ -2,11 +2,25 @@ import sanitizeHtml from 'sanitize-html';
 
 // Define a conservative allowlist: basic formatting only
 const allowedTags = [
-  'b','i','em','strong','u','s','p','br','ul','ol','li','blockquote','code','pre','span'
+	'b',
+	'i',
+	'em',
+	'strong',
+	'u',
+	's',
+	'p',
+	'br',
+	'ul',
+	'ol',
+	'li',
+	'blockquote',
+	'code',
+	'pre',
+	'span'
 ];
 
 const allowedAttributes = {
-  span: ['class']
+	span: ['class']
 };
 
 /**
@@ -16,19 +30,19 @@ const allowedAttributes = {
  * @returns {string}
  */
 export function sanitizeContent(input = '') {
-  if (typeof input !== 'string') return '';
-  const trimmed = input.trim();
-  if (!trimmed) return '';
-  const cleaned = sanitizeHtml(trimmed, {
-    allowedTags,
-    allowedAttributes,
-    disallowedTagsMode: 'discard',
-    // Transformations: collapse multiple spaces and newlines
-    textFilter(text) {
-      return text.replace(/\s+/g, ' ');
-    }
-  });
-  return cleaned;
+	if (typeof input !== 'string') return '';
+	const trimmed = input.trim();
+	if (!trimmed) return '';
+	const cleaned = sanitizeHtml(trimmed, {
+		allowedTags,
+		allowedAttributes,
+		disallowedTagsMode: 'discard',
+		// Transformations: collapse multiple spaces and newlines
+		textFilter(text) {
+			return text.replace(/\s+/g, ' ');
+		}
+	});
+	return cleaned;
 }
 
 /**
@@ -36,5 +50,5 @@ export function sanitizeContent(input = '') {
  * @param {string} input
  */
 export function sanitizePlainText(input = '') {
-  return sanitizeHtml(input || '', { allowedTags: [], allowedAttributes: {} });
+	return sanitizeHtml(input || '', { allowedTags: [], allowedAttributes: {} });
 }

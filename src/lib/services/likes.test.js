@@ -18,21 +18,21 @@ describe('Likes Service', () => {
 
 	beforeEach(async () => {
 		vi.clearAllMocks();
-		
+
 		// Import the mocked module
 		const { pb } = await import('../pocketbase.js');
 		mockPb = pb;
-		
+
 		// Reset auth state (cast to any to bypass readonly typing)
-		/** @type {any} */(mockPb.authStore).model = { id: 'user123' };
-		
+		/** @type {any} */ (mockPb.authStore).model = { id: 'user123' };
+
 		mockLikesCollection = {
 			getFirstListItem: vi.fn(),
 			create: vi.fn(),
 			delete: vi.fn(),
 			getList: vi.fn()
 		};
-		
+
 		mockPostsCollection = {
 			getOne: vi.fn(),
 			update: vi.fn()
@@ -48,14 +48,14 @@ describe('Likes Service', () => {
 	describe('toggleLike', () => {
 		it('should create a like when user has not liked the post', async () => {
 			const postId = 'post123';
-			
+
 			// Mock no existing like
 			mockLikesCollection.getFirstListItem.mockRejectedValue(new Error('Not found'));
-			
+
 			// Mock post data
 			mockPostsCollection.getOne.mockResolvedValue({ id: postId, likeCount: 5 });
 			mockPostsCollection.update.mockResolvedValue({ id: postId, likeCount: 6 });
-			
+
 			// Mock like creation
 			mockLikesCollection.create.mockResolvedValue({ id: 'like123' });
 
@@ -72,14 +72,14 @@ describe('Likes Service', () => {
 		it('should remove a like when user has already liked the post', async () => {
 			const postId = 'post123';
 			const existingLike = { id: 'like123' };
-			
+
 			// Mock existing like
 			mockLikesCollection.getFirstListItem.mockResolvedValue(existingLike);
-			
+
 			// Mock post data
 			mockPostsCollection.getOne.mockResolvedValue({ id: postId, likeCount: 5 });
 			mockPostsCollection.update.mockResolvedValue({ id: postId, likeCount: 4 });
-			
+
 			// Mock like deletion
 			mockLikesCollection.delete.mockResolvedValue(true);
 
@@ -93,16 +93,18 @@ describe('Likes Service', () => {
 		it('should throw error when user is not authenticated', async () => {
 			mockPb.authStore.model = null;
 
-			await expect(toggleLike('post123')).rejects.toThrow('User must be authenticated to like posts');
+			await expect(toggleLike('post123')).rejects.toThrow(
+				'User must be authenticated to like posts'
+			);
 		});
 
 		it('should handle minimum like count of 0', async () => {
 			const postId = 'post123';
 			const existingLike = { id: 'like123' };
-			
+
 			// Ensure user is authenticated
 			mockPb.authStore.model = { id: 'user123' };
-			
+
 			mockLikesCollection.getFirstListItem.mockResolvedValue(existingLike);
 			mockPostsCollection.getOne.mockResolvedValue({ id: postId, likeCount: 1 });
 			mockPostsCollection.update.mockResolvedValue({ id: postId, likeCount: 0 });
@@ -118,7 +120,7 @@ describe('Likes Service', () => {
 		it('should return true when user has liked the post', async () => {
 			// Ensure user is authenticated
 			mockPb.authStore.model = { id: 'user123' };
-			
+
 			mockLikesCollection.getFirstListItem.mockResolvedValue({ id: 'like123' });
 
 			const result = await hasUserLikedPost('post123');

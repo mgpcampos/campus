@@ -1,5 +1,6 @@
 // Using relative import to avoid alias resolution issues in Vitest
 import { pb } from '../pocketbase.js';
+import { normalizeError } from '../utils/errors.js';
 
 /**
  * @typedef {import('pocketbase').RecordModel} RecordModel
@@ -66,7 +67,7 @@ export async function createComment(postId, content, parentId) {
 		});
 	} catch (error) {
 		console.error('Error creating comment:', error);
-		throw error;
+		throw normalizeError(error, { context: 'createComment' });
 	}
 }
 
@@ -90,11 +91,13 @@ export async function createComment(postId, content, parentId) {
  */
 export async function getComments(postId, options = {}) {
 	// Default includeReplies false to preserve previous behavior for existing tests
-	const { page = 1, perPage = 50, includeReplies = false } = /** @type {any} */(options);
+	const { page = 1, perPage = 50, includeReplies = false } = /** @type {any} */ (options);
 
 	try {
 		// Backwards compatibility: when includeReplies is false preserve original filter semantics
-		const baseFilter = includeReplies ? `post = "${postId}" && (parent = null || parent = "")` : `post = "${postId}"`;
+		const baseFilter = includeReplies
+			? `post = "${postId}" && (parent = null || parent = "")`
+			: `post = "${postId}"`;
 		const topLevel = await pb.collection('comments').getList(page, perPage, {
 			filter: baseFilter,
 			sort: 'created',
@@ -106,11 +109,11 @@ export async function getComments(postId, options = {}) {
 		}
 
 		// Collect ids to fetch children for (1 level deep for now)
-		const ids = topLevel.items.map(c => c.id);
+		const ids = topLevel.items.map((c) => c.id);
 		if (ids.length === 0) return topLevel;
 
 		let children = [];
-		const filter = `post = "${postId}" && parent != null && parent.id in [${ids.map(id => '"'+id+'"').join(',')}]`;
+		const filter = `post = "${postId}" && parent != null && parent.id in [${ids.map((id) => '"' + id + '"').join(',')}]`;
 		const commentsCollection = pb.collection('comments');
 		if (typeof commentsCollection.getFullList === 'function') {
 			children = await commentsCollection.getFullList({
@@ -123,7 +126,11 @@ export async function getComments(postId, options = {}) {
 			let childPage = 1;
 			const childPerPage = 50;
 			while (true) {
-				const batch = await /** @type {any} */(commentsCollection).getList(childPage, childPerPage, { filter, sort: 'created', expand: 'author,parent' });
+				const batch = await /** @type {any} */ (commentsCollection).getList(
+					childPage,
+					childPerPage,
+					{ filter, sort: 'created', expand: 'author,parent' }
+				);
 				children.push(...batch.items);
 				if (batch.items.length < childPerPage) break;
 				childPage++;
@@ -141,13 +148,13 @@ export async function getComments(postId, options = {}) {
 			childrenByParent[p].push(child);
 		}
 		for (const item of topLevel.items) {
-			(item /** @type {any} */).replies = childrenByParent[item.id] || [];
+			item /** @type {any} */.replies = childrenByParent[item.id] || [];
 		}
 
 		return topLevel;
 	} catch (error) {
 		console.error('Error getting comments:', error);
-		throw error;
+		throw normalizeError(error, { context: 'getComments' });
 	}
 }
 
@@ -168,7 +175,7 @@ export async function updateComment(commentId, content) {
 		});
 	} catch (error) {
 		console.error('Error updating comment:', error);
-		throw error;
+		throw normalizeError(error, { context: 'updateComment' });
 	}
 }
 
@@ -191,7 +198,7 @@ export async function deleteComment(commentId, postId) {
 		return true;
 	} catch (error) {
 		console.error('Error deleting comment:', error);
-		throw error;
+		throw normalizeError(error, { context: 'deleteComment' });
 	}
 }
 
@@ -214,6 +221,7 @@ export async function getCommentCount(postId) {
 		return result.totalItems;
 	} catch (error) {
 		console.error('Error getting comment count:', error);
+		normalizeError(error, { context: 'getCommentCount' }); // normalized for potential future logging
 		return 0;
 	}
 }

@@ -53,8 +53,8 @@
 				<LoadingSpinner text="Loading..." />
 			</div>
 		{:else if error}
-			<div class="text-center py-8">
-				<p class="text-destructive text-sm">{error}</p>
+			<div class="py-8 text-center">
+				<p class="text-sm text-destructive">{error}</p>
 			</div>
 		{:else}
 			{@render children?.()}
@@ -62,7 +62,7 @@
 	</Card.Content>
 
 	{#if actions.length > 0}
-		<Card.Footer class="flex gap-2 justify-end">
+		<Card.Footer class="flex justify-end gap-2">
 			{#each actions as action}
 				<Button
 					variant={action.variant || 'default'}

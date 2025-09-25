@@ -5,34 +5,34 @@ import { getPosts } from '$lib/services/posts.js';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ params, locals }) {
-  if (!locals.user) throw redirect(302, '/auth/login');
-  const id = params.id;
-  const space = await getSpace(id);
-  const memberCount = await getSpaceMemberCount(id);
-  const membershipRole = await getMembershipRole(id);
-  const member = membershipRole != null;
-  const posts = await getPosts({ scope: 'space', space: id });
-  return { space, memberCount, membershipRole, member, posts };
+	if (!locals.user) throw redirect(302, '/auth/login');
+	const id = params.id;
+	const space = await getSpace(id);
+	const memberCount = await getSpaceMemberCount(id);
+	const membershipRole = await getMembershipRole(id);
+	const member = membershipRole != null;
+	const posts = await getPosts({ scope: 'space', space: id });
+	return { space, memberCount, membershipRole, member, posts };
 }
 
 /** @type {import('./$types').Actions} */
 export const actions = {
-  join: async ({ params, locals }) => {
-    if (!locals.user) throw redirect(302, '/auth/login');
-    try {
-      await joinSpace(params.id);
-    } catch {
-      return fail(400, { error: 'Failed to join space' });
-    }
-    return { success: true };
-  },
-  leave: async ({ params, locals }) => {
-    if (!locals.user) throw redirect(302, '/auth/login');
-    try {
-      await leaveSpace(params.id);
-    } catch {
-      return fail(400, { error: 'Failed to leave space' });
-    }
-    return { success: true };
-  }
+	join: async ({ params, locals }) => {
+		if (!locals.user) throw redirect(302, '/auth/login');
+		try {
+			await joinSpace(params.id);
+		} catch {
+			return fail(400, { error: 'Failed to join space' });
+		}
+		return { success: true };
+	},
+	leave: async ({ params, locals }) => {
+		if (!locals.user) throw redirect(302, '/auth/login');
+		try {
+			await leaveSpace(params.id);
+		} catch {
+			return fail(400, { error: 'Failed to leave space' });
+		}
+		return { success: true };
+	}
 };

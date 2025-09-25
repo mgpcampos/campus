@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { LoaderCircle } from 'lucide-svelte';
 
-	let { 
+	let {
 		size = 'default',
 		class: className = '',
 		text = ''
@@ -18,7 +18,11 @@
 	};
 </script>
 
-<div class="flex items-center justify-center space-x-2 {className}" role="status" aria-live="polite">
+<div
+	class="flex items-center justify-center space-x-2 {className}"
+	role="status"
+	aria-live="polite"
+>
 	<LoaderCircle class="{sizeClasses[size]} animate-spin text-muted-foreground" aria-hidden="true" />
 	{#if text}
 		<span class="text-sm text-muted-foreground">{text}</span>

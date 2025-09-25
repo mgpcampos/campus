@@ -9,29 +9,29 @@
 	let feedComponent: any;
 	let refreshTrigger = 0;
 
-// Feed discovery controls
-let feedSearch: string = '';
-let feedSort: 'new' | 'top' | 'trending' = 'new';
-let timeframeHours: number = 48;
+	// Feed discovery controls
+	let feedSearch: string = '';
+	let feedSort: 'new' | 'top' | 'trending' = 'new';
+	let timeframeHours: number = 48;
 
-// Simple debounce for search input
-let searchDebounce: any;
-function handleSearchInput(e: Event) {
-  const value = (e.target as HTMLInputElement).value;
-  clearTimeout(searchDebounce);
-  searchDebounce = setTimeout(() => {
-    feedSearch = value.trim();
-  }, 250);
-}
+	// Simple debounce for search input
+	let searchDebounce: any;
+	function handleSearchInput(e: Event) {
+		const value = (e.target as HTMLInputElement).value;
+		clearTimeout(searchDebounce);
+		searchDebounce = setTimeout(() => {
+			feedSearch = value.trim();
+		}, 250);
+	}
 
-function changeSort(s: 'new' | 'top' | 'trending') {
-  feedSort = s;
-}
+	function changeSort(s: 'new' | 'top' | 'trending') {
+		feedSort = s;
+	}
 
-function changeTimeframe(e: Event) {
-  const v = Number((e.target as HTMLSelectElement).value);
-  timeframeHours = v;
-}
+	function changeTimeframe(e: Event) {
+		const v = Number((e.target as HTMLSelectElement).value);
+		timeframeHours = v;
+	}
 
 	function handlePostCreated(event: CustomEvent) {
 		const newPost = event.detail;
@@ -44,14 +44,14 @@ function changeTimeframe(e: Event) {
 	}
 </script>
 
-<div class="max-w-4xl mx-auto py-8">
-	<div class="text-center mb-8">
-		<h1 class="text-4xl font-bold mb-4" style="color: #1e293b;">Welcome to Campus</h1>
+<div class="mx-auto max-w-4xl py-8">
+	<div class="mb-8 text-center">
+		<h1 class="mb-4 text-4xl font-bold" style="color: #1e293b;">Welcome to Campus</h1>
 		<p class="text-xl" style="color: #64748b;">
 			A lightweight social network designed for the education community
 		</p>
 	</div>
-	
+
 	{#if $currentUser}
 		<!-- Post creation form -->
 		<Card.Root class="mb-6">
@@ -67,81 +67,81 @@ function changeTimeframe(e: Event) {
 		<div class="space-y-6">
 			<div class="flex items-center justify-between">
 				<h2 class="text-2xl font-semibold">Global Feed</h2>
-<div class="flex flex-wrap gap-2 items-center">
-  <!-- Search -->
-  <input
-    type="text"
-    placeholder="Search posts..."
-    class="border px-2 py-1 rounded text-sm"
-    on:input={handleSearchInput}
-  />
+				<div class="flex flex-wrap items-center gap-2">
+					<!-- Search -->
+					<input
+						type="text"
+						placeholder="Search posts..."
+						class="rounded border px-2 py-1 text-sm"
+						oninput={handleSearchInput}
+					/>
 
-  <!-- Sort buttons -->
-  <div class="flex gap-1">
-    <Button
-      variant={feedSort === 'new' ? 'default' : 'outline'}
-      size="sm"
-      on:click={() => changeSort('new')}
-      aria-pressed={feedSort === 'new'}
-    >
-      <MessageSquare size={16} class="mr-1" />
-      New
-    </Button>
-    <Button
-      variant={feedSort === 'top' ? 'default' : 'outline'}
-      size="sm"
-      on:click={() => changeSort('top')}
-      aria-pressed={feedSort === 'top'}
-    >
-      Top
-    </Button>
-    <Button
-      variant={feedSort === 'trending' ? 'default' : 'outline'}
-      size="sm"
-      on:click={() => changeSort('trending')}
-      aria-pressed={feedSort === 'trending'}
-    >
-      Trending
-    </Button>
-  </div>
+					<!-- Sort buttons -->
+					<div class="flex gap-1">
+						<Button
+							variant={feedSort === 'new' ? 'default' : 'outline'}
+							size="sm"
+							onclick={() => changeSort('new')}
+							aria-pressed={feedSort === 'new'}
+						>
+							<MessageSquare size={16} class="mr-1" />
+							New
+						</Button>
+						<Button
+							variant={feedSort === 'top' ? 'default' : 'outline'}
+							size="sm"
+							onclick={() => changeSort('top')}
+							aria-pressed={feedSort === 'top'}
+						>
+							Top
+						</Button>
+						<Button
+							variant={feedSort === 'trending' ? 'default' : 'outline'}
+							size="sm"
+							onclick={() => changeSort('trending')}
+							aria-pressed={feedSort === 'trending'}
+						>
+							Trending
+						</Button>
+					</div>
 
-  {#if feedSort === 'trending'}
-    <select
-      class="border px-2 py-1 rounded text-sm"
-      on:change={changeTimeframe}
-      aria-label="Trending timeframe"
-      bind:value={timeframeHours}
-    >
-      <option value="6">6h</option>
-      <option value="12">12h</option>
-      <option value="24">24h</option>
-      <option value="48">48h</option>
-      <option value="72">72h</option>
-    </select>
-  {/if}
+					{#if feedSort === 'trending'}
+						<select
+							class="rounded border px-2 py-1 text-sm"
+							onchange={changeTimeframe}
+							aria-label="Trending timeframe"
+							bind:value={timeframeHours}
+						>
+							<option value="6">6h</option>
+							<option value="12">12h</option>
+							<option value="24">24h</option>
+							<option value="48">48h</option>
+							<option value="72">72h</option>
+						</select>
+					{/if}
 
-  <Button href="/spaces" variant="outline" size="sm" class="ml-auto">
-    <Users size={16} class="mr-1" />
-    Browse Spaces
-  </Button>
-</div>
+					<Button href="/spaces" variant="outline" size="sm" class="ml-auto">
+						<Users size={16} class="mr-1" />
+						Browse Spaces
+					</Button>
+				</div>
 			</div>
-			
-<Feed
-  bind:this={feedComponent}
-  scope="global"
-  {refreshTrigger}
-  q={feedSearch}
-  sort={feedSort}
-  timeframeHours={timeframeHours}
-  on:like={(e) => console.log('Like:', e.detail)}
-  on:comment={(e) => console.log('Comment:', e.detail)}
-  on:edit={(e) => console.log('Edit:', e.detail)}
-  on:delete={(e) => console.log('Delete:', e.detail)}
-/>
+
+			<Feed
+				bind:this={feedComponent}
+				scope="global"
+				{refreshTrigger}
+				q={feedSearch}
+				sort={feedSort}
+				{timeframeHours}
+				on:like={(e) => console.log('Like:', e.detail)}
+				on:comment={(e) => console.log('Comment:', e.detail)}
+				on:edit={(e) => console.log('Edit:', e.detail)}
+				on:delete={(e) => console.log('Delete:', e.detail)}
+			/>
 		</div>
 	{:else}
-		<Card.Root class="max-w-2xl mx-auto">
+		<Card.Root class="mx-auto max-w-2xl">
 			<Card.Header class="text-center">
 				<Card.Title class="text-2xl">Get Started</Card.Title>
 				<Card.Description class="text-lg">
@@ -149,12 +149,8 @@ function changeTimeframe(e: Event) {
 				</Card.Description>
 			</Card.Header>
 			<Card.Footer class="flex justify-center space-x-4">
-				<Button href="/auth/register" size="lg">
-					Sign Up
-				</Button>
-				<Button href="/auth/login" variant="outline" size="lg">
-					Sign In
-				</Button>
+				<Button href="/auth/register" size="lg">Sign Up</Button>
+				<Button href="/auth/login" variant="outline" size="lg">Sign In</Button>
 			</Card.Footer>
 		</Card.Root>
 	{/if}

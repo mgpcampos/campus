@@ -43,7 +43,8 @@
 	});
 
 	$effect(() => {
-		const rootMain = typeof document !== 'undefined' ? document.getElementById('main-content') : null;
+		const rootMain =
+			typeof document !== 'undefined' ? document.getElementById('main-content') : null;
 		if (rootMain) {
 			if (mobileMenuOpen) {
 				rootMain.setAttribute('inert', '');
@@ -65,16 +66,20 @@
 	}
 </script>
 
-<header class="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 {className}" {id} {...restProps}>
+<header
+	class="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 {className}"
+	{id}
+	{...restProps}
+>
 	<div class="container flex h-14 max-w-screen-2xl items-center px-4">
 		<!-- Logo and Brand -->
 		<div class="mr-4 flex items-center space-x-4">
-			<a 
-				href="/" 
-				class="mr-2 flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-md"
+			<a
+				href="/"
+				class="mr-2 flex items-center space-x-2 rounded-md focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none"
 				aria-label="Campus Home"
 			>
-				<span class="font-bold text-xl">Campus</span>
+				<span class="text-xl font-bold">Campus</span>
 			</a>
 			{#if $currentUser}
 				<Button
@@ -96,18 +101,26 @@
 		</div>
 
 		<!-- Desktop Navigation Links -->
-		<nav class="hidden md:flex items-center gap-4 text-sm lg:gap-6" aria-label="Primary navigation">
+		<nav class="hidden items-center gap-4 text-sm md:flex lg:gap-6" aria-label="Primary navigation">
 			{#if $currentUser}
-				<a 
-					href="/" 
-					class="transition-colors hover:text-foreground/80 focus:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-md px-2 py-1 {isActivePage('/') ? 'text-foreground font-medium' : 'text-foreground/60'}"
+				<a
+					href="/"
+					class="rounded-md px-2 py-1 transition-colors hover:text-foreground/80 focus:text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none {isActivePage(
+						'/'
+					)
+						? 'font-medium text-foreground'
+						: 'text-foreground/60'}"
 					aria-current={isActivePage('/') ? 'page' : undefined}
 				>
 					Feed
 				</a>
-				<a 
-					href="/spaces" 
-					class="transition-colors hover:text-foreground/80 focus:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-md px-2 py-1 {isActivePage('/spaces') ? 'text-foreground font-medium' : 'text-foreground/60'}"
+				<a
+					href="/spaces"
+					class="rounded-md px-2 py-1 transition-colors hover:text-foreground/80 focus:text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none {isActivePage(
+						'/spaces'
+					)
+						? 'font-medium text-foreground'
+						: 'text-foreground/60'}"
 					aria-current={isActivePage('/spaces') ? 'page' : undefined}
 				>
 					Spaces
@@ -124,17 +137,17 @@
 					<DropdownMenu.Root>
 						<DropdownMenu.Trigger>
 							{#snippet child({ props })}
-								<Button 
+								<Button
 									{...props}
-									variant="ghost" 
+									variant="ghost"
 									size="sm"
 									class="relative h-8 w-8 rounded-full"
 									aria-label="User menu"
 								>
-									{#if $currentUser.avatar}
-										<img 
-											src={$currentUser.avatar} 
-											alt="{$currentUser.name}'s avatar"
+									{#if $currentUser && $currentUser.avatar}
+										<img
+											src={$currentUser?.avatar}
+											alt="{$currentUser?.name || 'User'}'s avatar"
 											class="h-8 w-8 rounded-full object-cover"
 										/>
 									{:else}
@@ -147,7 +160,7 @@
 						<DropdownMenu.Content class="w-56" align="end" forceMount>
 							<DropdownMenu.Label class="font-normal">
 								<div class="flex flex-col space-y-1">
-									<p class="text-sm font-medium leading-none">{$currentUser.name}</p>
+									<p class="text-sm leading-none font-medium">{$currentUser.name}</p>
 									<p class="text-xs leading-none text-muted-foreground">
 										@{$currentUser.username}
 									</p>
@@ -165,19 +178,15 @@
 								</DropdownMenu.Item>
 							</DropdownMenu.Group>
 							<DropdownMenu.Separator />
-								<DropdownMenu.Item>
-									<LogOut class="mr-2 h-4 w-4" aria-hidden="true" />
+							<DropdownMenu.Item>
+								<LogOut class="mr-2 h-4 w-4" aria-hidden="true" />
 								<a href="/auth/logout" class="flex-1">Sign out</a>
 							</DropdownMenu.Item>
 						</DropdownMenu.Content>
 					</DropdownMenu.Root>
 				{:else}
-					<Button variant="ghost" size="sm" href="/auth/login">
-						Sign In
-					</Button>
-					<Button size="sm" href="/auth/register">
-						Sign Up
-					</Button>
+					<Button variant="ghost" size="sm" href="/auth/login">Sign In</Button>
+					<Button size="sm" href="/auth/register">Sign Up</Button>
 				{/if}
 			</nav>
 		</div>
@@ -185,24 +194,32 @@
 
 	<!-- Mobile Navigation Menu -->
 	{#if $currentUser && mobileMenuOpen}
-		<nav 
+		<nav
 			id="mobile-menu"
-			class="md:hidden border-t border-border/40 bg-background/95 backdrop-blur"
+			class="border-t border-border/40 bg-background/95 backdrop-blur md:hidden"
 			aria-label="Mobile"
 			bind:this={mobileMenuEl}
 		>
-			<div class="container px-4 py-4 space-y-2">
-				<a 
-					href="/" 
-					class="block px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none {isActivePage('/') ? 'bg-accent text-accent-foreground' : 'text-foreground/60'}"
+			<div class="container space-y-2 px-4 py-4">
+				<a
+					href="/"
+					class="block rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none {isActivePage(
+						'/'
+					)
+						? 'bg-accent text-accent-foreground'
+						: 'text-foreground/60'}"
 					onclick={closeMobileMenu}
 					aria-current={isActivePage('/') ? 'page' : undefined}
 				>
 					Feed
 				</a>
-				<a 
-					href="/spaces" 
-					class="block px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none {isActivePage('/spaces') ? 'bg-accent text-accent-foreground' : 'text-foreground/60'}"
+				<a
+					href="/spaces"
+					class="block rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none {isActivePage(
+						'/spaces'
+					)
+						? 'bg-accent text-accent-foreground'
+						: 'text-foreground/60'}"
 					onclick={closeMobileMenu}
 					aria-current={isActivePage('/spaces') ? 'page' : undefined}
 				>

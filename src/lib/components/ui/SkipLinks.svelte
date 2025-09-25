@@ -18,11 +18,14 @@
 </script>
 
 <div class="sr-only focus-within:not-sr-only {className}">
-	<nav aria-label="Skip links" class="fixed top-0 left-0 z-[9999] bg-primary text-primary-foreground p-2 space-x-2">
+	<nav
+		aria-label="Skip links"
+		class="fixed top-0 left-0 z-[9999] space-x-2 bg-primary p-2 text-primary-foreground"
+	>
 		{#each links as link}
-			<a 
+			<a
 				href={link.href}
-				class="inline-block px-4 py-2 bg-primary text-primary-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 hover:bg-primary/90 transition-colors"
+				class="inline-block rounded-md bg-primary px-4 py-2 text-primary-foreground transition-colors hover:bg-primary/90 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none"
 			>
 				{link.label}
 			</a>

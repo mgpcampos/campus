@@ -34,8 +34,8 @@
 
 	function handleKeydown(event: KeyboardEvent) {
 		const items = containerElement.querySelectorAll(selector) as NodeListOf<HTMLElement>;
-		const currentIndex = Array.from(items).findIndex(item => item === document.activeElement);
-		
+		const currentIndex = Array.from(items).findIndex((item) => item === document.activeElement);
+
 		if (currentIndex === -1) return;
 
 		let newIndex = currentIndex;
@@ -44,25 +44,33 @@
 		switch (event.key) {
 			case 'ArrowRight':
 				if (direction === 'horizontal' || direction === 'both') {
-					newIndex = wrap ? (currentIndex + 1) % items.length : Math.min(currentIndex + 1, items.length - 1);
+					newIndex = wrap
+						? (currentIndex + 1) % items.length
+						: Math.min(currentIndex + 1, items.length - 1);
 					handled = true;
 				}
 				break;
 			case 'ArrowLeft':
 				if (direction === 'horizontal' || direction === 'both') {
-					newIndex = wrap ? (currentIndex - 1 + items.length) % items.length : Math.max(currentIndex - 1, 0);
+					newIndex = wrap
+						? (currentIndex - 1 + items.length) % items.length
+						: Math.max(currentIndex - 1, 0);
 					handled = true;
 				}
 				break;
 			case 'ArrowDown':
 				if (direction === 'vertical' || direction === 'both') {
-					newIndex = wrap ? (currentIndex + 1) % items.length : Math.min(currentIndex + 1, items.length - 1);
+					newIndex = wrap
+						? (currentIndex + 1) % items.length
+						: Math.min(currentIndex + 1, items.length - 1);
 					handled = true;
 				}
 				break;
 			case 'ArrowUp':
 				if (direction === 'vertical' || direction === 'both') {
-					newIndex = wrap ? (currentIndex - 1 + items.length) % items.length : Math.max(currentIndex - 1, 0);
+					newIndex = wrap
+						? (currentIndex - 1 + items.length) % items.length
+						: Math.max(currentIndex - 1, 0);
 					handled = true;
 				}
 				break;
@@ -84,7 +92,7 @@
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<div 
+<div
 	bind:this={containerElement}
 	class={className}
 	onkeydown={handleKeydown}

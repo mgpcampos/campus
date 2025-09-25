@@ -21,19 +21,20 @@ export async function POST({ params, locals }) {
 
 	try {
 		// Check if user already liked this post
-		const existingLike = await locals.pb.collection('likes').getFirstListItem(
-			`post = "${postId}" && user = "${userId}"`
-		).catch(() => null);
+		const existingLike = await locals.pb
+			.collection('likes')
+			.getFirstListItem(`post = "${postId}" && user = "${userId}"`)
+			.catch(() => null);
 
 		if (existingLike) {
 			// Unlike: delete the like record
 			await locals.pb.collection('likes').delete(existingLike.id);
-			
+
 			// Update post like count
 			const post = await locals.pb.collection('posts').getOne(postId);
 			const newLikeCount = Math.max(0, (post.likeCount || 0) - 1);
 			await locals.pb.collection('posts').update(postId, { likeCount: newLikeCount });
-			
+
 			return json({ liked: false, likeCount: newLikeCount });
 		} else {
 			// Like: create new like record
@@ -41,7 +42,7 @@ export async function POST({ params, locals }) {
 				post: postId,
 				user: userId
 			});
-			
+
 			// Update post like count & fetch post with author for notification
 			const post = await locals.pb.collection('posts').getOne(postId);
 			const newLikeCount = (post.likeCount || 0) + 1;
@@ -50,10 +51,17 @@ export async function POST({ params, locals }) {
 			// Notification (avoid notifying self)
 			try {
 				if (post.author && post.author !== userId) {
-					await createNotification({ user: post.author, actor: userId, type: 'like', post: postId });
+					await createNotification({
+						user: post.author,
+						actor: userId,
+						type: 'like',
+						post: postId
+					});
 				}
-			} catch (e) { console.warn('like notification failed', e); }
-			
+			} catch (e) {
+				console.warn('like notification failed', e);
+			}
+
 			return json({ liked: true, likeCount: newLikeCount });
 		}
 	} catch (err) {
@@ -74,19 +82,23 @@ export async function GET({ params, locals }) {
 
 	try {
 		// Check if user has liked this post
-		const existingLike = await locals.pb.collection('likes').getFirstListItem(
-			`post = "${postId}" && user = "${userId}"`
-		).catch(() => null);
+		const existingLike = await locals.pb
+			.collection('likes')
+			.getFirstListItem(`post = "${postId}" && user = "${userId}"`)
+			.catch(() => null);
 
 		// Get current like count
-		const likeCount = await locals.pb.collection('likes').getList(1, 1, {
-			filter: `post = "${postId}"`,
-			totalCount: true
-		}).then(result => result.totalItems);
+		const likeCount = await locals.pb
+			.collection('likes')
+			.getList(1, 1, {
+				filter: `post = "${postId}"`,
+				totalCount: true
+			})
+			.then((result) => result.totalItems);
 
-		return json({ 
-			liked: !!existingLike, 
-			likeCount 
+		return json({
+			liked: !!existingLike,
+			likeCount
 		});
 	} catch (err) {
 		console.error('Error getting like status:', err instanceof Error ? err.message : err);

@@ -22,9 +22,7 @@
 		class?: string;
 	} = $props();
 
-	const allItems = showHome 
-		? [{ label: 'Home', href: homeHref, icon: Home }, ...items]
-		: items;
+	const allItems = showHome ? [{ label: 'Home', href: homeHref, icon: Home }, ...items] : items;
 </script>
 
 <nav aria-label="Breadcrumb" class="flex {className}">
@@ -33,29 +31,29 @@
 			<li class="flex items-center">
 				{#if index > 0}
 					{@const SeparatorIcon = separator}
-					<SeparatorIcon class="h-4 w-4 mx-2" aria-hidden="true" />
+					<SeparatorIcon class="mx-2 h-4 w-4" aria-hidden="true" />
 				{/if}
-				
+
 				{#if item.href && !item.current}
-					<a 
+					<a
 						href={item.href}
-						class="hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-sm px-1"
+						class="rounded-sm px-1 transition-colors hover:text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none"
 						aria-current={item.current ? 'page' : undefined}
 					>
 						{#if item.icon}
 							{@const IconComponent = item.icon}
-							<IconComponent class="h-4 w-4 mr-1 inline" aria-hidden="true" />
+							<IconComponent class="mr-1 inline h-4 w-4" aria-hidden="true" />
 						{/if}
 						{item.label}
 					</a>
 				{:else}
-					<span 
-						class="text-foreground font-medium"
+					<span
+						class="font-medium text-foreground"
 						aria-current={item.current ? 'page' : undefined}
 					>
 						{#if item.icon}
 							{@const IconComponent = item.icon}
-							<IconComponent class="h-4 w-4 mr-1 inline" aria-hidden="true" />
+							<IconComponent class="mr-1 inline h-4 w-4" aria-hidden="true" />
 						{/if}
 						{item.label}
 					</span>

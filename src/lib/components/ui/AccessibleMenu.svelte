@@ -19,7 +19,15 @@
 		children?: any;
 		onOpenChange?: (open: boolean) => void;
 		class?: string;
-		placement?: 'top' | 'bottom' | 'left' | 'right' | 'top-start' | 'top-end' | 'bottom-start' | 'bottom-end';
+		placement?:
+			| 'top'
+			| 'bottom'
+			| 'left'
+			| 'right'
+			| 'top-start'
+			| 'top-end'
+			| 'bottom-start'
+			| 'bottom-end';
 		closeOnSelect?: boolean;
 		closeOnEscape?: boolean;
 		closeOnOutsideClick?: boolean;
@@ -65,7 +73,12 @@
 	}
 
 	function handleOutsideClick(event: MouseEvent) {
-		if (closeOnOutsideClick && menuElement && !menuElement.contains(event.target as Node) && !triggerElement?.contains(event.target as Node)) {
+		if (
+			closeOnOutsideClick &&
+			menuElement &&
+			!menuElement.contains(event.target as Node) &&
+			!triggerElement?.contains(event.target as Node)
+		) {
 			open = false;
 			onOpenChange(false);
 		}
@@ -90,10 +103,10 @@
 	});
 
 	const placementClasses = {
-		'top': 'bottom-full mb-2',
-		'bottom': 'top-full mt-2',
-		'left': 'right-full mr-2',
-		'right': 'left-full ml-2',
+		top: 'bottom-full mb-2',
+		bottom: 'top-full mt-2',
+		left: 'right-full mr-2',
+		right: 'left-full ml-2',
 		'top-start': 'bottom-full mb-2 left-0',
 		'top-end': 'bottom-full mb-2 right-0',
 		'bottom-start': 'top-full mt-2 left-0',
@@ -106,7 +119,7 @@
 	<button
 		bind:this={triggerElement}
 		type="button"
-		class="focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+		class="focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none"
 		onclick={handleTriggerClick}
 		onkeydown={handleTriggerKeydown}
 		aria-expanded={open}
@@ -119,18 +132,24 @@
 	{#if open}
 		<div
 			bind:this={menuElement}
-			class="absolute z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md {placementClasses[placement]} {className}"
+			class="absolute z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md {placementClasses[
+				placement
+			]} {className}"
 			role="menu"
 			aria-orientation="vertical"
 			onkeydown={handleMenuKeydown}
 			tabindex="-1"
 		>
-			<KeyboardNavigation 
+			<KeyboardNavigation
 				selector="[role='menuitem']:not([aria-disabled='true'])"
 				direction="vertical"
 			>
 				{#snippet children()}
-					<div role="presentation" onclick={handleMenuItemClick} onkeydown={(e) => e.key === 'Enter' && handleMenuItemClick()}>
+					<div
+						role="presentation"
+						onclick={handleMenuItemClick}
+						onkeydown={(e) => e.key === 'Enter' && handleMenuItemClick()}
+					>
 						{@render children?.()}
 					</div>
 				{/snippet}
@@ -139,4 +158,7 @@
 	{/if}
 </div>
 
-<svelte:window on:keydown={(e) => e.key === 'Escape' && open && closeOnEscape && (open = false, onOpenChange(false))} />
+<svelte:window
+	on:keydown={(e) =>
+		e.key === 'Escape' && open && closeOnEscape && ((open = false), onOpenChange(false))}
+/>

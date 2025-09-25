@@ -46,7 +46,9 @@ describe('requireAuth', () => {
 			model: null
 		});
 
-		expect(() => requireAuth(locals, '/profile')).toThrow('Redirect to /auth/login?returnUrl=%2Fprofile');
+		expect(() => requireAuth(locals, '/profile')).toThrow(
+			'Redirect to /auth/login?returnUrl=%2Fprofile'
+		);
 	});
 });
 

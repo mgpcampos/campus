@@ -11,6 +11,7 @@
 	import { ImagePlus, X, Loader2 } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import { validateImages, MAX_ATTACHMENTS } from '$lib/utils/media.js';
+	import { withErrorToast, notifyError } from '$lib/utils/errors.js';
 
 	export let initialData = { content: '', scope: 'global' };
 	export let spaceId: string | null = null; // if provided, posts go to that space
@@ -28,30 +29,28 @@
 		onSubmit: async ({ formData, cancel }) => {
 			cancel();
 			isSubmitting = true;
-			
-			try {
-				const postData: any = {
-					content: $form.content,
-					scope: spaceId ? 'space' : ($form.scope as 'global' | 'space' | 'group'),
-					attachments: files
-				};
-				if (spaceId) postData.space = spaceId;
-				
-				const newPost = await createPost(postData);
-				
-				// Reset form
-				$form.content = '';
-				files = [];
-				if (fileInput) fileInput.value = '';
-				
-				dispatch('postCreated', newPost);
-				toast.success('Post created successfully!');
-			} catch (error) {
-				console.error('Error creating post:', error);
-				toast.error('Failed to create post. Please try again.');
-			} finally {
-				isSubmitting = false;
-			}
+
+			const postData: any = {
+				content: $form.content,
+				scope: spaceId ? 'space' : ($form.scope as 'global' | 'space' | 'group'),
+				attachments: files
+			};
+			if (spaceId) postData.space = spaceId;
+
+			await withErrorToast(
+				async () => {
+					const newPost = await createPost(postData);
+					// Reset form only on success
+					$form.content = '';
+					files = [];
+					if (fileInput) fileInput.value = '';
+					dispatch('postCreated', newPost);
+					toast.success('Post created successfully!');
+				},
+				{ context: 'createPost' }
+			);
+
+			isSubmitting = false;
 		}
 	});
 
@@ -62,7 +61,9 @@
 		const prospective = [...files, ...selectedFiles];
 		const { valid, errors } = validateImages(prospective);
 		if (!valid) {
-			errors.slice(0,3).forEach(e => toast.error(e));
+			errors
+				.slice(0, 3)
+				.forEach(async (e) => await notifyError(new Error(e), { context: 'fileValidation' }));
 			return;
 		}
 		files = prospective.slice(0, MAX_ATTACHMENTS);
@@ -97,7 +98,7 @@
 		{#if $errors.content}
 			<p class="text-sm text-red-600">{$errors.content[0]}</p>
 		{/if}
-		<div class="text-sm text-gray-500 text-right">
+		<div class="text-right text-sm text-gray-500">
 			{$form.content.length}/2000
 		</div>
 	</div>
@@ -106,16 +107,16 @@
 	{#if files.length > 0}
 		<div class="grid grid-cols-2 gap-2">
 			{#each files as file, index}
-				<div class="relative group">
+				<div class="group relative">
 					<img
 						src={URL.createObjectURL(file)}
 						alt="Preview"
-						class="w-full h-24 object-cover rounded-md border"
+						class="h-24 w-full rounded-md border object-cover"
 					/>
 					<button
 						type="button"
-						on:click={() => removeFile(index)}
-						class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+						onclick={() => removeFile(index)}
+						class="absolute top-1 right-1 rounded-full bg-red-500 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
 					>
 						<X size={12} />
 					</button>
@@ -129,7 +130,7 @@
 			<input
 				type="file"
 				bind:this={fileInput}
-				on:change={handleFileSelect}
+				onchange={handleFileSelect}
 				accept="image/jpeg,image/png,image/webp,image/gif"
 				multiple
 				class="hidden"

@@ -1,5 +1,9 @@
 import { json, error } from '@sveltejs/kit';
-import { createNotification, extractMentions, resolveUsernames } from '$lib/services/notifications.js';
+import {
+	createNotification,
+	extractMentions,
+	resolveUsernames
+} from '$lib/services/notifications.js';
 import { z } from 'zod';
 import { sanitizeContent } from '$lib/utils/sanitize.js';
 
@@ -51,12 +55,12 @@ export async function POST({ params, locals, request }) {
 
 		const safeContent = sanitizeContent(content);
 
-        // Create the comment
-        const comment = await locals.pb.collection('comments').create({
-            post: postId,
-            author: userId,
-            content: safeContent
-        });
+		// Create the comment
+		const comment = await locals.pb.collection('comments').create({
+			post: postId,
+			author: userId,
+			content: safeContent
+		});
 
 		// Update post comment count & fetch author for notification
 		const post = await locals.pb.collection('posts').getOne(postId);
@@ -66,9 +70,17 @@ export async function POST({ params, locals, request }) {
 		// Comment notification (avoid self notify)
 		try {
 			if (post.author && post.author !== userId) {
-				await createNotification({ user: post.author, actor: userId, type: 'comment', post: postId, comment: comment.id });
+				await createNotification({
+					user: post.author,
+					actor: userId,
+					type: 'comment',
+					post: postId,
+					comment: comment.id
+				});
 			}
-		} catch (e) { console.warn('comment notification failed', e); }
+		} catch (e) {
+			console.warn('comment notification failed', e);
+		}
 
 		// Mention notifications
 		try {
@@ -80,10 +92,18 @@ export async function POST({ params, locals, request }) {
 					if (!mentionedId || mentionedId === userId) continue;
 					// Avoid duplicate with comment notification to post author; still allow if someone else
 					if (mentionedId === post.author && post.author !== userId) continue;
-					await createNotification({ user: mentionedId, actor: userId, type: 'mention', post: postId, comment: comment.id });
+					await createNotification({
+						user: mentionedId,
+						actor: userId,
+						type: 'mention',
+						post: postId,
+						comment: comment.id
+					});
 				}
 			}
-		} catch (e) { console.warn('mention notifications failed', e); }
+		} catch (e) {
+			console.warn('mention notifications failed', e);
+		}
 
 		// Return comment with expanded author
 		const expandedComment = await locals.pb.collection('comments').getOne(comment.id, {

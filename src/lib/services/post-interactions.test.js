@@ -20,24 +20,24 @@ describe('Post Interactions Integration', () => {
 
 	beforeEach(async () => {
 		vi.clearAllMocks();
-		
+
 		const { pb } = await import('../pocketbase.js');
 		mockPb = pb;
-		/** @type {any} */(mockPb.authStore).model = { id: 'user123' };
-		
+		/** @type {any} */ (mockPb.authStore).model = { id: 'user123' };
+
 		mockLikesCollection = {
 			getFirstListItem: vi.fn(),
 			create: vi.fn(),
 			delete: vi.fn(),
 			getList: vi.fn()
 		};
-		
+
 		mockCommentsCollection = {
 			create: vi.fn(),
 			getList: vi.fn(),
 			getOne: vi.fn()
 		};
-		
+
 		mockPostsCollection = {
 			getOne: vi.fn(),
 			update: vi.fn()
@@ -53,12 +53,12 @@ describe('Post Interactions Integration', () => {
 
 	it('should handle complete post interaction workflow', async () => {
 		const postId = 'post123';
-		
+
 		// Setup initial post state
-		mockPostsCollection.getOne.mockResolvedValue({ 
-			id: postId, 
-			likeCount: 0, 
-			commentCount: 0 
+		mockPostsCollection.getOne.mockResolvedValue({
+			id: postId,
+			likeCount: 0,
+			commentCount: 0
 		});
 
 		// Test liking a post
@@ -71,21 +71,21 @@ describe('Post Interactions Integration', () => {
 
 		// Test adding a comment
 		const commentContent = 'This is a great post!';
-		const newComment = { 
-			id: 'comment123', 
-			content: commentContent, 
-			post: postId, 
-			author: 'user123' 
+		const newComment = {
+			id: 'comment123',
+			content: commentContent,
+			post: postId,
+			author: 'user123'
 		};
-		const expandedComment = { 
-			...newComment, 
-			expand: { 
-				author: { 
-					id: 'user123', 
-					name: 'Test User', 
-					username: 'testuser' 
-				} 
-			} 
+		const expandedComment = {
+			...newComment,
+			expand: {
+				author: {
+					id: 'user123',
+					name: 'Test User',
+					username: 'testuser'
+				}
+			}
 		};
 
 		mockCommentsCollection.create.mockResolvedValue(newComment);
@@ -123,7 +123,7 @@ describe('Post Interactions Integration', () => {
 
 	it('should handle optimistic updates correctly', async () => {
 		const postId = 'post123';
-		
+
 		// Test unliking a post (removing existing like)
 		const existingLike = { id: 'like123' };
 		mockLikesCollection.getFirstListItem.mockResolvedValue(existingLike);
@@ -132,14 +132,14 @@ describe('Post Interactions Integration', () => {
 		mockPostsCollection.update.mockResolvedValue({ id: postId, likeCount: 4 });
 
 		const result = await toggleLike(postId);
-		
+
 		expect(mockLikesCollection.delete).toHaveBeenCalledWith('like123');
 		expect(result).toEqual({ liked: false, likeCount: 4 });
 	});
 
 	it('should handle error scenarios gracefully', async () => {
 		const postId = 'post123';
-		
+
 		// Test like error handling
 		mockLikesCollection.getFirstListItem.mockRejectedValue(new Error('Not found'));
 		mockLikesCollection.create.mockRejectedValue(new Error('Database error'));
@@ -149,6 +149,8 @@ describe('Post Interactions Integration', () => {
 		// Test comment error handling
 		mockCommentsCollection.create.mockRejectedValue(new Error('Database error'));
 
-		await expect(createComment(postId, 'test comment', undefined)).rejects.toThrow('Database error');
+		await expect(createComment(postId, 'test comment', undefined)).rejects.toThrow(
+			'Database error'
+		);
 	});
 });

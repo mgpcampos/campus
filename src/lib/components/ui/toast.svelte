@@ -3,10 +3,4 @@
 </script>
 
 <!-- Toaster component for displaying notifications -->
-<Toaster 
-	position="bottom-right"
-	richColors
-	closeButton
-	expand={true}
-	duration={4000}
-/>
+<Toaster position="bottom-right" richColors closeButton expand={true} duration={4000} />

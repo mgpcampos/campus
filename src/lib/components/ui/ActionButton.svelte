@@ -58,14 +58,14 @@
 	{:else}
 		{#if icon && iconPosition === 'left'}
 			{@const IconComponent = icon}
-			<IconComponent class="w-4 h-4 mr-2" aria-hidden="true" />
+			<IconComponent class="mr-2 h-4 w-4" aria-hidden="true" />
 		{/if}
-		
+
 		{@render children?.()}
-		
+
 		{#if icon && iconPosition === 'right'}
 			{@const IconComponent = icon}
-			<IconComponent class="w-4 h-4 ml-2" aria-hidden="true" />
+			<IconComponent class="ml-2 h-4 w-4" aria-hidden="true" />
 		{/if}
 	{/if}
 </Button>

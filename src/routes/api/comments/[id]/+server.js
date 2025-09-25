@@ -25,7 +25,7 @@ export async function PUT({ params, locals, request }) {
 	try {
 		// Check if comment exists and user owns it
 		const comment = await locals.pb.collection('comments').getOne(commentId);
-		
+
 		if (comment.author !== userId) {
 			throw error(403, 'You can only edit your own comments');
 		}
@@ -43,8 +43,8 @@ export async function PUT({ params, locals, request }) {
 		if (err instanceof z.ZodError) {
 			throw error(400, err.errors[0].message);
 		}
-		if (/** @type {any} */(err)?.status) {
-			throw /** @type {any} */(err);
+		if (/** @type {any} */ (err)?.status) {
+			throw /** @type {any} */ (err);
 		}
 		console.error('Error updating comment:', err instanceof Error ? err.message : err);
 		throw error(500, 'Failed to update comment');
@@ -64,7 +64,7 @@ export async function DELETE({ params, locals }) {
 	try {
 		// Check if comment exists and user owns it
 		const comment = await locals.pb.collection('comments').getOne(commentId);
-		
+
 		if (comment.author !== userId) {
 			throw error(403, 'You can only delete your own comments');
 		}
@@ -79,8 +79,8 @@ export async function DELETE({ params, locals }) {
 
 		return json({ success: true });
 	} catch (err) {
-		if (/** @type {any} */(err)?.status) {
-			throw /** @type {any} */(err);
+		if (/** @type {any} */ (err)?.status) {
+			throw /** @type {any} */ (err);
 		}
 		console.error('Error deleting comment:', err instanceof Error ? err.message : err);
 		throw error(500, 'Failed to delete comment');

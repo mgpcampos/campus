@@ -11,8 +11,8 @@ A lightweight, Twitter-like social network designed specifically for the educati
 - User authentication and profiles
 - Real-time updates
 - Responsive design with accessibility support
- - Role-based Space memberships (owner, moderator, member)
- - Image attachments on posts with validation & previews (Task 10)
+- Role-based Space memberships (owner, moderator, member)
+- Image attachments on posts with validation & previews (Task 10)
 
 ## Tech Stack
 
@@ -24,27 +24,31 @@ A lightweight, Twitter-like social network designed specifically for the educati
 
 ## Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - PocketBase server running on http://127.0.0.1:8090
 
 ## Setup
 
 1. Install dependencies:
+
 ```sh
 npm install
 ```
 
 2. Copy environment variables:
+
 ```sh
 cp .env.example .env
 ```
 
 3. Start PocketBase server (download from https://pocketbase.io/):
+
 ```sh
 ./pocketbase serve
 ```
 
 4. Start the development server:
+
 ```sh
 npm run dev
 ```
@@ -80,24 +84,30 @@ Spaces allow organizing content around institutions or thematic communities. Eac
 Memberships are stored in the `space_members` collection with a unique `(space, user)` constraint and a `role` field (`member | moderator | owner`). An owner membership is automatically created when a Space is created.
 
 ### Creating a Space
+
 1. Navigate to `/spaces/create`
 2. Provide name, slug, optional description, and public flag
 3. Submit the form – you become the owner
 
 ### Browsing Spaces
+
 The `/spaces` page lists spaces with member counts and supports basic search.
 
 ### Space Detail & Feed
+
 `/spaces/[id]` displays:
+
 - Space metadata
 - Join/Leave button based on membership state
 - Member count
 - Posts scoped to that space
 
 ### Management
+
 Owners and moderators can edit the description at `/spaces/[id]/manage`.
 
 ### Posting Into a Space
+
 When on a Space page, new posts created via the post form are automatically scoped to that Space.
 
 ## Testing
@@ -143,10 +153,10 @@ Planned / recommended production enhancements:
 
 Implemented optimizations:
 
-- Server-side in-memory LRU+TTL cache (`src/lib/utils/cache.js`) for: 
-	- First page of global posts feed (10s TTL)
-	- First page of spaces listing (30s TTL)
-	- Space member counts (20s TTL)
+- Server-side in-memory LRU+TTL cache (`src/lib/utils/cache.js`) for:
+  - First page of global posts feed (10s TTL)
+  - First page of spaces listing (30s TTL)
+  - Space member counts (20s TTL)
 - Client-side stale-while-revalidate query cache store (`src/lib/stores/queryCache.ts`) for lightweight response reuse without bringing a full query lib.
 - PocketBase collection indexes migration (`pb_migrations/1758635000_add_performance_indexes.js`) adding composite indexes for common filters & uniqueness constraints.
 - Lazy loading of comment section in `PostCard.svelte` via dynamic import to reduce initial bundle.
@@ -180,5 +190,3 @@ Implemented a realtime layer for post feed updates and a user notifications syst
 - Accessible dropdown UI with keyboard support and axe-tested semantics.
 
 Detailed architecture & extension guidance: `docs/realtime-notifications.md`.
-
-

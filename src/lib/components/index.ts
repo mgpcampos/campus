@@ -22,6 +22,7 @@ export { default as ContentCard } from './ui/ContentCard.svelte';
 export { default as FormField } from './ui/FormField.svelte';
 export { default as ActionButton } from './ui/ActionButton.svelte';
 export { default as SkeletonLoader } from './ui/SkeletonLoader.svelte';
+export { default as DataState } from './ui/DataState.svelte';
 export { default as Toast } from './ui/toast.svelte';
 
 // Accessibility Components

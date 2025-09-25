@@ -2,53 +2,100 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { AlertTriangle, RefreshCw } from 'lucide-svelte';
+	import { normalizeError } from '$lib/utils/errors.js';
+	import LiveRegion from './LiveRegion.svelte';
 
 	let {
 		error = null,
 		retry = () => window.location.reload(),
-		class: className = ''
+		class: className = '',
+		showDetails = false
 	}: {
-		error?: Error | null;
+		error?: any | null;
 		retry?: () => void;
 		class?: string;
+		showDetails?: boolean;
 	} = $props();
+
+	let normalized: any = $state(null);
+	let announcedMessage = $state('');
+
+	$effect(() => {
+		if (error) {
+			normalized = error?.__normalized ? error : normalizeError(error);
+			announcedMessage = normalized.userMessage || 'Something went wrong.';
+		} else {
+			normalized = null;
+			announcedMessage = '';
+		}
+	});
 
 	function handleRetry() {
 		error = null;
+		normalized = null;
 		retry();
 	}
 </script>
 
 {#if error}
-	<Card.Root class="w-full max-w-md mx-auto {className}">
-		<Card.Header class="text-center">
-			<div class="flex justify-center mb-4">
-				<div class="p-3 rounded-full bg-destructive/10">
-					<AlertTriangle class="w-8 h-8 text-destructive" />
+	<Card.Root class="mx-auto w-full max-w-md {className}" role="alert" aria-live="assertive">
+		<Card.Header class="space-y-2 text-center">
+			<div class="mb-2 flex justify-center">
+				<div class="rounded-full bg-destructive/10 p-3">
+					<AlertTriangle class="h-8 w-8 text-destructive" />
 				</div>
 			</div>
-			<Card.Title class="text-destructive">Something went wrong</Card.Title>
+			<Card.Title class="text-destructive">
+				{#if normalized}{normalized.userMessage || 'Something went wrong'}{:else}Something went
+					wrong{/if}
+			</Card.Title>
 			<Card.Description>
-				We encountered an error while loading this content.
+				{#if normalized && normalized.retryable}
+					You can try again. {#if normalized.code === 'offline'}Check your connection first.{/if}
+				{:else}
+					We encountered an error while loading this content.
+				{/if}
 			</Card.Description>
 		</Card.Header>
-		
-		<Card.Content class="text-center">
-			<details class="text-left">
-				<summary class="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
-					Show error details
-				</summary>
-				<pre class="mt-2 p-2 bg-muted rounded text-xs overflow-auto">
-					{error.message}
-				</pre>
-			</details>
+
+		<Card.Content class="space-y-3 text-center">
+			{#if showDetails}
+				<details class="text-left">
+					<summary class="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
+						Details
+					</summary>
+					<pre class="mt-2 overflow-auto rounded bg-muted p-2 text-xs">
+{#if normalized}
+							code: {normalized.code}
+type: {normalized.type}
+status: {normalized.status}
+dev: {normalized.devMessage}
+						{:else}
+							{error.message}
+						{/if}
+</pre>
+				</details>
+			{:else}
+				<button
+					type="button"
+					class="text-xs text-muted-foreground underline hover:text-foreground"
+					onclick={() => (showDetails = true)}
+				>
+					Show details
+				</button>
+			{/if}
+			<LiveRegion message={announcedMessage} priority="assertive" class="sr-only" />
 		</Card.Content>
-		
-		<Card.Footer class="flex justify-center">
-			<Button onclick={handleRetry} variant="outline">
-				<RefreshCw class="w-4 h-4 mr-2" />
-				Try Again
-			</Button>
+
+		<Card.Footer class="flex justify-center gap-2">
+			{#if normalized?.retryable}
+				<Button onclick={handleRetry} variant="outline">
+					<RefreshCw class="mr-2 h-4 w-4" />
+					Try Again
+				</Button>
+			{:else}
+				<Button onclick={handleRetry} variant="outline">Dismiss</Button>
+			{/if}
 		</Card.Footer>
 	</Card.Root>
 {/if}

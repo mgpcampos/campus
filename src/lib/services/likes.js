@@ -1,5 +1,6 @@
 // Using relative import to avoid alias resolution issues in Vitest
 import { pb } from '../pocketbase.js';
+import { normalizeError } from '../utils/errors.js';
 /**
  * @typedef {import('pocketbase').RecordModel} RecordModel
  * @typedef {import('pocketbase').ListResult<RecordModel>} ListResult
@@ -19,19 +20,20 @@ export async function toggleLike(postId) {
 
 	try {
 		// Check if user already liked this post
-		const existingLike = await pb.collection('likes').getFirstListItem(
-			`post = "${postId}" && user = "${userId}"`
-		).catch(() => null);
+		const existingLike = await pb
+			.collection('likes')
+			.getFirstListItem(`post = "${postId}" && user = "${userId}"`)
+			.catch(() => null);
 
 		if (existingLike) {
 			// Unlike: delete the like record
 			await pb.collection('likes').delete(existingLike.id);
-			
+
 			// Update post like count
 			const post = await pb.collection('posts').getOne(postId);
 			const newLikeCount = Math.max(0, (post.likeCount || 0) - 1);
 			await pb.collection('posts').update(postId, { likeCount: newLikeCount });
-			
+
 			return { liked: false, likeCount: newLikeCount };
 		} else {
 			// Like: create new like record
@@ -39,17 +41,17 @@ export async function toggleLike(postId) {
 				post: postId,
 				user: userId
 			});
-			
+
 			// Update post like count
 			const post = await pb.collection('posts').getOne(postId);
 			const newLikeCount = (post.likeCount || 0) + 1;
 			await pb.collection('posts').update(postId, { likeCount: newLikeCount });
-			
+
 			return { liked: true, likeCount: newLikeCount };
 		}
 	} catch (error) {
 		console.error('Error toggling like:', error);
-		throw error;
+		throw normalizeError(error, { context: 'toggleLike' });
 	}
 }
 
@@ -66,13 +68,15 @@ export async function hasUserLikedPost(postId) {
 	const userId = pb.authStore.model.id;
 
 	try {
-		const like = await pb.collection('likes').getFirstListItem(
-			`post = "${postId}" && user = "${userId}"`
-		).catch(() => null);
+		const like = await pb
+			.collection('likes')
+			.getFirstListItem(`post = "${postId}" && user = "${userId}"`)
+			.catch(() => null);
 
 		return !!like;
 	} catch (error) {
 		console.error('Error checking like status:', error);
+		normalizeError(error, { context: 'hasUserLikedPost' }); // swallow but normalize for potential logging
 		return false;
 	}
 }
@@ -91,6 +95,7 @@ export async function getLikeCount(postId) {
 		return result.totalItems;
 	} catch (error) {
 		console.error('Error getting like count:', error);
+		normalizeError(error, { context: 'getLikeCount' }); // swallow but normalize
 		return 0;
 	}
 }

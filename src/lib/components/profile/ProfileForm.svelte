@@ -8,12 +8,14 @@
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Textarea } from '$lib/components/ui/textarea/index.js';
 	import { toast } from 'svelte-sonner';
+	import { notifyError } from '$lib/utils/errors.js';
 	import { User, Save, LoaderCircle } from 'lucide-svelte';
 
 	// Profile form schema
 	const profileSchema = z.object({
 		name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),
-		username: z.string()
+		username: z
+			.string()
 			.min(3, 'Username must be at least 3 characters')
 			.max(30, 'Username must be less than 30 characters')
 			.regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores'),
@@ -21,7 +23,7 @@
 		avatar: z.instanceof(File).optional()
 	});
 
-	let { 
+	let {
 		data,
 		class: className = ''
 	}: {
@@ -39,7 +41,7 @@
 			}
 		},
 		onError: ({ result }) => {
-			toast.error('Failed to update profile. Please try again.');
+			notifyError(result, { context: 'profile.update' });
 		}
 	});
 
@@ -49,7 +51,7 @@
 	function handleAvatarChange(event: Event) {
 		const target = event.target as HTMLInputElement;
 		const file = target.files?.[0];
-		
+
 		if (file) {
 			// Validate file type and size
 			if (!file.type.startsWith('image/')) {
@@ -57,8 +59,9 @@
 				target.value = '';
 				return;
 			}
-			
-			if (file.size > 5 * 1024 * 1024) { // 5MB limit
+
+			if (file.size > 5 * 1024 * 1024) {
+				// 5MB limit
 				toast.error('Image must be less than 5MB');
 				target.value = '';
 				return;
@@ -77,9 +80,7 @@
 <Card.Root class="w-full max-w-2xl {className}">
 	<Card.Header>
 		<Card.Title>Edit Profile</Card.Title>
-		<Card.Description>
-			Update your profile information and avatar
-		</Card.Description>
+		<Card.Description>Update your profile information and avatar</Card.Description>
 	</Card.Header>
 
 	<form method="POST" enctype="multipart/form-data" use:enhance>
@@ -88,25 +89,22 @@
 			<div class="flex flex-col items-center space-y-4">
 				<div class="relative">
 					{#if previewUrl}
-						<img 
-							src={previewUrl} 
+						<img
+							src={previewUrl}
 							alt="Avatar preview"
-							class="w-24 h-24 rounded-full object-cover border-2 border-border"
+							class="h-24 w-24 rounded-full border-2 border-border object-cover"
 						/>
 					{:else}
-						<div class="w-24 h-24 rounded-full bg-muted flex items-center justify-center border-2 border-border">
-							<User class="w-8 h-8 text-muted-foreground" />
+						<div
+							class="flex h-24 w-24 items-center justify-center rounded-full border-2 border-border bg-muted"
+						>
+							<User class="h-8 w-8 text-muted-foreground" />
 						</div>
 					{/if}
 				</div>
-				
+
 				<div class="flex flex-col items-center space-y-2">
-					<Button 
-						type="button" 
-						variant="outline" 
-						size="sm"
-						onclick={() => avatarInput.click()}
-					>
+					<Button type="button" variant="outline" size="sm" onclick={() => avatarInput.click()}>
 						Choose Avatar
 					</Button>
 					<input
@@ -117,9 +115,7 @@
 						class="hidden"
 						onchange={handleAvatarChange}
 					/>
-					<p class="text-xs text-muted-foreground">
-						JPG, PNG or WebP. Max 5MB.
-					</p>
+					<p class="text-xs text-muted-foreground">JPG, PNG or WebP. Max 5MB.</p>
 				</div>
 			</div>
 
@@ -185,15 +181,13 @@
 		</Card.Content>
 
 		<Card.Footer class="flex justify-between">
-			<Button variant="outline" href="/profile">
-				Cancel
-			</Button>
+			<Button variant="outline" href="/profile">Cancel</Button>
 			<Button type="submit" disabled={$submitting}>
 				{#if $submitting}
-					<LoaderCircle class="w-4 h-4 mr-2 animate-spin" />
+					<LoaderCircle class="mr-2 h-4 w-4 animate-spin" />
 					Saving...
 				{:else}
-					<Save class="w-4 h-4 mr-2" />
+					<Save class="mr-2 h-4 w-4" />
 					Save Changes
 				{/if}
 			</Button>

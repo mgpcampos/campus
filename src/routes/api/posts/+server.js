@@ -3,34 +3,36 @@ import { createPostSchema, postQuerySchema } from '$lib/schemas/post.js';
 import { sanitizeContent } from '$lib/utils/sanitize.js';
 import { createPost, getPosts } from '$lib/services/posts.js';
 import { validateImages } from '$lib/utils/media.js';
+import { normalizeError, toErrorPayload } from '$lib/utils/errors.js';
 
 /** @type {import('./$types').RequestHandler} */
 export async function GET({ url }) {
 	try {
-const queryParams = Object.fromEntries(url.searchParams);
-// Allow either ?q= or legacy ?search= param
-if (!queryParams.q && queryParams.search) {
-  queryParams.q = queryParams.search;
-}
-const validatedQuery = postQuerySchema.parse(queryParams);
-		
+		const queryParams = Object.fromEntries(url.searchParams);
+		// Allow either ?q= or legacy ?search= param
+		if (!queryParams.q && queryParams.search) {
+			queryParams.q = queryParams.search;
+		}
+		const validatedQuery = postQuerySchema.parse(queryParams);
+
 		const result = await getPosts(validatedQuery);
 		// Add short-lived HTTP cache for anonymous global first page to leverage CDN/browser caching
 		const headers = new Headers();
 		const isCacheable =
-  (!validatedQuery.scope || validatedQuery.scope === 'global') &&
-  !validatedQuery.space &&
-  !validatedQuery.group &&
-  (validatedQuery.page == null || Number(validatedQuery.page) === 1) &&
-  !validatedQuery.q &&
-  (!validatedQuery.sort || validatedQuery.sort === 'new');
+			(!validatedQuery.scope || validatedQuery.scope === 'global') &&
+			!validatedQuery.space &&
+			!validatedQuery.group &&
+			(validatedQuery.page == null || Number(validatedQuery.page) === 1) &&
+			!validatedQuery.q &&
+			(!validatedQuery.sort || validatedQuery.sort === 'new');
 		if (isCacheable) {
 			headers.set('Cache-Control', 'public, max-age=5, stale-while-revalidate=30');
 		}
 		return json(result, { headers });
 	} catch (err) {
-		console.error('Error fetching posts:', err);
-		return error(500, 'Failed to fetch posts');
+		const n = normalizeError(err, { context: 'api:getPosts' });
+		console.error('Error fetching posts:', n.toString());
+		return json({ error: toErrorPayload(n) }, { status: n.status || 500 });
 	}
 }
 
@@ -44,7 +46,9 @@ export async function POST({ request, locals }) {
 	try {
 		const formData = await request.formData();
 
-		const rawFiles = /** @type {File[]} */(formData.getAll('attachments').filter(f => f instanceof File && f.size > 0));
+		const rawFiles = /** @type {File[]} */ (
+			formData.getAll('attachments').filter((f) => f instanceof File && f.size > 0)
+		);
 
 		// Validate images (server-side defense in depth)
 		const { valid, errors: imageErrors } = validateImages(rawFiles);
@@ -70,10 +74,12 @@ export async function POST({ request, locals }) {
 		const newPost = await createPost(validatedData);
 		return json(newPost, { status: 201 });
 	} catch (err) {
-		console.error('Error creating post:', err);
-		if (err instanceof Error && err.name === 'ZodError') {
-			return error(400, 'Invalid post data');
-		}
-		return error(500, 'Failed to create post');
+		const isZod = err instanceof Error && err.name === 'ZodError';
+		const n = isZod
+			? normalizeError(err, { context: 'api:createPost' })
+			: normalizeError(err, { context: 'api:createPost' });
+		console.error('Error creating post:', n.toString());
+		const status = isZod ? 400 : n.status || 500;
+		return json({ error: toErrorPayload({ ...n, status }) }, { status });
 	}
 }

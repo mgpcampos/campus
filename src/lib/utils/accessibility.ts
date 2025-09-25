@@ -125,13 +125,13 @@ export function announce(message: string, priority: 'polite' | 'assertive' = 'po
 	announcer.setAttribute('aria-live', priority);
 	announcer.setAttribute('aria-atomic', 'true');
 	announcer.className = 'sr-only';
-	
+
 	document.body.appendChild(announcer);
-	
+
 	// Small delay to ensure screen readers pick up the content
 	setTimeout(() => {
 		announcer.textContent = message;
-		
+
 		// Remove after announcement
 		setTimeout(() => {
 			document.body.removeChild(announcer);
@@ -146,9 +146,9 @@ export function isFocusable(element: HTMLElement): boolean {
 	if (element.tabIndex < 0) return false;
 	if ('disabled' in element && (element as any).disabled) return false;
 	if (element.hidden) return false;
-	
+
 	const style = window.getComputedStyle(element);
 	if (style.display === 'none' || style.visibility === 'hidden') return false;
-	
+
 	return true;
 }

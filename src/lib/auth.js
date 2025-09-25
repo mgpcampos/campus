@@ -9,12 +9,12 @@ import { redirect } from '@sveltejs/kit';
  */
 export function requireAuth(locals, returnUrl = null) {
 	if (!locals.pb.authStore.isValid) {
-		const loginUrl = returnUrl 
+		const loginUrl = returnUrl
 			? `/auth/login?returnUrl=${encodeURIComponent(returnUrl)}`
 			: '/auth/login';
 		throw redirect(302, loginUrl);
 	}
-	
+
 	return locals.pb.authStore.model;
 }
 

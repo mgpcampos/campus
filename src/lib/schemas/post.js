@@ -28,22 +28,22 @@ export const updatePostSchema = z.object({
  * Schema for post query parameters
  */
 export const postQuerySchema = z.object({
-page: z.coerce.number().min(1).default(1),
-perPage: z.coerce.number().min(1).max(50).default(20),
-scope: z.enum(['global', 'space', 'group']).optional(),
-space: z.string().optional(),
-group: z.string().optional(),
-/**
- * Free-text search query (content search)
- * Accepts either `q` or `search` in query params; route layer maps both to q.
- */
-q: z.string().min(1).max(100).optional(),
-/**
- * Sort mode: new (default chronological), top (likeCount), trending (engagement + recency window)
- */
-sort: z.enum(['new', 'top', 'trending']).default('new').optional(),
-/**
- * Timeframe (in hours) for trending calculation (default 48h)
- */
-timeframeHours: z.coerce.number().min(1).max(168).default(48).optional()
+	page: z.coerce.number().min(1).default(1),
+	perPage: z.coerce.number().min(1).max(50).default(20),
+	scope: z.enum(['global', 'space', 'group']).optional(),
+	space: z.string().optional(),
+	group: z.string().optional(),
+	/**
+	 * Free-text search query (content search)
+	 * Accepts either `q` or `search` in query params; route layer maps both to q.
+	 */
+	q: z.string().min(1).max(100).optional(),
+	/**
+	 * Sort mode: new (default chronological), top (likeCount), trending (engagement + recency window)
+	 */
+	sort: z.enum(['new', 'top', 'trending']).default('new').optional(),
+	/**
+	 * Timeframe (in hours) for trending calculation (default 48h)
+	 */
+	timeframeHours: z.coerce.number().min(1).max(168).default(48).optional()
 });

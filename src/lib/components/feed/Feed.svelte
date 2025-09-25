@@ -1,29 +1,36 @@
 <script lang="ts">
 	import { onMount, createEventDispatcher } from 'svelte';
 	import { getPosts } from '$lib/services/posts.js';
-	import { subscribeFeed, enablePolling, disablePolling, realtimeStatus, feedPosts } from '$lib/services/realtime.js';
+	import {
+		subscribeFeed,
+		enablePolling,
+		disablePolling,
+		realtimeStatus,
+		feedPosts
+	} from '$lib/services/realtime.js';
 	import PostCard from './PostCard.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Loader2, RefreshCw } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
+	import { notifyError, withErrorToast } from '$lib/utils/errors.js';
 
-export let scope = 'global';
-export let space: string | null = null;
-export let group: string | null = null;
-export let refreshTrigger = 0; // External trigger for refresh
-export let q: string = '';
-export let sort: 'new' | 'top' | 'trending' = 'new';
-export let timeframeHours: number = 48;
+	export let scope = 'global';
+	export let space: string | null = null;
+	export let group: string | null = null;
+	export let refreshTrigger = 0; // External trigger for refresh
+	export let q: string = '';
+	export let sort: 'new' | 'top' | 'trending' = 'new';
+	export let timeframeHours: number = 48;
 
 	const dispatch = createEventDispatcher();
 
 	let posts: any[] = [];
-let loading = false;
-let loadingMore = false;
-let hasMore = true;
-let currentPage = 1;
-let error: string | undefined = undefined;
-let lastQueryKey = '';
+	let loading = false;
+	let loadingMore = false;
+	let hasMore = true;
+	let currentPage = 1;
+	let error: string | undefined = undefined;
+	let lastQueryKey = '';
 
 	const perPage = 20;
 
@@ -32,37 +39,42 @@ let lastQueryKey = '';
 			// Subscribe realtime after initial load
 			subscribeFeed({ scope, space, group });
 		});
-		const unsub = realtimeStatus.subscribe(status => {
+		const unsub = realtimeStatus.subscribe((status) => {
 			if (!status.connected) {
-				enablePolling(async () => { await refreshFeed(); });
+				enablePolling(async () => {
+					await refreshFeed();
+				});
 			} else {
 				disablePolling();
 			}
 		});
 		// Keep posts in sync with feedPosts store
-		const unsubPosts = feedPosts.subscribe(fp => {
+		const unsubPosts = feedPosts.subscribe((fp) => {
 			// Merge updates only if same context
 			posts = fp;
 		});
-		return () => { unsub(); unsubPosts(); };
+		return () => {
+			unsub();
+			unsubPosts();
+		};
 	});
 
- // Watch for refresh trigger changes
-$: if (refreshTrigger > 0) {
-  refreshFeed();
-}
+	// Watch for refresh trigger changes
+	$: if (refreshTrigger > 0) {
+		refreshFeed();
+	}
 
-// Reactive refresh when query parameters change
-$: {
-  const key = `${scope}|${space}|${group}|${q}|${sort}|${timeframeHours}`;
-  if (key !== lastQueryKey && !loading && !loadingMore) {
-    lastQueryKey = key;
-    // Avoid double initial load (onMount already loads)
-    if (posts.length > 0) {
-      refreshFeed();
-    }
-  }
-}
+	// Reactive refresh when query parameters change
+	$: {
+		const key = `${scope}|${space}|${group}|${q}|${sort}|${timeframeHours}`;
+		if (key !== lastQueryKey && !loading && !loadingMore) {
+			lastQueryKey = key;
+			// Avoid double initial load (onMount already loads)
+			if (posts.length > 0) {
+				refreshFeed();
+			}
+		}
+	}
 
 	async function loadPosts(page = 1, append = false) {
 		if (loading || loadingMore) return;
@@ -75,16 +87,16 @@ $: {
 		}
 
 		try {
-const result = await getPosts({
-  page,
-  perPage,
-  scope: scope as any,
-  space: space ?? undefined,
-  group: group ?? undefined,
-  q: q || undefined,
-  sort,
-  timeframeHours
-});
+			const result = await getPosts({
+				page,
+				perPage,
+				scope: scope as any,
+				space: space ?? undefined,
+				group: group ?? undefined,
+				q: q || undefined,
+				sort,
+				timeframeHours
+			});
 
 			if (append) {
 				posts = [...posts, ...(result as any).items];
@@ -95,9 +107,8 @@ const result = await getPosts({
 			hasMore = (result as any).page < (result as any).totalPages;
 			currentPage = (result as any).page;
 		} catch (err) {
-			console.error('Error loading posts:', err);
-			error = 'Failed to load posts. Please try again.';
-			toast.error('Failed to load posts');
+			const normalized = await notifyError(err, { context: 'loadPosts' });
+			error = normalized.userMessage;
 		} finally {
 			loading = false;
 			loadingMore = false;
@@ -117,7 +128,7 @@ const result = await getPosts({
 
 	function handlePostAction(event: CustomEvent) {
 		const { type, detail } = event;
-		
+
 		switch (type) {
 			case 'like':
 				handleLike(detail.postId);
@@ -149,12 +160,11 @@ const result = await getPosts({
 	async function handleDelete(postId: string) {
 		try {
 			// Optimistically remove from UI
-			posts = posts.filter(p => p.id !== postId);
+			posts = posts.filter((p) => p.id !== postId);
 			dispatch('delete', { postId });
 			toast.success('Post deleted successfully');
 		} catch (err) {
-			console.error('Error deleting post:', err);
-			toast.error('Failed to delete post');
+			await notifyError(err, { context: 'deletePost' });
 			// Reload to restore state
 			await refreshFeed();
 		}
@@ -172,16 +182,16 @@ const result = await getPosts({
 			<Loader2 size={32} class="animate-spin text-gray-400" />
 		</div>
 	{:else if error}
-		<div class="text-center py-8">
-			<p class="text-red-600 mb-4">{error}</p>
+		<div class="py-8 text-center">
+			<p class="mb-4 text-red-600">{error}</p>
 			<Button onclick={refreshFeed} variant="outline">
 				<RefreshCw size={16} class="mr-2" />
 				Try Again
 			</Button>
 		</div>
 	{:else if posts.length === 0}
-		<div class="text-center py-12">
-			<p class="text-gray-500 text-lg mb-2">No posts yet</p>
+		<div class="py-12 text-center">
+			<p class="mb-2 text-lg text-gray-500">No posts yet</p>
 			<p class="text-gray-400">Be the first to share something!</p>
 		</div>
 	{:else}
@@ -199,12 +209,7 @@ const result = await getPosts({
 		<!-- Load more button -->
 		{#if hasMore}
 			<div class="flex justify-center py-4">
-				<Button
-					onclick={loadMore}
-					variant="outline"
-					disabled={loadingMore}
-					class="min-w-32"
-				>
+				<Button onclick={loadMore} variant="outline" disabled={loadingMore} class="min-w-32">
 					{#if loadingMore}
 						<Loader2 size={16} class="mr-2 animate-spin" />
 						Loading...
@@ -214,8 +219,8 @@ const result = await getPosts({
 				</Button>
 			</div>
 		{:else if posts.length > 0}
-			<div class="text-center py-4">
-				<p class="text-gray-500 text-sm">You've reached the end!</p>
+			<div class="py-4 text-center">
+				<p class="text-sm text-gray-500">You've reached the end!</p>
 			</div>
 		{/if}
 	{/if}

@@ -8,7 +8,9 @@
 	import Sidebar from '$lib/components/layout/Sidebar.svelte';
 	import SkipLinks from '$lib/components/ui/SkipLinks.svelte';
 	import LiveRegion from '$lib/components/ui/LiveRegion.svelte';
+	import ConnectionStatus from '$lib/components/ui/ConnectionStatus.svelte';
 	import { Toaster } from '$lib/components/ui/sonner/index.js';
+	import { online, initConnectionListeners } from '$lib/stores/connection';
 
 	let { children, data } = $props();
 
@@ -16,6 +18,9 @@
 	onMount(() => {
 		// Sync auth state with server on client-side hydration
 		currentUser.set(data.user);
+		// Initialize online/offline listeners
+		const dispose = initConnectionListeners();
+		return dispose;
 	});
 </script>
 
@@ -32,6 +37,17 @@
 	<!-- Header -->
 	<Header id="navigation" />
 
+	<!-- Offline status banner -->
+	{#if !$online}
+		<div
+			class="flex w-full items-center justify-center gap-2 bg-amber-500 px-4 py-2 text-sm text-black"
+			role="status"
+			aria-live="polite"
+		>
+			<span>Offline. Some actions may fail until connection is restored.</span>
+		</div>
+	{/if}
+
 	<!-- Main Layout with Sidebar -->
 	<div class="flex">
 		<!-- Sidebar for authenticated users -->
@@ -40,12 +56,9 @@
 		{/if}
 
 		<!-- Main Content (single unique <main>, aria-label unnecessary) -->
-			<main 
-				id="main-content"
-				class="flex-1 container mx-auto px-4 py-6 max-w-6xl"
-			>
-				{@render children?.()}
-			</main>
+		<main id="main-content" class="container mx-auto max-w-6xl flex-1 px-4 py-6">
+			{@render children?.()}
+		</main>
 	</div>
 
 	<!-- Footer -->
@@ -53,13 +66,10 @@
 </div>
 
 <!-- Toast Notifications -->
-<Toaster 
-	position="bottom-right"
-	richColors
-	closeButton
-	expand={true}
-	duration={4000}
-/>
+<Toaster position="bottom-right" richColors closeButton expand={true} duration={4000} />
+
+<!-- Connection Status -->
+<ConnectionStatus />
 
 <!-- Live Region for Screen Reader Announcements -->
 <LiveRegion />

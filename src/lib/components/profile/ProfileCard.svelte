@@ -14,12 +14,12 @@
 		updated: string;
 	}
 
-	let { 
-		user, 
+	let {
+		user,
 		isOwnProfile = false,
-		class: className = '' 
-	}: { 
-		user: UserProfile; 
+		class: className = ''
+	}: {
+		user: UserProfile;
 		isOwnProfile?: boolean;
 		class?: string;
 	} = $props();
@@ -34,16 +34,18 @@
 
 <Card.Root class="w-full max-w-md {className}">
 	<Card.Header class="text-center">
-		<div class="flex justify-center mb-4">
+		<div class="mb-4 flex justify-center">
 			{#if user.avatar}
-				<img 
-					src={user.avatar} 
+				<img
+					src={user.avatar}
 					alt="{user.name}'s avatar"
-					class="w-20 h-20 rounded-full object-cover border-2 border-border"
+					class="h-20 w-20 rounded-full border-2 border-border object-cover"
 				/>
 			{:else}
-				<div class="w-20 h-20 rounded-full bg-muted flex items-center justify-center border-2 border-border">
-					<User class="w-8 h-8 text-muted-foreground" />
+				<div
+					class="flex h-20 w-20 items-center justify-center rounded-full border-2 border-border bg-muted"
+				>
+					<User class="h-8 w-8 text-muted-foreground" />
 				</div>
 			{/if}
 		</div>
@@ -55,7 +57,7 @@
 
 	{#if user.bio}
 		<Card.Content class="text-center">
-			<p class="text-sm text-muted-foreground leading-relaxed">
+			<p class="text-sm leading-relaxed text-muted-foreground">
 				{user.bio}
 			</p>
 		</Card.Content>
@@ -63,13 +65,13 @@
 
 	<Card.Footer class="flex flex-col space-y-3">
 		<div class="flex items-center justify-center text-xs text-muted-foreground">
-			<Calendar class="w-3 h-3 mr-1" />
+			<Calendar class="mr-1 h-3 w-3" />
 			Joined {formatDate(user.created)}
 		</div>
-		
+
 		{#if isOwnProfile}
 			<Button variant="outline" size="sm" href="/profile/edit" class="w-full">
-				<Edit class="w-4 h-4 mr-2" />
+				<Edit class="mr-2 h-4 w-4" />
 				Edit Profile
 			</Button>
 		{/if}

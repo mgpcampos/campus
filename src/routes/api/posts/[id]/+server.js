@@ -24,7 +24,7 @@ export async function PUT({ params, request, locals }) {
 	try {
 		// Get the existing post to check ownership
 		const existingPost = await getPost(params.id);
-		
+
 		// Check if user owns the post
 		// @ts-ignore - PocketBase record type
 		if (existingPost.author !== locals.pb.authStore.model?.id) {
@@ -34,17 +34,17 @@ export async function PUT({ params, request, locals }) {
 		const body = await request.json();
 		const validatedData = updatePostSchema.parse(body);
 		validatedData.content = sanitizeContent(validatedData.content);
-		
+
 		const updatedPost = await updatePost(params.id, validatedData);
-		
+
 		return json(updatedPost);
 	} catch (err) {
 		console.error('Error updating post:', err);
-		
+
 		if (err instanceof Error && err.name === 'ZodError') {
 			return error(400, 'Invalid post data');
 		}
-		
+
 		return error(500, 'Failed to update post');
 	}
 }
@@ -59,7 +59,7 @@ export async function DELETE({ params, locals }) {
 	try {
 		// Get the existing post to check ownership
 		const existingPost = await getPost(params.id);
-		
+
 		// Check if user owns the post
 		// @ts-ignore - PocketBase record type
 		if (existingPost.author !== locals.pb.authStore.model?.id) {
@@ -67,7 +67,7 @@ export async function DELETE({ params, locals }) {
 		}
 
 		await deletePost(params.id);
-		
+
 		return json({ success: true });
 	} catch (err) {
 		console.error('Error deleting post:', err);
