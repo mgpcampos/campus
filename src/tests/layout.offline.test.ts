@@ -36,7 +36,7 @@ describe('Layout offline banner', () => {
 		try {
 			render(Layout, {
 				props: {
-					data: { user: null },
+					data: { user: null, sessionToken: null },
 					// @ts-expect-error fake snippet for testing
 					children: () => {}
 				}
@@ -55,7 +55,7 @@ describe('Layout offline banner', () => {
 		try {
 			render(Layout, {
 				props: {
-					data: { user: null },
+					data: { user: null, sessionToken: null },
 					// @ts-expect-error fake snippet for testing
 					children: () => {}
 				}

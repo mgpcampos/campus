@@ -15,7 +15,7 @@ export async function load({ params, locals }) {
 	const memberCount = await getGroupMemberCount(params.groupId);
 	const membershipRole = await getGroupMembershipRole(params.groupId);
 	const member = membershipRole != null;
-	const posts = await getPosts({ scope: 'group', group: params.groupId });
+	const posts = await getPosts({ scope: 'group', group: params.groupId }, { pb: locals.pb });
 	return { group, memberCount, membershipRole, member, posts };
 }
 

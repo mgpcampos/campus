@@ -5,7 +5,7 @@ import { createGroupSchema } from '$lib/schemas/group.js';
 
 export async function load({ params, locals, url }) {
 	if (!locals.user) throw redirect(302, '/auth/login');
-	const space = await getSpace(params.id);
+	const space = await getSpace(params.id, { pb: locals.pb });
 	const search = url.searchParams.get('q') || '';
 	const groups = await getGroups(params.id, { search });
 	return { space, groups, search };

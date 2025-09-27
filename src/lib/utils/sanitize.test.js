@@ -23,6 +23,19 @@ describe('sanitizeContent', () => {
 		const result = sanitizeContent(input);
 		expect(result).toBe('Line 1 Line 2 Line 4');
 	});
+
+	it('preserves whitespace within pre and code blocks', () => {
+		const input = `<pre><code>function greet() {\n  console.log('hello');\n}\n</code></pre>`;
+		const result = sanitizeContent(input);
+		expect(result).toBe(`<pre><code>function greet() {\n  console.log('hello');\n}\n</code></pre>`);
+	});
+
+	it('keeps indentation for nested elements inside pre', () => {
+		const input = `<pre><span class="token">  indented</span>\nline</pre>`;
+		const result = sanitizeContent(input);
+		expect(result).toBe(`<pre><span class="token">  indented</span>\nline</pre>`);
+	});
+
 	it('handles empty and null inputs', () => {
 		expect(sanitizeContent('')).toBe('');
 		expect(sanitizeContent(undefined)).toBe('');

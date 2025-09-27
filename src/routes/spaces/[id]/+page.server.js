@@ -7,11 +7,11 @@ import { getPosts } from '$lib/services/posts.js';
 export async function load({ params, locals }) {
 	if (!locals.user) throw redirect(302, '/auth/login');
 	const id = params.id;
-	const space = await getSpace(id);
-	const memberCount = await getSpaceMemberCount(id);
-	const membershipRole = await getMembershipRole(id);
+	const space = await getSpace(id, { pb: locals.pb });
+	const memberCount = await getSpaceMemberCount(id, { pb: locals.pb });
+	const membershipRole = await getMembershipRole(id, { pb: locals.pb });
 	const member = membershipRole != null;
-	const posts = await getPosts({ scope: 'space', space: id });
+	const posts = await getPosts({ scope: 'space', space: id }, { pb: locals.pb });
 	return { space, memberCount, membershipRole, member, posts };
 }
 
@@ -20,7 +20,7 @@ export const actions = {
 	join: async ({ params, locals }) => {
 		if (!locals.user) throw redirect(302, '/auth/login');
 		try {
-			await joinSpace(params.id);
+			await joinSpace(params.id, { pb: locals.pb });
 		} catch {
 			return fail(400, { error: 'Failed to join space' });
 		}
@@ -29,7 +29,7 @@ export const actions = {
 	leave: async ({ params, locals }) => {
 		if (!locals.user) throw redirect(302, '/auth/login');
 		try {
-			await leaveSpace(params.id);
+			await leaveSpace(params.id, { pb: locals.pb });
 		} catch {
 			return fail(400, { error: 'Failed to leave space' });
 		}

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
-	import { currentUser } from '$lib/pocketbase.js';
+	import { currentUser, hydrateClientAuth } from '$lib/pocketbase.js';
 	import { onMount } from 'svelte';
 	import Header from '$lib/components/layout/Header.svelte';
 	import Footer from '$lib/components/layout/Footer.svelte';
@@ -11,16 +11,33 @@
 	import ConnectionStatus from '$lib/components/ui/ConnectionStatus.svelte';
 	import { Toaster } from '$lib/components/ui/sonner/index.js';
 	import { online, initConnectionListeners } from '$lib/stores/connection';
+	import { initAnalytics } from '$lib/services/analytics';
 
 	let { children, data } = $props();
 
+	function syncAuthState() {
+		currentUser.set(data.user);
+		hydrateClientAuth(data.sessionToken, data.user);
+	}
+
+	// Reflect server-provided user data immediately for SSR and CSR hydration
+	syncAuthState();
+
+	// Keep currentUser aligned with layout data on prop changes
+	$effect(() => {
+		syncAuthState();
+	});
+
 	// Initialize PocketBase auth state on mount
 	onMount(() => {
-		// Sync auth state with server on client-side hydration
-		currentUser.set(data.user);
 		// Initialize online/offline listeners
-		const dispose = initConnectionListeners();
-		return dispose;
+		const disposeConnection = initConnectionListeners();
+		const teardownAnalytics = initAnalytics();
+
+		return () => {
+			disposeConnection?.();
+			teardownAnalytics?.();
+		};
 	});
 </script>
 

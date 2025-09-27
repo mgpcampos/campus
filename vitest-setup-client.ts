@@ -1,5 +1,11 @@
-/// <reference types="@vitest/browser/matchers" />
-/// <reference types="@vitest/browser/providers/playwright" />
+// Type extensions for jest-dom matchers
+declare module 'vitest' {
+	interface Assertion<T> {
+		toBeInTheDocument(): T;
+		toHaveAccessibleName(name?: string | RegExp): T;
+		// Add other jest-dom matchers as needed
+	}
+}
 
 // Axe-core injection for accessibility tests
 import 'axe-core/axe.min.js';
@@ -45,7 +51,7 @@ vi.mock('$lib/pocketbase.js', () => {
 	const pb = {
 		collection: () => ({
 			getList: async () => ({ items: [] }),
-			subscribe: async (_topic: string, _callback: (e: unknown) => void) => () => {},
+			subscribe: async () => () => {},
 			unsubscribe: () => {},
 			update: async () => ({}),
 			create: async () => ({}),

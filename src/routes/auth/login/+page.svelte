@@ -4,22 +4,41 @@
 	import { loginSchema } from '$lib/utils/validation.js';
 	import { getErrorMessage } from '$lib/utils/errors.js';
 	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
 
 	let { data } = $props();
+	let generalError = $state('');
 
 	const { form, errors, enhance, submitting } = superForm(data.form, {
 		validators: zod(loginSchema),
-		onUpdated: ({ form }) => {
-			if (form.valid) {
-				// Redirect to return URL or home page
-				const returnUrl = $page.url.searchParams.get('returnUrl') || '/';
-				goto(returnUrl);
+		onSubmit: () => {
+			generalError = '';
+		},
+		onResult: ({ result }) => {
+			if (result.type === 'redirect') {
+				generalError = '';
+				goto(result.location);
+				return;
+			}
+
+			if (result.type === 'success') {
+				generalError = '';
+				goto('/');
+				return;
+			}
+
+			if (result.type === 'failure') {
+				const serverMessage =
+					(typeof result.data?.error === 'string' && result.data.error) ||
+					getErrorMessage(result.data?.error ?? result);
+				generalError = serverMessage;
+				return;
+			}
+
+			if (result.type === 'error') {
+				generalError = getErrorMessage(result.error);
 			}
 		}
 	});
-
-	let generalError = $state('');
 </script>
 
 <svelte:head>

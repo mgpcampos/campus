@@ -4,6 +4,8 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import PostForm from '$lib/components/forms/PostForm.svelte';
 	import Feed from '$lib/components/feed/Feed.svelte';
+	import { Input } from '$lib/components/ui/input/index.js';
+	import { Label } from '$lib/components/ui/label/index.js';
 	import { MessageSquare, Users, Plus } from 'lucide-svelte';
 
 	let feedComponent: any;
@@ -13,6 +15,8 @@
 	let feedSearch: string = '';
 	let feedSort: 'new' | 'top' | 'trending' = 'new';
 	let timeframeHours: number = 48;
+
+	const trendingOptions = [6, 12, 24, 48, 72] as const;
 
 	// Simple debounce for search input
 	let searchDebounce: any;
@@ -44,13 +48,14 @@
 	}
 </script>
 
-<div class="mx-auto max-w-4xl py-8">
-	<div class="mb-8 text-center">
-		<h1 class="mb-4 text-4xl font-bold" style="color: #1e293b;">Welcome to Campus</h1>
-		<p class="text-xl" style="color: #64748b;">
-			A lightweight social network designed for the education community
+<div class="mx-auto max-w-4xl space-y-8 py-10 sm:py-12">
+	<section class="space-y-3 text-center">
+		<h1>Welcome to Campus</h1>
+		<p class="mx-auto max-w-2xl text-lg">
+			A lightweight social platform where faculty, students, and staff share updates, discover new
+			spaces, and celebrate campus life.
 		</p>
-	</div>
+	</section>
 
 	{#if $currentUser}
 		<!-- Post creation form -->
@@ -65,67 +70,82 @@
 
 		<!-- Global feed -->
 		<div class="space-y-6">
-			<div class="flex items-center justify-between">
-				<h2 class="text-2xl font-semibold">Global Feed</h2>
-				<div class="flex flex-wrap items-center gap-2">
-					<!-- Search -->
-					<input
-						type="text"
-						placeholder="Search posts..."
-						class="rounded border px-2 py-1 text-sm"
-						oninput={handleSearchInput}
-					/>
-
-					<!-- Sort buttons -->
-					<div class="flex gap-1">
-						<Button
-							variant={feedSort === 'new' ? 'default' : 'outline'}
-							size="sm"
-							onclick={() => changeSort('new')}
-							aria-pressed={feedSort === 'new'}
-						>
-							<MessageSquare size={16} class="mr-1" />
-							New
-						</Button>
-						<Button
-							variant={feedSort === 'top' ? 'default' : 'outline'}
-							size="sm"
-							onclick={() => changeSort('top')}
-							aria-pressed={feedSort === 'top'}
-						>
-							Top
-						</Button>
-						<Button
-							variant={feedSort === 'trending' ? 'default' : 'outline'}
-							size="sm"
-							onclick={() => changeSort('trending')}
-							aria-pressed={feedSort === 'trending'}
-						>
-							Trending
-						</Button>
+			<Card.Root class="border border-border/60 bg-card/90 shadow-md">
+				<Card.Header class="gap-4 sm:flex-row sm:items-center sm:justify-between">
+					<div class="space-y-1 text-left sm:text-left">
+						<Card.Title class="text-2xl">Global Feed</Card.Title>
+						<Card.Description>
+							Stay up to date with what the Campus community is sharing right now.
+						</Card.Description>
 					</div>
-
-					{#if feedSort === 'trending'}
-						<select
-							class="rounded border px-2 py-1 text-sm"
-							onchange={changeTimeframe}
-							aria-label="Trending timeframe"
-							bind:value={timeframeHours}
-						>
-							<option value="6">6h</option>
-							<option value="12">12h</option>
-							<option value="24">24h</option>
-							<option value="48">48h</option>
-							<option value="72">72h</option>
-						</select>
-					{/if}
-
-					<Button href="/spaces" variant="outline" size="sm" class="ml-auto">
-						<Users size={16} class="mr-1" />
-						Browse Spaces
-					</Button>
-				</div>
-			</div>
+					<Card.Action class="sm:justify-self-end">
+						<Button href="/spaces" variant="secondary" size="sm">
+							<Users size={16} class="mr-1" />
+							Browse Spaces
+						</Button>
+					</Card.Action>
+				</Card.Header>
+				<Card.Content class="space-y-4">
+					<div class="flex flex-col gap-2 sm:max-w-sm">
+						<Label class="text-muted-foreground" for="feed-search">Search posts</Label>
+						<Input
+							id="feed-search"
+							type="search"
+							placeholder="Search by keyword"
+							autocomplete="off"
+							oninput={handleSearchInput}
+						/>
+					</div>
+					<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+						<div class="inline-flex rounded-lg border border-input bg-background p-1 shadow-xs">
+							<Button
+								variant={feedSort === 'new' ? 'default' : 'ghost'}
+								size="sm"
+								onclick={() => changeSort('new')}
+								aria-pressed={feedSort === 'new'}
+								class="px-3"
+							>
+								<MessageSquare size={16} class="mr-2" />
+								New
+							</Button>
+							<Button
+								variant={feedSort === 'top' ? 'default' : 'ghost'}
+								size="sm"
+								onclick={() => changeSort('top')}
+								aria-pressed={feedSort === 'top'}
+								class="px-3"
+							>
+								Top
+							</Button>
+							<Button
+								variant={feedSort === 'trending' ? 'default' : 'ghost'}
+								size="sm"
+								onclick={() => changeSort('trending')}
+								aria-pressed={feedSort === 'trending'}
+								class="px-3"
+							>
+								Trending
+							</Button>
+						</div>
+						{#if feedSort === 'trending'}
+							<div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+								<Label class="text-muted-foreground" for="timeframe-select">Trending window</Label>
+								<select
+									id="timeframe-select"
+									class="h-9 rounded-md border border-input bg-background px-3 text-sm shadow-xs focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+									onchange={changeTimeframe}
+									aria-label="Trending timeframe"
+									bind:value={timeframeHours}
+								>
+									{#each trendingOptions as option}
+										<option value={option}>{option}h</option>
+									{/each}
+								</select>
+							</div>
+						{/if}
+					</div>
+				</Card.Content>
+			</Card.Root>
 
 			<Feed
 				bind:this={feedComponent}

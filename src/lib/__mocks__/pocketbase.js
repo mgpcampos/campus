@@ -7,7 +7,6 @@ export const pb = {
 	collection: () => ({
 		getList: async () => ({ items: [] }),
 		/** @param {string} __t @param {(e:any)=>void} __cb */
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		subscribe: async (__t, __cb) => () => {},
 		unsubscribe: () => {},
 		update: async () => ({}),

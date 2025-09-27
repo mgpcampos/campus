@@ -178,12 +178,12 @@
 
 <div class="space-y-4">
 	{#if loading}
-		<div class="flex justify-center py-8">
-			<Loader2 size={32} class="animate-spin text-gray-400" />
+		<div class="flex justify-center py-10">
+			<Loader2 size={32} class="animate-spin text-muted-foreground opacity-70" aria-hidden="true" />
 		</div>
 	{:else if error}
 		<div class="py-8 text-center">
-			<p class="mb-4 text-red-600">{error}</p>
+			<p class="mb-4 text-destructive">{error}</p>
 			<Button onclick={refreshFeed} variant="outline">
 				<RefreshCw size={16} class="mr-2" />
 				Try Again
@@ -191,8 +191,8 @@
 		</div>
 	{:else if posts.length === 0}
 		<div class="py-12 text-center">
-			<p class="mb-2 text-lg text-gray-500">No posts yet</p>
-			<p class="text-gray-400">Be the first to share something!</p>
+			<p class="mb-2 text-lg text-foreground">No posts yet</p>
+			<p class="text-sm text-muted-foreground">Be the first to share something!</p>
 		</div>
 	{:else}
 		<!-- Posts list -->
@@ -208,10 +208,10 @@
 
 		<!-- Load more button -->
 		{#if hasMore}
-			<div class="flex justify-center py-4">
+			<div class="flex justify-center py-6">
 				<Button onclick={loadMore} variant="outline" disabled={loadingMore} class="min-w-32">
 					{#if loadingMore}
-						<Loader2 size={16} class="mr-2 animate-spin" />
+						<Loader2 size={16} class="mr-2 animate-spin" aria-hidden="true" />
 						Loading...
 					{:else}
 						Load More
@@ -219,8 +219,8 @@
 				</Button>
 			</div>
 		{:else if posts.length > 0}
-			<div class="py-4 text-center">
-				<p class="text-sm text-gray-500">You've reached the end!</p>
+			<div class="py-6 text-center">
+				<p class="text-sm text-muted-foreground">You've reached the end!</p>
 			</div>
 		{/if}
 	{/if}

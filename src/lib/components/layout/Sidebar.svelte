@@ -1,17 +1,19 @@
 <script lang="ts">
 	import { currentUser } from '$lib/pocketbase.js';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import { House, Users, User, Plus } from 'lucide-svelte';
+	import { House, Users, User, Plus, Shield } from 'lucide-svelte';
 	import { page } from '$app/stores';
 
 	let { class: className = '' } = $props();
 
 	// Navigation items
-	const navigationItems = [
+	const baseNavigationItems = [
 		{ href: '/', label: 'Home', icon: House, requiresAuth: false },
 		{ href: '/spaces', label: 'Spaces', icon: Users, requiresAuth: true },
 		{ href: '/profile', label: 'Profile', icon: User, requiresAuth: true }
 	];
+
+	const adminNavItem = { href: '/admin', label: 'Admin', icon: Shield, requiresAuth: true };
 
 	function isActive(href: string): boolean {
 		if (href === '/') {
@@ -28,7 +30,7 @@
 	>
 		<div class="sticky top-14 h-[calc(100vh-3.5rem)] overflow-y-auto px-4 py-6">
 			<nav class="space-y-2">
-				{#each navigationItems as item}
+				{#each $currentUser?.isAdmin ? [...baseNavigationItems, adminNavItem] : baseNavigationItems as item}
 					{#if !item.requiresAuth || $currentUser}
 						<Button
 							variant={isActive(item.href) ? 'secondary' : 'ghost'}

@@ -61,12 +61,14 @@
 		const prospective = [...files, ...selectedFiles];
 		const { valid, errors } = validateImages(prospective);
 		if (!valid) {
+			target.value = '';
 			errors
 				.slice(0, 3)
 				.forEach(async (e) => await notifyError(new Error(e), { context: 'fileValidation' }));
 			return;
 		}
 		files = prospective.slice(0, MAX_ATTACHMENTS);
+		target.value = '';
 		if (files.length >= MAX_ATTACHMENTS) {
 			toast.info(`Maximum ${MAX_ATTACHMENTS} images allowed per post`);
 		}
@@ -139,7 +141,7 @@
 				type="button"
 				variant="outline"
 				size="sm"
-				onclick={() => fileInput?.click()}
+				on:click={() => fileInput?.click()}
 				disabled={disabled || isSubmitting || files.length >= 4}
 			>
 				<ImagePlus size={16} class="mr-1" />

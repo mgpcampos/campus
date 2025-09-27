@@ -6,17 +6,39 @@
 	import { goto } from '$app/navigation';
 
 	let { data } = $props();
+	let generalError = $state('');
 
 	const { form, errors, enhance, submitting } = superForm(data.form, {
 		validators: zod(registerSchema),
-		onUpdated: ({ form }) => {
-			if (form.valid) {
+		onSubmit: () => {
+			generalError = '';
+		},
+		onResult: ({ result }) => {
+			if (result.type === 'redirect') {
+				generalError = '';
+				goto(result.location);
+				return;
+			}
+
+			if (result.type === 'success') {
+				generalError = '';
 				goto('/');
+				return;
+			}
+
+			if (result.type === 'failure') {
+				const serverMessage =
+					(typeof result.data?.error === 'string' && result.data.error) ||
+					getErrorMessage(result.data?.error ?? result);
+				generalError = serverMessage;
+				return;
+			}
+
+			if (result.type === 'error') {
+				generalError = getErrorMessage(result.error);
 			}
 		}
 	});
-
-	let generalError = $state('');
 </script>
 
 <svelte:head>

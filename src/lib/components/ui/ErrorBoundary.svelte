@@ -5,40 +5,50 @@
 	import { normalizeError } from '$lib/utils/errors.js';
 	import LiveRegion from './LiveRegion.svelte';
 
-	let {
-		error = null,
-		retry = () => window.location.reload(),
-		class: className = '',
-		showDetails = false
-	}: {
+	const props = $props<{
 		error?: any | null;
 		retry?: () => void;
 		class?: string;
 		showDetails?: boolean;
-	} = $props();
+	}>();
 
-	let normalized: any = $state(null);
-	let announcedMessage = $state('');
+	const defaultRetry = () => window.location.reload();
+
+	const normalized = $derived.by(() => {
+		const value = props.error;
+		if (!value) return null;
+		return value?.__normalized ? value : normalizeError(value);
+	});
+
+	const announcedMessage = $derived.by(() => {
+		if (!props.error) return '';
+		return normalized?.userMessage || 'Something went wrong.';
+	});
+
+	let detailsVisible = $state(props.showDetails ?? false);
 
 	$effect(() => {
-		if (error) {
-			normalized = error?.__normalized ? error : normalizeError(error);
-			announcedMessage = normalized.userMessage || 'Something went wrong.';
-		} else {
-			normalized = null;
-			announcedMessage = '';
+		if (props.showDetails !== undefined) {
+			detailsVisible = props.showDetails;
 		}
 	});
 
+	function revealDetails() {
+		detailsVisible = true;
+	}
+
 	function handleRetry() {
-		error = null;
-		normalized = null;
+		const retry = props.retry ?? defaultRetry;
 		retry();
 	}
 </script>
 
-{#if error}
-	<Card.Root class="mx-auto w-full max-w-md {className}" role="alert" aria-live="assertive">
+{#if props.error}
+	<Card.Root
+		class={`mx-auto w-full max-w-md ${props.class ?? ''}`}
+		role="alert"
+		aria-live="assertive"
+	>
 		<Card.Header class="space-y-2 text-center">
 			<div class="mb-2 flex justify-center">
 				<div class="rounded-full bg-destructive/10 p-3">
@@ -59,7 +69,7 @@
 		</Card.Header>
 
 		<Card.Content class="space-y-3 text-center">
-			{#if showDetails}
+			{#if detailsVisible}
 				<details class="text-left">
 					<summary class="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
 						Details
@@ -71,7 +81,7 @@ type: {normalized.type}
 status: {normalized.status}
 dev: {normalized.devMessage}
 						{:else}
-							{error.message}
+							{props.error?.message}
 						{/if}
 </pre>
 				</details>
@@ -79,7 +89,7 @@ dev: {normalized.devMessage}
 				<button
 					type="button"
 					class="text-xs text-muted-foreground underline hover:text-foreground"
-					onclick={() => (showDetails = true)}
+					onclick={revealDetails}
 				>
 					Show details
 				</button>

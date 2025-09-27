@@ -8,6 +8,7 @@ declare global {
 		interface Locals {
 			pb: PocketBase;
 			user?: import('pocketbase').RecordModel | null;
+			sessionToken?: string | null;
 		}
 		// interface PageData {}
 		// interface PageState {}

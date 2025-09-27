@@ -1,7 +1,20 @@
 // Using relative import to avoid alias resolution issues in Vitest
+import { browser } from '$app/environment';
 import { pb } from '../pocketbase.js';
 import { serverCaches, getOrSet } from '../utils/cache.js';
-import { normalizeError, withRetry } from '../utils/errors.js';
+import { isAuthError, normalizeError, withRetry } from '../utils/errors.js';
+
+/**
+ * @typedef {{ pb?: import('pocketbase').default }} ServiceOptions
+ */
+
+/**
+ * Resolve PocketBase client for service functions.
+ * @param {import('pocketbase').default | undefined} provided
+ */
+function resolveClient(provided) {
+	return provided ?? pb;
+}
 
 /**
  * Create a new post
@@ -13,33 +26,23 @@ import { normalizeError, withRetry } from '../utils/errors.js';
  * @param {File[]} [postData.attachments] - File attachments
  * @returns {Promise<Object>} Created post
  */
-export async function createPost(postData) {
+export async function createPost(postData, serviceOptions = /** @type {ServiceOptions} */ ({})) {
+	const client = resolveClient(serviceOptions.pb);
+	const preferApi = shouldUseApiFallback(client, serviceOptions);
+	if (preferApi) {
+		return await createPostViaApi(postData);
+	}
+
 	try {
-		const formData = new FormData();
-
-		if (pb.authStore.model?.id) {
-			formData.append('author', pb.authStore.model.id);
-		}
-		formData.append('content', postData.content);
-		formData.append('scope', postData.scope || 'global');
-
-		if (postData.space) {
-			formData.append('space', postData.space);
-		}
-
-		if (postData.group) {
-			formData.append('group', postData.group);
-		}
-
-		// Add file attachments
-		if (postData.attachments && postData.attachments.length > 0) {
-			postData.attachments.forEach((file) => {
-				formData.append('attachments', file);
-			});
-		}
-
-		return await pb.collection('posts').create(formData);
+		const formData = buildPostFormData(postData, {
+			includeAuthor: true,
+			client
+		});
+		return await client.collection('posts').create(formData);
 	} catch (err) {
+		if (shouldRetryWithApi(err, serviceOptions)) {
+			return await createPostViaApi(postData);
+		}
 		throw normalizeError(err, { context: 'createPost' });
 	}
 }
@@ -61,7 +64,16 @@ export async function createPost(postData) {
  * @param {GetPostsOptions} [options]
  * @returns {Promise<Object>} Posts with pagination info
  */
-export async function getPosts(options = /** @type {GetPostsOptions} */ ({})) {
+export async function getPosts(
+	options = /** @type {GetPostsOptions} */ ({}),
+	serviceOptions = /** @type {ServiceOptions} */ ({})
+) {
+	const client = resolveClient(serviceOptions.pb);
+	const preferApi = shouldUseApiFallback(client, serviceOptions);
+	if (preferApi) {
+		return await getPostsViaApi(options);
+	}
+
 	try {
 		const {
 			page = 1,
@@ -115,7 +127,7 @@ export async function getPosts(options = /** @type {GetPostsOptions} */ ({})) {
 		async function fetchList() {
 			return await withRetry(
 				async () => {
-					const list = await pb.collection('posts').getList(page, perPage, {
+					const list = await client.collection('posts').getList(page, perPage, {
 						filter,
 						sort: sortExpr,
 						expand: 'author,space,group'
@@ -146,6 +158,9 @@ export async function getPosts(options = /** @type {GetPostsOptions} */ ({})) {
 		}
 		return await getOrSet(serverCaches.lists, cacheKey, fetchList, { ttlMs: 10_000 });
 	} catch (err) {
+		if (shouldRetryWithApi(err, serviceOptions)) {
+			return await getPostsViaApi(options);
+		}
 		throw normalizeError(err, { context: 'getPosts' });
 	}
 }
@@ -155,9 +170,10 @@ export async function getPosts(options = /** @type {GetPostsOptions} */ ({})) {
  * @param {string} id - Post ID
  * @returns {Promise<Object>} Post data
  */
-export async function getPost(id) {
+export async function getPost(id, serviceOptions = /** @type {ServiceOptions} */ ({})) {
 	try {
-		return await pb.collection('posts').getOne(id, {
+		const client = resolveClient(serviceOptions.pb);
+		return await client.collection('posts').getOne(id, {
 			expand: 'author,space,group'
 		});
 	} catch (err) {
@@ -171,9 +187,14 @@ export async function getPost(id) {
  * @param {Object} updateData - Update data
  * @returns {Promise<Object>} Updated post
  */
-export async function updatePost(id, updateData) {
+export async function updatePost(
+	id,
+	updateData,
+	serviceOptions = /** @type {ServiceOptions} */ ({})
+) {
 	try {
-		return await pb.collection('posts').update(id, updateData);
+		const client = resolveClient(serviceOptions.pb);
+		return await client.collection('posts').update(id, updateData);
 	} catch (err) {
 		throw normalizeError(err, { context: 'updatePost' });
 	}
@@ -184,9 +205,10 @@ export async function updatePost(id, updateData) {
  * @param {string} id - Post ID
  * @returns {Promise<boolean>} Success status
  */
-export async function deletePost(id) {
+export async function deletePost(id, serviceOptions = /** @type {ServiceOptions} */ ({})) {
 	try {
-		return await pb.collection('posts').delete(id);
+		const client = resolveClient(serviceOptions.pb);
+		return await client.collection('posts').delete(id);
 	} catch (err) {
 		throw normalizeError(err, { context: 'deletePost' });
 	}
@@ -197,17 +219,18 @@ export async function deletePost(id) {
  * @param {string} postId - Post ID
  * @returns {Promise<Object>} Post statistics
  */
-export async function getPostStats(postId) {
+export async function getPostStats(postId, serviceOptions = /** @type {ServiceOptions} */ ({})) {
 	try {
+		const client = resolveClient(serviceOptions.pb);
 		const [likeCount, commentCount] = await Promise.all([
-			pb
+			client
 				.collection('likes')
 				.getList(1, 1, {
 					filter: `post = "${postId}"`,
 					totalCount: true
 				})
 				.then((result) => result.totalItems),
-			pb
+			client
 				.collection('comments')
 				.getList(1, 1, {
 					filter: `post = "${postId}"`,
@@ -220,4 +243,116 @@ export async function getPostStats(postId) {
 	} catch (err) {
 		throw normalizeError(err, { context: 'getPostStats' });
 	}
+}
+
+function hasFetchSupport() {
+	return typeof fetch === 'function';
+}
+
+/**
+ * @param {import('pocketbase').default} client
+ * @param {ServiceOptions} serviceOptions
+ */
+function shouldUseApiFallback(client, serviceOptions) {
+	return !serviceOptions.pb && browser && hasFetchSupport() && !client.authStore.isValid;
+}
+
+/**
+ * @param {any} error
+ * @param {ServiceOptions} serviceOptions
+ */
+function shouldRetryWithApi(error, serviceOptions) {
+	return !serviceOptions.pb && browser && hasFetchSupport() && isAuthError(error);
+}
+
+/**
+ * @param {any} postData
+ * @param {{ includeAuthor: boolean; client?: import('pocketbase').default }} options
+ */
+function buildPostFormData(postData, { includeAuthor, client }) {
+	const formData = new FormData();
+	if (includeAuthor && client?.authStore.model?.id) {
+		formData.append('author', client.authStore.model.id);
+	}
+	if (typeof postData.content === 'string') {
+		formData.append('content', postData.content);
+	}
+	formData.append('scope', postData.scope || 'global');
+	if (postData.space) {
+		formData.append('space', postData.space);
+	}
+	if (postData.group) {
+		formData.append('group', postData.group);
+	}
+	if (Array.isArray(postData.attachments)) {
+		postData.attachments
+			.filter(/** @param {File} file */ (file) => file instanceof File && file.size > 0)
+			.forEach(
+				/** @param {File} file */ (file) => {
+					formData.append('attachments', file);
+				}
+			);
+	}
+	return formData;
+}
+
+/**
+ * @param {{ content: string; scope: 'global'|'space'|'group'; space?: string; group?: string; attachments?: File[] }} postData
+ */
+async function createPostViaApi(postData) {
+	if (!hasFetchSupport()) {
+		throw new Error('Fetch API unavailable for createPost via /api/posts');
+	}
+	const formData = buildPostFormData(postData, { includeAuthor: false });
+	const response = await fetch('/api/posts', {
+		method: 'POST',
+		credentials: 'include',
+		body: formData
+	});
+	return await handleApiResponse(response, 'createPost');
+}
+
+/**
+ * @param {GetPostsOptions} [options]
+ */
+async function getPostsViaApi(options = {}) {
+	if (!hasFetchSupport()) {
+		throw new Error('Fetch API unavailable for getPosts via /api/posts');
+	}
+	const params = new URLSearchParams();
+	if (options.page != null) params.set('page', String(options.page));
+	if (options.perPage != null) params.set('perPage', String(options.perPage));
+	if (options.scope) params.set('scope', options.scope);
+	if (options.space) params.set('space', options.space);
+	if (options.group) params.set('group', options.group);
+	if (options.q) params.set('q', options.q);
+	if (options.sort) params.set('sort', options.sort);
+	if (options.timeframeHours != null) params.set('timeframeHours', String(options.timeframeHours));
+	const query = params.toString();
+	const response = await fetch(query ? `/api/posts?${query}` : '/api/posts', {
+		credentials: 'include'
+	});
+	return await handleApiResponse(response, 'getPosts');
+}
+
+/**
+ * @param {Response} response
+ * @param {string} context
+ */
+async function handleApiResponse(response, context) {
+	let payload = null;
+	try {
+		payload = await response.json();
+	} catch {
+		/* ignore */
+	}
+	if (response.ok) {
+		return payload ?? {};
+	}
+	const message =
+		payload?.error?.message || payload?.message || `Request failed with status ${response.status}`;
+	const error = new Error(message);
+	/** @type {any} */ (error).status = response.status;
+	/** @type {any} */ (error).response = { data: payload };
+	throw normalizeError(error, { context });
 }

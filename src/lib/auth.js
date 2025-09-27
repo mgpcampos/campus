@@ -1,4 +1,4 @@
-import { redirect } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 
 /**
  * Middleware to protect routes that require authentication
@@ -34,4 +34,16 @@ export function isAuthenticated(locals) {
  */
 export function getCurrentUser(locals) {
 	return locals.pb.authStore.isValid ? locals.pb.authStore.model : null;
+}
+
+/**
+ * Assert that the current user is authenticated and has admin privileges.
+ * @param {App.Locals} locals
+ */
+export function requireAdmin(locals) {
+	const user = requireAuth(locals);
+	if (!user?.isAdmin) {
+		throw error(403, 'Admins only');
+	}
+	return user;
 }

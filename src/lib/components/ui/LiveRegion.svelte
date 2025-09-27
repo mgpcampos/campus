@@ -26,20 +26,22 @@
 
 	// Function to announce a message
 	export function announce(text: string, urgency: 'polite' | 'assertive' = 'polite') {
-		if (regionElement) {
-			// Clear first to ensure screen readers pick up the change
-			regionElement.textContent = '';
+		if (!regionElement) return;
+		const target = regionElement;
 
-			// Set the priority if different
-			if (urgency !== priority) {
-				regionElement.setAttribute('aria-live', urgency);
-			}
+		// Clear first to ensure screen readers pick up the change
+		target.textContent = '';
 
-			// Small delay to ensure screen readers detect the change
-			setTimeout(() => {
-				regionElement.textContent = text;
-			}, 100);
+		// Set the priority if different
+		if (urgency !== priority) {
+			target.setAttribute('aria-live', urgency);
 		}
+
+		// Small delay to ensure screen readers detect the change
+		setTimeout(() => {
+			if (!target.isConnected) return;
+			target.textContent = text;
+		}, 100);
 	}
 
 	onMount(() => {

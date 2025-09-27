@@ -1,9 +1,21 @@
-import sharp from 'sharp';
-
 // Configuration constants
 export const ALLOWED_IMAGE_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 export const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 export const MAX_ATTACHMENTS = 4;
+
+/** @type {any} */
+let sharpModule = null;
+
+async function loadSharp() {
+	if (typeof window !== 'undefined') {
+		throw new Error('optimizeImage is only available server-side');
+	}
+	if (!sharpModule) {
+		const mod = await import('sharp');
+		sharpModule = mod.default ?? mod;
+	}
+	return sharpModule;
+}
 
 /**
  * Validate an array of File (or Blob-like) objects for upload
@@ -36,6 +48,7 @@ export function validateImages(files = []) {
  * @returns {Promise<{original: Buffer, variants: Record<string, Buffer>, meta: any}>}
  */
 export async function optimizeImage(buffer, { widths = [320, 640, 960], quality = 80 } = {}) {
+	const sharp = await loadSharp();
 	const image = sharp(buffer, { failOn: 'none' });
 	const metadata = await image.metadata();
 

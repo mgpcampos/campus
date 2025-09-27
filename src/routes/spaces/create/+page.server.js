@@ -29,7 +29,7 @@ export const actions = {
 		}
 		try {
 			const payload = { name, slug, description, isPublic, ...(avatar ? { avatar } : {}) };
-			const space = await createSpace(payload);
+			const space = await createSpace(payload, { pb: locals.pb });
 			throw redirect(303, `/spaces/${space.id}`);
 		} catch (e) {
 			if (e && typeof e === 'object' && 'status' in e && e.status === 303) {

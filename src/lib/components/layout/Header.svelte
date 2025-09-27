@@ -2,23 +2,32 @@
 	import { currentUser } from '$lib/pocketbase.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
-	import { User, LogOut, Settings, Menu, X } from 'lucide-svelte';
+	import { User, LogOut, Settings, Menu, X, Shield } from 'lucide-svelte';
 	import NotificationsDropdown from '$lib/components/notifications/NotificationsDropdown.svelte';
 	import { page } from '$app/stores';
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount } from 'svelte';
+	import { tick } from 'svelte';
+
+	const domAvailable = typeof window !== 'undefined' && typeof document !== 'undefined';
 
 	let { class: className = '', id, ...restProps } = $props();
 	let mobileMenuOpen = $state(false);
 	let mobileMenuEl = $state<HTMLElement | null>(null);
-	let mobileToggleButton: HTMLButtonElement | null = null;
+	let mobileToggleButton = $state<HTMLButtonElement | null>(null);
+	let userMenuOpen = $state(false);
 
-	function openMobileMenu() {
+	function handleUserMenuOpenChange(value: boolean) {
+		userMenuOpen = value;
+	}
+
+	async function openMobileMenu() {
 		mobileMenuOpen = true;
-		// Focus first link shortly after render
-		setTimeout(() => {
-			const firstLink = mobileMenuEl?.querySelector('a');
-			(firstLink as HTMLElement)?.focus();
-		}, 0);
+		if (!domAvailable) {
+			return;
+		}
+		await tick();
+		const firstLink = mobileMenuEl?.querySelector('a') as HTMLElement | null;
+		firstLink?.focus();
 	}
 
 	function closeMobileMenu() {
@@ -38,13 +47,23 @@
 	}
 
 	onMount(() => {
+		if (!domAvailable) {
+			return;
+		}
+
 		window.addEventListener('keydown', handleKeydown);
-		mobileToggleButton = document.querySelector('#navigation button[aria-controls="mobile-menu"]');
+
+		return () => {
+			window.removeEventListener('keydown', handleKeydown);
+		};
 	});
 
 	$effect(() => {
-		const rootMain =
-			typeof document !== 'undefined' ? document.getElementById('main-content') : null;
+		if (!domAvailable) {
+			return;
+		}
+
+		const rootMain = document.getElementById('main-content');
 		if (rootMain) {
 			if (mobileMenuOpen) {
 				rootMain.setAttribute('inert', '');
@@ -52,10 +71,6 @@
 				rootMain.removeAttribute('inert');
 			}
 		}
-	});
-
-	onDestroy(() => {
-		window.removeEventListener('keydown', handleKeydown);
 	});
 
 	function isActivePage(href: string): boolean {
@@ -83,6 +98,7 @@
 			</a>
 			{#if $currentUser}
 				<Button
+					bind:ref={mobileToggleButton}
 					variant="ghost"
 					size="sm"
 					class="md:hidden"
@@ -125,6 +141,19 @@
 				>
 					Spaces
 				</a>
+				{#if $currentUser?.isAdmin}
+					<a
+						href="/admin"
+						class="rounded-md px-2 py-1 transition-colors hover:text-foreground/80 focus:text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none {isActivePage(
+							'/admin'
+						)
+							? 'font-medium text-foreground'
+							: 'text-foreground/60'}"
+						aria-current={isActivePage('/admin') ? 'page' : undefined}
+					>
+						Admin
+					</a>
+				{/if}
 			{/if}
 		</nav>
 
@@ -134,7 +163,7 @@
 			<nav class="flex items-center gap-2">
 				{#if $currentUser}
 					<NotificationsDropdown />
-					<DropdownMenu.Root>
+					<DropdownMenu.Root open={userMenuOpen} onOpenChange={handleUserMenuOpenChange}>
 						<DropdownMenu.Trigger>
 							{#snippet child({ props })}
 								<Button
@@ -143,6 +172,7 @@
 									size="sm"
 									class="relative h-8 w-8 rounded-full"
 									aria-label="User menu"
+									aria-expanded={userMenuOpen}
 								>
 									{#if $currentUser && $currentUser.avatar}
 										<img
@@ -157,7 +187,7 @@
 								</Button>
 							{/snippet}
 						</DropdownMenu.Trigger>
-						<DropdownMenu.Content class="w-56" align="end" forceMount>
+						<DropdownMenu.Content class="w-56" align="end">
 							<DropdownMenu.Label class="font-normal">
 								<div class="flex flex-col space-y-1">
 									<p class="text-sm leading-none font-medium">{$currentUser.name}</p>
@@ -176,6 +206,12 @@
 									<Settings class="mr-2 h-4 w-4" aria-hidden="true" />
 									<span>Settings</span>
 								</DropdownMenu.Item>
+								{#if $currentUser.isAdmin}
+									<DropdownMenu.Item>
+										<Shield class="mr-2 h-4 w-4" aria-hidden="true" />
+										<a href="/admin" class="flex-1">Admin dashboard</a>
+									</DropdownMenu.Item>
+								{/if}
 							</DropdownMenu.Group>
 							<DropdownMenu.Separator />
 							<DropdownMenu.Item>
@@ -225,6 +261,20 @@
 				>
 					Spaces
 				</a>
+				{#if $currentUser?.isAdmin}
+					<a
+						href="/admin"
+						class="block rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none {isActivePage(
+							'/admin'
+						)
+							? 'bg-accent text-accent-foreground'
+							: 'text-foreground/60'}"
+						onclick={closeMobileMenu}
+						aria-current={isActivePage('/admin') ? 'page' : undefined}
+					>
+						Admin
+					</a>
+				{/if}
 			</div>
 		</nav>
 	{/if}

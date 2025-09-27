@@ -138,9 +138,10 @@ test.describe('Performance Tests', () => {
 		await page.goto('/');
 
 		// Get initial memory usage
-		const initialMemory = await page.evaluate(() => {
-			return (performance as any).memory ? (performance as any).memory.usedJSHeapSize : 0;
-		});
+		const initialMemory = (await page.evaluate(() => {
+			const perfWithMemory = performance as unknown as { memory?: { usedJSHeapSize: number } };
+			return perfWithMemory.memory ? perfWithMemory.memory.usedJSHeapSize : 0;
+		})) as number;
 
 		// Navigate around and create/destroy components
 		if (await page.locator('a[href="/spaces"]').isVisible()) {
@@ -153,16 +154,18 @@ test.describe('Performance Tests', () => {
 
 		// Force garbage collection if available
 		await page.evaluate(() => {
-			if ((window as any).gc) {
-				(window as any).gc();
+			const windowWithGc = window as unknown as { gc?: () => void };
+			if (windowWithGc.gc) {
+				windowWithGc.gc();
 			}
 		});
 
 		await page.waitForTimeout(1000);
 
-		const finalMemory = await page.evaluate(() => {
-			return (performance as any).memory ? (performance as any).memory.usedJSHeapSize : 0;
-		});
+		const finalMemory = (await page.evaluate(() => {
+			const perfWithMemory = performance as unknown as { memory?: { usedJSHeapSize: number } };
+			return perfWithMemory.memory ? perfWithMemory.memory.usedJSHeapSize : 0;
+		})) as number;
 
 		// Memory shouldn't grow excessively (allow 5MB growth)
 		if (initialMemory > 0 && finalMemory > 0) {
@@ -211,7 +214,11 @@ test.describe('Performance Tests', () => {
 
 	test('should bundle assets efficiently', async ({ page }) => {
 		// Track network requests during page load
-		const requests: any[] = [];
+		const requests: Array<{
+			url: string;
+			method: string;
+			resourceType: string;
+		}> = [];
 
 		page.on('request', (request) => {
 			requests.push({

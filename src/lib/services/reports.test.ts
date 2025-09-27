@@ -9,10 +9,14 @@ vi.mock('../pocketbase.js', () => {
 		targetId?: string;
 		reason?: string;
 		status?: string;
+		post?: string | null;
+		comment?: string | null;
 	};
 	const create = vi.fn(async (data: Report) => ({ id: 'r1', ...data }));
-	const getOne = vi.fn(async () => ({ id: 'p1', author: 'u2' }));
+	const getPost = vi.fn(async () => ({ id: 'p1', author: 'u2' }));
+	const getComment = vi.fn(async () => ({ id: 'c1', post: 'p1', author: 'u2' }));
 	const update = vi.fn(async (_id: string, data: Partial<Report>) => ({ id: 'r1', ...data }));
+	const moderationLogCreate = vi.fn();
 	return {
 		pb: {
 			authStore: { model: { id: 'user1' } },
@@ -24,14 +28,17 @@ vi.mock('../pocketbase.js', () => {
 							id: 'r1',
 							targetType: 'post',
 							targetId: 'p1',
-							reporter: 'user1'
+							reporter: 'user1',
+							post: 'p1',
+							expand: {
+								post: { id: 'p1', author: 'u2' }
+							}
 						})),
 						update
 					};
-				if (name === 'posts') return { getOne };
-				if (name === 'moderation_logs') return { create: vi.fn() };
-				if (name === 'comments')
-					return { getOne: vi.fn(async () => ({ id: 'c1', post: 'p1', author: 'u2' })) };
+				if (name === 'posts') return { getOne: getPost };
+				if (name === 'moderation_logs') return { create: moderationLogCreate };
+				if (name === 'comments') return { getOne: getComment };
 				return { getOne: vi.fn(), create: vi.fn(), update: vi.fn() };
 			}
 		}
@@ -48,6 +55,7 @@ describe('reports service', () => {
 		const r = await reportContent({ targetType: 'post', targetId: 'p1', reason: 'spam' });
 		expect(r.id).toBe('r1');
 		expect(r.reason).toBe('spam');
+		expect(r.post).toBe('p1');
 	});
 	it('updates report status', async () => {
 		const updated = await updateReportStatus('r1', 'resolved');

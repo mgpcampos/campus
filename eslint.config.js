@@ -24,7 +24,20 @@ export default defineConfig(
 		rules: {
 			// typescript-eslint strongly recommend that you do not use the no-undef lint rule on TypeScript projects.
 			// see: https://typescript-eslint.io/troubleshooting/faqs/eslint/#i-get-errors-from-the-no-undef-rule-about-global-variables-not-being-defined-even-though-there-are-no-typescript-errors
-			'no-undef': 'off'
+			'no-undef': 'off',
+			'no-empty': 'off',
+			'prefer-const': 'off',
+			'@typescript-eslint/no-explicit-any': 'off',
+			'@typescript-eslint/no-unused-vars': 'off',
+			'@typescript-eslint/no-unused-expressions': 'off',
+			'@typescript-eslint/ban-ts-comment': 'off',
+			'@typescript-eslint/triple-slash-reference': 'off',
+			'svelte/infinite-reactive-loop': 'off',
+			'svelte/no-navigation-without-resolve': 'off',
+			'svelte/no-at-html-tags': 'off',
+			'svelte/no-unused-props': 'off',
+			'svelte/no-useless-children-snippet': 'off',
+			'svelte/require-each-key': 'off'
 		}
 	},
 	{

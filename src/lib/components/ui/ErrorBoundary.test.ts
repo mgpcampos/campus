@@ -1,11 +1,15 @@
-import { render, screen, fireEvent } from '@testing-library/svelte';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, cleanup } from '@testing-library/svelte';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import ErrorBoundary from './ErrorBoundary.svelte';
 import { normalizeError } from '$lib/utils/errors.js';
 
 describe('ErrorBoundary', () => {
 	beforeEach(() => {
 		vi.restoreAllMocks();
+	});
+
+	afterEach(() => {
+		cleanup();
 	});
 
 	it('renders userMessage from a normalized network error and retries', async () => {

@@ -9,7 +9,9 @@ export default defineConfig(({ mode }) => ({
 			$lib: path.resolve(__dirname, 'src/lib'),
 			'$env/static/public': path.resolve(__dirname, 'src/mocks/env-public.ts'),
 			'$app/stores': path.resolve(__dirname, 'src/mocks/app-stores.ts'),
-			'$app/environment': path.resolve(__dirname, 'src/mocks/app-environment.ts')
+			'$app/environment': path.resolve(__dirname, 'src/mocks/app-environment.ts'),
+			'$app/navigation': path.resolve(__dirname, 'src/mocks/app-navigation.ts'),
+			'$app/forms': path.resolve(__dirname, 'src/mocks/app-forms.ts')
 		},
 		// Ensure browser conditions so Svelte 5 lifecycle APIs (mount/onMount) are available under Vitest
 		conditions: mode === 'test' ? ['browser'] : []

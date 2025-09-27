@@ -10,6 +10,7 @@ export async function reportContent({ targetType, targetId, reason }) {
 	try {
 		if (!pb.authStore.model?.id) throw new Error('Not authenticated');
 		if (!['post', 'comment'].includes(targetType)) throw new Error('Invalid targetType');
+		/** @type {Record<string, any>} */
 		const data = {
 			reporter: pb.authStore.model.id,
 			targetType,
@@ -17,6 +18,13 @@ export async function reportContent({ targetType, targetId, reason }) {
 			reason: reason?.trim() || 'unspecified',
 			status: 'open'
 		};
+		if (targetType === 'post') {
+			data.post = targetId;
+			delete data.comment;
+		} else if (targetType === 'comment') {
+			data.comment = targetId;
+			delete data.post;
+		}
 		return await pb.collection('reports').create(data);
 	} catch (error) {
 		console.error('Error reporting content:', error);
@@ -43,15 +51,29 @@ export async function listReports({ status = 'open', page = 1, perPage = 50 } = 
 export async function updateReportStatus(reportId, newStatus) {
 	try {
 		if (!pb.authStore.model?.id) throw new Error('Not authenticated');
-		const report = await pb.collection('reports').getOne(reportId);
+		const report = await pb.collection('reports').getOne(reportId, {
+			expand:
+				'post,post.space,post.group,post.group.space,comment,comment.post,comment.post.space,comment.post.group,comment.post.group.space'
+		});
 		if (!report) throw new Error('Report not found');
 		// Check permission via target
 		let allowed = false;
-		if (report.targetType === 'post') {
+		if (report.expand?.post || report.post) {
+			const post = report.expand?.post || (await pb.collection('posts').getOne(report.post));
+			allowed = await canModeratePost(post);
+		}
+		if (!allowed && (report.expand?.comment || report.comment)) {
+			const comment =
+				report.expand?.comment ||
+				(await pb.collection('comments').getOne(report.comment, { expand: 'post' }));
+			allowed = await canModerateComment(comment);
+		}
+		if (!allowed && report.targetType === 'post' && report.targetId) {
 			const post = await pb.collection('posts').getOne(report.targetId);
 			allowed = await canModeratePost(post);
-		} else if (report.targetType === 'comment') {
-			const comment = await pb.collection('comments').getOne(report.targetId);
+		}
+		if (!allowed && report.targetType === 'comment' && report.targetId) {
+			const comment = await pb.collection('comments').getOne(report.targetId, { expand: 'post' });
 			allowed = await canModerateComment(comment);
 		}
 		if (!allowed) throw new Error('Not authorized to modify report');

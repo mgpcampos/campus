@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/svelte';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { render, screen, cleanup } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import ErrorBoundary from './ErrorBoundary.svelte';
 
@@ -17,10 +17,15 @@ vi.mock('$lib/utils/errors.js', () => ({
 	}))
 }));
 
+afterEach(() => {
+	cleanup();
+	vi.restoreAllMocks();
+});
+
 describe('ErrorBoundary', () => {
 	it('renders nothing when no error', () => {
-		const { container } = render(ErrorBoundary, { props: { error: null } });
-		expect(container.firstChild).toBeNull();
+		render(ErrorBoundary, { props: { error: null } });
+		expect(screen.queryByRole('alert')).toBeNull();
 	});
 
 	it('displays error message with retry button when retryable', () => {

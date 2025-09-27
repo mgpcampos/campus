@@ -6,6 +6,7 @@
  * @property {string} email
  * @property {string} [avatar]
  * @property {string} [bio]
+ * @property {boolean} [isAdmin]
  * @property {string} created
  * @property {string} updated
  */

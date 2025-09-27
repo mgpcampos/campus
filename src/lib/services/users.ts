@@ -108,7 +108,7 @@ export async function listUserMemberships(
 	userId: string
 ): Promise<MembershipSummary> {
 	// Spaces
-	const spaceMemberships = await pb.collection('space_memberships').getFullList({
+	const spaceMemberships = await pb.collection('space_members').getFullList({
 		filter: `user = "${userId}"`,
 		expand: 'space'
 	});
@@ -126,7 +126,7 @@ export async function listUserMemberships(
 		.map((s) => ({ id: s.id, name: s.name, slug: s.slug }));
 
 	// Groups
-	const groupMemberships = await pb.collection('group_memberships').getFullList({
+	const groupMemberships = await pb.collection('group_members').getFullList({
 		filter: `user = "${userId}"`,
 		expand: 'group'
 	});

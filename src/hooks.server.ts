@@ -29,14 +29,25 @@ export const handle: Handle = async ({ event, resolve }) => {
 	// Load auth from incoming cookies
 	event.locals.pb.authStore.loadFromCookie(event.request.headers.get('cookie') || '');
 
+	const syncLocalsAuth = () => {
+		const { authStore } = event.locals.pb;
+		event.locals.user = authStore.model || null;
+		event.locals.sessionToken = authStore.isValid ? (authStore.token ?? null) : null;
+	};
+
+	syncLocalsAuth();
+
 	// Attempt silent refresh if token still valid
 	try {
 		if (event.locals.pb.authStore.isValid) {
 			await event.locals.pb.collection('users').authRefresh();
 		}
+		// Refresh may update auth data (e.g., rotated token)
+		syncLocalsAuth();
 	} catch {
 		// Clear invalid auth (token expired, revoked, etc.)
 		event.locals.pb.authStore.clear();
+		syncLocalsAuth();
 	}
 
 	// Apply rate limiting to mutating requests under /api (POST/PUT/PATCH/DELETE)
@@ -51,6 +62,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 	}
 
 	const response = await resolve(event);
+
+	// Auth state might have changed during the request lifecycle (e.g., login/logout)
+	syncLocalsAuth();
 
 	// Always re-export cookie so client stays in sync; httpOnly to mitigate XSS
 	response.headers.append(

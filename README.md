@@ -13,6 +13,7 @@ A lightweight, Twitter-like social network designed specifically for the educati
 - Responsive design with accessibility support
 - Role-based Space memberships (owner, moderator, member)
 - Image attachments on posts with validation & previews (Task 10)
+- Admin dashboard with analytics overview and moderation queue (Task 18)
 
 ## Tech Stack
 
@@ -121,7 +122,7 @@ npm test
 ## Development
 
 - `npm run dev` - Start development server
-- `npm run build` - Build for production
+- `npm run build` - Build for production (precompresses assets and generates Node server in `build/`)
 - `npm run preview` - Preview production build
 - `npm run check` - Run type checking
 - `npm run lint` - Run linting
@@ -130,6 +131,11 @@ npm test
 ## Environment Variables
 
 - `PUBLIC_POCKETBASE_URL` - PocketBase server URL (default: http://127.0.0.1:8090)
+- `BUNDLE_SOURCEMAP` - When set to `true`, emits sourcemaps during production build for debugging.
+
+## Deployment
+
+Refer to `docs/deployment.md` for end-to-end deployment steps, including PocketBase hosting guidance, environment hardening, and build verification checklists.
 
 ## Security & Validation
 
@@ -177,6 +183,12 @@ Testing:
 - `cache.test.js` validates LRU + TTL semantics and getOrSet helper.
 - `images.test.js` covers URL & srcset generation.
 - Additional feed / route benchmarks can be added using Vitest + synthetic timers or Playwright traces.
+
+## Monitoring & Analytics
+
+- Client-side analytics pipeline batches page views, feature events, and Web Vitals to the `/api/analytics` endpoint. See `docs/analytics.md` for architecture details.
+- PocketBase `analytics_events` collection stores metrics; access is limited to platform admins for privacy.
+- Sampling is controlled by `PUBLIC_ANALYTICS_SAMPLE_RATE`; disable entirely by setting `PUBLIC_ENABLE_ANALYTICS=false`.
 
 ## Realtime Feed & Notifications (Task 14)
 

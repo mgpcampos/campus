@@ -1,6 +1,8 @@
 @import 'tailwindcss';
 
 @import 'tw-animate-css';
+@plugin '@tailwindcss/forms';
+@plugin '@tailwindcss/typography';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -116,11 +118,46 @@
 		@apply border-border outline-ring/50;
 	}
 	body {
-		@apply bg-background text-foreground;
+		@apply bg-background text-foreground antialiased;
 		font-family:
 			system-ui,
 			-apple-system,
 			sans-serif;
+		font-feature-settings: 'liga', 'kern';
+		font-variation-settings: 'GRAD' 0;
+	}
+
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		@apply font-semibold tracking-tight text-balance text-foreground;
+	}
+
+	h1 {
+		@apply scroll-m-20 text-3xl sm:text-4xl;
+	}
+
+	h2 {
+		@apply scroll-m-20 text-2xl sm:text-3xl;
+	}
+
+	h3 {
+		@apply scroll-m-20 text-xl;
+	}
+
+	h4 {
+		@apply scroll-m-20 text-lg;
+	}
+
+	p {
+		@apply leading-7 text-muted-foreground;
+	}
+
+	strong {
+		@apply font-semibold text-foreground;
 	}
 
 	/* Fallback styles in case CSS variables don't load */

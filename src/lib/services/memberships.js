@@ -1,15 +1,28 @@
 import { pb } from '../pocketbase.js';
 import { normalizeError } from '../utils/errors.js';
 
+/**
+ * @typedef {{ pb?: import('pocketbase').default }} ServiceOptions
+ */
+
+/**
+ * @param {import('pocketbase').default | undefined} provided
+ * @returns {import('pocketbase').default}
+ */
+function resolveClient(provided) {
+	return provided ?? pb;
+}
+
 /** Join a space (creates membership)
  * @param {string} spaceId
  */
-export async function joinSpace(spaceId) {
+export async function joinSpace(spaceId, serviceOptions = /** @type {ServiceOptions} */ ({})) {
 	try {
-		if (!pb.authStore.model?.id) throw new Error('Not authenticated');
-		return await pb.collection('space_members').create({
+		const client = resolveClient(serviceOptions.pb);
+		if (!client.authStore.model?.id) throw new Error('Not authenticated');
+		return await client.collection('space_members').create({
 			space: spaceId,
-			user: pb.authStore.model.id,
+			user: client.authStore.model.id,
 			role: 'member'
 		});
 	} catch (error) {
@@ -21,15 +34,16 @@ export async function joinSpace(spaceId) {
 /** Leave a space (delete membership)
  * @param {string} spaceId
  */
-export async function leaveSpace(spaceId) {
+export async function leaveSpace(spaceId, serviceOptions = /** @type {ServiceOptions} */ ({})) {
 	try {
-		if (!pb.authStore.model?.id) throw new Error('Not authenticated');
+		const client = resolveClient(serviceOptions.pb);
+		if (!client.authStore.model?.id) throw new Error('Not authenticated');
 		// Find membership record id first
-		const list = await pb.collection('space_members').getList(1, 1, {
-			filter: `space = "${spaceId}" && user = "${pb.authStore.model.id}"`
+		const list = await client.collection('space_members').getList(1, 1, {
+			filter: `space = "${spaceId}" && user = "${client.authStore.model.id}"`
 		});
 		if (list.items.length === 0) return false;
-		await pb.collection('space_members').delete(list.items[0].id);
+		await client.collection('space_members').delete(list.items[0].id);
 		return true;
 	} catch (error) {
 		console.error('Error leaving space:', error);
@@ -40,11 +54,12 @@ export async function leaveSpace(spaceId) {
 /** Check if current user is member of space
  * @param {string} spaceId
  */
-export async function isMember(spaceId) {
+export async function isMember(spaceId, serviceOptions = /** @type {ServiceOptions} */ ({})) {
 	try {
-		if (!pb.authStore.model?.id) return false;
-		const list = await pb.collection('space_members').getList(1, 1, {
-			filter: `space = "${spaceId}" && user = "${pb.authStore.model.id}"`
+		const client = resolveClient(serviceOptions.pb);
+		if (!client.authStore.model?.id) return false;
+		const list = await client.collection('space_members').getList(1, 1, {
+			filter: `space = "${spaceId}" && user = "${client.authStore.model.id}"`
 		});
 		return list.items.length > 0;
 	} catch (error) {
@@ -57,11 +72,15 @@ export async function isMember(spaceId) {
 /** Get role of current user in space
  * @param {string} spaceId
  */
-export async function getMembershipRole(spaceId) {
+export async function getMembershipRole(
+	spaceId,
+	serviceOptions = /** @type {ServiceOptions} */ ({})
+) {
 	try {
-		if (!pb.authStore.model?.id) return null;
-		const list = await pb.collection('space_members').getList(1, 1, {
-			filter: `space = "${spaceId}" && user = "${pb.authStore.model.id}"`
+		const client = resolveClient(serviceOptions.pb);
+		if (!client.authStore.model?.id) return null;
+		const list = await client.collection('space_members').getList(1, 1, {
+			filter: `space = "${spaceId}" && user = "${client.authStore.model.id}"`
 		});
 		return list.items[0]?.role || null;
 	} catch (error) {

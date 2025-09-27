@@ -6,7 +6,7 @@ import { validateImages } from '$lib/utils/media.js';
 import { normalizeError, toErrorPayload } from '$lib/utils/errors.js';
 
 /** @type {import('./$types').RequestHandler} */
-export async function GET({ url }) {
+export async function GET({ url, locals }) {
 	try {
 		const queryParams = Object.fromEntries(url.searchParams);
 		// Allow either ?q= or legacy ?search= param
@@ -15,7 +15,7 @@ export async function GET({ url }) {
 		}
 		const validatedQuery = postQuerySchema.parse(queryParams);
 
-		const result = await getPosts(validatedQuery);
+		const result = await getPosts(validatedQuery, { pb: locals.pb });
 		// Add short-lived HTTP cache for anonymous global first page to leverage CDN/browser caching
 		const headers = new Headers();
 		const isCacheable =
@@ -71,7 +71,7 @@ export async function POST({ request, locals }) {
 		validatedData.content = sanitizeContent(validatedData.content);
 
 		// For now, we directly forward files to PocketBase. (Optional future: optimize server-side via sharp.)
-		const newPost = await createPost(validatedData);
+		const newPost = await createPost(validatedData, { pb: locals.pb });
 		return json(newPost, { status: 201 });
 	} catch (err) {
 		const isZod = err instanceof Error && err.name === 'ZodError';

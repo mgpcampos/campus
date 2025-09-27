@@ -8,22 +8,16 @@
 		subscribeNotifications
 	} from '$lib/services/notificationClient';
 	import { onMount } from 'svelte';
-	import { Button } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Bell } from 'lucide-svelte';
-	import { pb, currentUser } from '$lib/pocketbase.js';
 
-	let open = false;
+	let open = $state(false);
 	onMount(() => {
 		subscribeNotifications();
 	});
-
-	function handleOpenChange(v: boolean) {
-		open = v;
-	}
 </script>
 
-<DropdownMenu.Root {open}>
+<DropdownMenu.Root bind:open>
 	<DropdownMenu.Trigger>
 		{#snippet child({ props })}
 			<button

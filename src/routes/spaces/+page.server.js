@@ -7,10 +7,10 @@ export async function load({ url, locals }) {
 	const pageParam = url.searchParams.get('page');
 	const page = pageParam ? Number(pageParam) : 1;
 	const search = url.searchParams.get('q') || '';
-	const spaces = await getSpaces({ page, search });
+	const spaces = await getSpaces({ page, search }, { pb: locals.pb });
 	const augmentedItems = await Promise.all(
 		spaces.items.map(async (s) => {
-			const memberCount = await getSpaceMemberCount(s.id);
+			const memberCount = await getSpaceMemberCount(s.id, { pb: locals.pb });
 			return { ...s, memberCount };
 		})
 	);

@@ -17,3 +17,29 @@ if (browser) {
 		currentUser.set(pb.authStore.model);
 	});
 }
+
+/**
+ * Synchronize PocketBase auth state on the client using session data from the server.
+ * @param {string | null | undefined} token
+ * @param {import('pocketbase').RecordModel | null | undefined} model
+ */
+export function hydrateClientAuth(token, model) {
+	if (!browser) return;
+	const nextToken = token ?? null;
+	const currentToken = pb.authStore.token ?? null;
+	const currentId = pb.authStore.model?.id ?? null;
+	const nextId = model?.id ?? null;
+
+	if (nextToken === currentToken && nextId === currentId) {
+		// Already in sync; avoid redundant save/clear to prevent needless events.
+		return;
+	}
+
+	if (nextToken && model) {
+		pb.authStore.save(nextToken, model);
+		currentUser.set(pb.authStore.model);
+	} else {
+		pb.authStore.clear();
+		currentUser.set(null);
+	}
+}
