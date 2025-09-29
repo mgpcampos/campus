@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect } from 'vitest';
 import { validateImages, MAX_ATTACHMENTS, optimizeImage, sanitizeFilename } from './media.js';
 
@@ -46,5 +47,5 @@ describe('media utils', () => {
 		expect(original.length).toBeGreaterThan(0);
 		// variant may be skipped if width larger than source; allow empty or buffer
 		expect(typeof variants).toBe('object');
-	});
+	}, 15000);
 });

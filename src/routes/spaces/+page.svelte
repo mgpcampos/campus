@@ -1,12 +1,27 @@
-<script>
-	/** @type {{ spaces: { items: Array<any> }, search: string }} */
-	export let data;
-	// Cast items to include expected properties for template assistance
-	const spaces =
-		/** @type {{ items: Array<{ id:string; name?:string; description?:string; memberCount?:number }>}} */ (
-			data.spaces
-		);
+<script lang="ts">
+	import type { PageData } from './$types';
+
+	export let data: PageData;
+
+	type SpaceListItem = {
+		id: string;
+		name?: string;
+		description?: string;
+		memberCount?: number | null;
+		memberCountHidden?: boolean;
+	};
+
+	const spaces = data.spaces as { items: SpaceListItem[] };
 	const search = data.search;
+	const numberFormatter = new Intl.NumberFormat();
+
+	function formatMemberCount(space: SpaceListItem) {
+		if (space.memberCountHidden) return 'Hidden';
+		if (typeof space.memberCount === 'number') {
+			return numberFormatter.format(space.memberCount);
+		}
+		return '0';
+	}
 </script>
 
 <h1 class="mb-4 text-2xl font-bold">Spaces</h1>
@@ -28,7 +43,7 @@
 		<li class="rounded border p-3">
 			<a class="font-semibold" href={`/spaces/${space.id}`}>{space.name}</a>
 			<div class="text-sm text-gray-600">{space.description}</div>
-			<div class="mt-1 text-xs">Members: {space.memberCount}</div>
+			<div class="mt-1 text-xs">Members: {formatMemberCount(space)}</div>
 		</li>
 	{/each}
 </ul>

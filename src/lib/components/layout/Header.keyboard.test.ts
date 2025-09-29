@@ -1,11 +1,14 @@
 import { render, fireEvent, waitFor } from '@testing-library/svelte';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import type { RecordModel } from 'pocketbase';
 import Header from './Header.svelte';
 
 // Mock currentUser store minimal
 vi.mock('$lib/pocketbase.js', async () => {
 	return await import('../../pocketbase.mock.js');
 });
+
+import { currentUser } from '$lib/pocketbase.js';
 
 vi.mock('$app/stores', async () => {
 	const { readable } = await import('svelte/store');
@@ -15,6 +18,26 @@ vi.mock('$app/stores', async () => {
 });
 
 describe('Header keyboard navigation', () => {
+	beforeEach(() => {
+		const user: RecordModel = {
+			id: 'user-1',
+			collectionId: 'users',
+			collectionName: 'users',
+			email: 'user@example.com',
+			name: 'Test User',
+			username: 'test-user',
+			avatar: null,
+			isAdmin: false,
+			created: '2024-01-01 00:00:00',
+			updated: '2024-01-01 00:00:00'
+		};
+		currentUser.set(user);
+	});
+
+	afterEach(() => {
+		currentUser.set(null);
+	});
+
 	it('opens mobile menu moves focus then Escape closes and restores focus', async () => {
 		const { container } = render(Header, { props: { id: 'navigation' } });
 		const getToggle = () =>

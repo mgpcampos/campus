@@ -1,5 +1,19 @@
-import { describe, it, expect } from 'vitest';
-import { rateLimit, RATE_LIMIT_TOKENS } from './rate-limit';
+import { beforeEach, afterEach, describe, it, expect, vi } from 'vitest';
+import {
+	rateLimit,
+	RATE_LIMIT_TOKENS,
+	RATE_LIMIT_WINDOW_MS,
+	__resetRateLimit,
+	__rateLimitStats
+} from '$lib/utils/rate-limit.js';
+
+beforeEach(() => {
+	__resetRateLimit();
+});
+
+afterEach(() => {
+	vi.useRealTimers();
+});
 
 describe('rateLimit util', () => {
 	it('enforces token bucket', () => {
@@ -9,5 +23,17 @@ describe('rateLimit util', () => {
 			if (rateLimit(ip)) allowed++;
 		}
 		expect(allowed).toBeLessThanOrEqual(RATE_LIMIT_TOKENS);
+	});
+
+	it('cleans up stale buckets to avoid memory leaks', () => {
+		vi.useFakeTimers();
+		const staleIp = 'stale-ip';
+		rateLimit(staleIp);
+		expect(__rateLimitStats().bucketCount).toBe(1);
+
+		// Advance time beyond stale threshold and trigger cleanup via another call.
+		vi.advanceTimersByTime(RATE_LIMIT_WINDOW_MS * 4);
+		rateLimit('new-ip');
+		expect(__rateLimitStats().bucketCount).toBe(1);
 	});
 });

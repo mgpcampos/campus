@@ -11,7 +11,11 @@ export async function load({ url, locals }) {
 	const augmentedItems = await Promise.all(
 		spaces.items.map(async (s) => {
 			const memberCount = await getSpaceMemberCount(s.id, { pb: locals.pb });
-			return { ...s, memberCount };
+			return {
+				...s,
+				memberCount,
+				memberCountHidden: memberCount === null
+			};
 		})
 	);
 	return { spaces: { ...spaces, items: augmentedItems }, search };

@@ -1,3 +1,4 @@
+import { ClientResponseError } from 'pocketbase';
 import { pb } from '../pocketbase.js';
 import { serverCaches, getOrSet } from '../utils/cache.js';
 
@@ -103,25 +104,32 @@ export async function getSpaceMemberCount(
 	const cacheKey = `spaceMemberCount:${spaceId}`;
 	const client = resolveClient(serviceOptions.pb);
 	const allowCache = !serviceOptions.pb;
-	if (!allowCache) {
-		const result = await client.collection('space_members').getList(1, 1, {
-			filter: `space = "${spaceId}"`,
-			totalCount: true
-		});
-		return result.totalItems;
-	}
-	return await getOrSet(
-		serverCaches.lists,
-		cacheKey,
-		async () => {
+	const fetchCount = async () => {
+		try {
 			const result = await client.collection('space_members').getList(1, 1, {
 				filter: `space = "${spaceId}"`,
-				totalCount: true
+				totalCount: true,
+				requestKey: `spaceMemberCount:${spaceId}`
 			});
 			return result.totalItems;
-		},
-		{ ttlMs: 20_000 }
-	);
+		} catch (error) {
+			if (error instanceof ClientResponseError) {
+				if (error.status === 403) {
+					return null; // hidden for private spaces or insufficient permissions
+				}
+				if (error.status === 404) {
+					return 0;
+				}
+			}
+			throw error;
+		}
+	};
+
+	if (!allowCache) {
+		return await fetchCount();
+	}
+
+	return await getOrSet(serverCaches.lists, cacheKey, fetchCount, { ttlMs: 20_000 });
 }
 
 /** List members of a space with optional search over user fields

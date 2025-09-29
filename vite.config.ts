@@ -10,6 +10,12 @@ export default defineConfig(({ mode }) => {
 	return {
 		// Keep sveltekit first to ensure its aliases (like $lib) register early
 		plugins: [sveltekit(), tailwindcss()],
+		server: {
+			port: 5173 // Sets the development server to use port 5173
+		},
+		preview: {
+			port: 4173 // Sets the preview server to use port 4173
+		},
 		resolve: {
 			alias: {
 				// Explicit fallback alias in case plugin order/caching caused loss of default alias

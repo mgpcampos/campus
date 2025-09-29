@@ -1,8 +1,47 @@
 import { defineConfig, devices } from '@playwright/test';
+import type { Project } from '@playwright/test';
 
 /**
  * @see https://playwright.dev/docs/test-configuration
  */
+const includeWebkit = Boolean(process.env.CI || process.env.PLAYWRIGHT_ENABLE_WEBKIT === '1');
+
+const projects: Project[] = [
+	{
+		name: 'chromium',
+		use: { ...devices['Desktop Chrome'] }
+	},
+	{
+		name: 'firefox',
+		use: { ...devices['Desktop Firefox'] }
+	},
+	/* Test against mobile viewports. */
+	{
+		name: 'Mobile Chrome',
+		use: { ...devices['Pixel 5'] }
+	}
+];
+
+if (includeWebkit) {
+	projects.push(
+		{
+			name: 'webkit',
+			use: { ...devices['Desktop Safari'] }
+		},
+		{
+			name: 'Mobile Safari',
+			use: { ...devices['iPhone 12'] }
+		}
+	);
+} else {
+	if (!process.env.PLAYWRIGHT_SKIP_WEBKIT_NOTICE) {
+		console.warn(
+			'Skipping WebKit-based Playwright projects; set PLAYWRIGHT_ENABLE_WEBKIT=1 to include them locally.'
+		);
+		process.env.PLAYWRIGHT_SKIP_WEBKIT_NOTICE = '1';
+	}
+}
+
 export default defineConfig({
 	testDir: 'e2e',
 	/* Run tests in files in parallel */ fullyParallel: true,
@@ -19,28 +58,7 @@ export default defineConfig({
 		/* Take screenshot on failure */ screenshot: 'only-on-failure',
 		/* Record video on first retry */ video: 'retain-on-failure'
 	},
-	/* Configure projects for major browsers */ projects: [
-		{
-			name: 'chromium',
-			use: { ...devices['Desktop Chrome'] }
-		},
-		{
-			name: 'firefox',
-			use: { ...devices['Desktop Firefox'] }
-		},
-		{
-			name: 'webkit',
-			use: { ...devices['Desktop Safari'] }
-		},
-		/* Test against mobile viewports. */ {
-			name: 'Mobile Chrome',
-			use: { ...devices['Pixel 5'] }
-		},
-		{
-			name: 'Mobile Safari',
-			use: { ...devices['iPhone 12'] }
-		}
-	] /* Test against branded browsers. */,
+	/* Configure projects for major browsers */ projects /* Test against branded browsers. */,
 	// {
 	//   name: 'Microsoft Edge',
 	//   use: { ...devices['Desktop Edge'], channel: 'msedge' },
@@ -52,7 +70,8 @@ export default defineConfig({
 	/* Run your local dev server before starting the tests */ webServer: {
 		command: 'npm run build && npm run preview',
 		port: 4173,
-		timeout: 120000
+		timeout: 120000,
+		reuseExistingServer: !process.env.CI
 	},
 	/* Global setup and teardown */ globalSetup: './tests/global-setup.ts',
 	globalTeardown: './tests/global-teardown.ts'

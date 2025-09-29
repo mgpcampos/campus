@@ -13,12 +13,12 @@ async function globalSetup(config: FullConfig) {
 	try {
 		// Wait for app to be ready
 		console.log('⏳ Waiting for app server...');
-		await page.goto(baseURL, { waitUntil: 'networkidle' });
+		await page.goto(baseURL, { waitUntil: 'domcontentloaded' });
 		console.log('✅ App server is ready');
 
 		// Wait for PocketBase to be ready
 		console.log('⏳ Waiting for PocketBase...');
-		await page.goto('http://localhost:8090/api/health', { waitUntil: 'networkidle' });
+		await page.goto('http://localhost:8090/api/health', { waitUntil: 'domcontentloaded' });
 		console.log('✅ PocketBase is ready');
 	} catch (error) {
 		console.error('❌ Global setup failed:', error);
