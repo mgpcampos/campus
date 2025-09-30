@@ -48,10 +48,18 @@
 				disablePolling();
 			}
 		});
-		// Keep posts in sync with feedPosts store
+		// Keep posts in sync with feedPosts store (but only for realtime updates, not initial empty state)
+		let initialized = false;
 		const unsubPosts = feedPosts.subscribe((fp) => {
-			// Merge updates only if same context
-			posts = fp;
+			// Skip the initial empty subscription callback
+			if (!initialized) {
+				initialized = true;
+				return;
+			}
+			// Only update if we have posts from realtime
+			if (fp.length > 0 || posts.length === 0) {
+				posts = fp;
+			}
 		});
 		return () => {
 			unsub();
@@ -102,6 +110,8 @@
 				posts = [...posts, ...(result as any).items];
 			} else {
 				posts = (result as any).items;
+				// Sync with feedPosts store for realtime updates
+				feedPosts.set(posts);
 			}
 
 			hasMore = (result as any).page < (result as any).totalPages;

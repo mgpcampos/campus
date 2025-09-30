@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	export let src: string;
 	export let alt: string = 'Attachment';
-	export const aspect: number | null = null; // width/height if known - for future use
+	export let aspect: number | null = null; // width/height if known - for future use
 	export let sizes: string = '(max-width: 640px) 100vw, 640px';
 	export let className: string = '';
 	let loaded = false;
@@ -57,7 +57,7 @@
 		<!-- Future sources for AVIF/WebP variants could be added here -->
 		<img
 			bind:this={imageEl}
-			class={`w-full rounded-md border object-cover transition-opacity ${loaded ? 'opacity-100' : 'opacity-0'} ${className}`}
+			class={`w-full rounded-md border transition-opacity ${loaded ? 'opacity-100' : 'opacity-0'} ${className}`}
 			{src}
 			{alt}
 			loading="lazy"

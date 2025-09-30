@@ -1,17 +1,60 @@
 <script>
+	import { invalidate } from '$app/navigation';
+
+	/**
+	 * @typedef {Object} SpaceGroupPermissions
+	 * @property {boolean} canCreateGroups
+	 * @property {boolean} [isMember]
+	 * @property {boolean} [isOwner]
+	 * @property {boolean} [isModerator]
+	 * @property {string | null} [membershipRole]
+	 */
+
+	/** @type {{ space: any; groups: any; search: string; permissions: SpaceGroupPermissions }} */
 	export let data;
-	let { space, groups, search } = data;
+	let space;
+	let groups;
+	let search;
+	/** @type {SpaceGroupPermissions} */
+	let permissions = data.permissions;
 	let creating = false;
+	/** @type {string | null} */
+	let error = null;
+	/** @type {string | null} */
+	let success = null;
+
+	$: ({ space, groups, search, permissions } = data);
 
 	/** @param {SubmitEvent} e */
 	async function createGroupAction(e) {
 		e.preventDefault();
+		if (creating) return;
+		if (!permissions?.canCreateGroups) {
+			error = 'You need to join this space before creating a group.';
+			success = null;
+			return;
+		}
 		creating = true;
+		error = null;
+		success = null;
 		const formEl = e.target instanceof HTMLFormElement ? e.target : undefined;
 		const fd = new FormData(formEl);
-		const res = await fetch('?/' + 'create', { method: 'POST', body: fd });
-		if (res.ok) location.reload();
-		creating = false;
+		try {
+			const res = await fetch('?/create', { method: 'POST', body: fd });
+			if (!res.ok) {
+				const payload = await res.json().catch(() => null);
+				throw new Error(payload?.error ?? 'Failed to create group');
+			}
+			const payload = await res.json().catch(() => null);
+			formEl?.reset();
+			await invalidate('app:groups');
+			success = payload?.message ?? 'Group created successfully.';
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'Failed to create group';
+			success = null;
+		} finally {
+			creating = false;
+		}
 	}
 </script>
 
@@ -35,7 +78,13 @@
 <form on:submit|preventDefault={createGroupAction} class="mb-6 space-y-2 rounded border p-4">
 	<div>
 		<label class="block text-sm font-medium" for="group_name">Name</label>
-		<input id="group_name" name="name" class="w-full rounded border px-2 py-1" required />
+		<input
+			id="group_name"
+			name="name"
+			class="w-full rounded border px-2 py-1"
+			required
+			disabled={creating || !permissions?.canCreateGroups}
+		/>
 	</div>
 	<div>
 		<label class="block text-sm font-medium" for="group_description">Description</label>
@@ -44,26 +93,52 @@
 			name="description"
 			class="w-full rounded border px-2 py-1"
 			rows="2"
+			disabled={creating || !permissions?.canCreateGroups}
 		></textarea>
 	</div>
 	<label class="inline-flex items-center gap-2 text-sm">
-		<input type="checkbox" name="isPublic" checked /> Public
+		<input
+			type="checkbox"
+			name="isPublic"
+			checked
+			disabled={creating || !permissions?.canCreateGroups}
+		/>
+		Public
 	</label>
-	<div>
-		<button class="rounded bg-blue-600 px-3 py-1 text-white" disabled={creating}
-			>Create Group</button
+	<div class="flex flex-col gap-2">
+		<button
+			class="rounded bg-blue-600 px-3 py-1 text-white disabled:opacity-60"
+			disabled={creating || !permissions?.canCreateGroups}
+			>{creating ? 'Creating…' : 'Create Group'}</button
 		>
+		{#if error}
+			<p class="text-sm text-red-600">{error}</p>
+		{/if}
+		{#if success}
+			<p class="text-sm text-green-600">{success}</p>
+		{/if}
+		{#if !permissions?.canCreateGroups}
+			<p class="text-sm text-muted-foreground">
+				You need to join this space before creating a group.
+			</p>
+		{/if}
 	</div>
 </form>
 
 <ul class="space-y-3">
-	{#each groups.items as group}
-		<li class="flex items-center justify-between rounded border p-3">
-			<div>
-				<div class="font-medium">{group.name}</div>
-				<div class="text-sm text-gray-600">{group.description}</div>
-			</div>
-			<a class="text-sm text-blue-600" href={`/spaces/${space.id}/groups/${group.id}`}>View</a>
+	{#if groups.items.length === 0}
+		<li class="rounded border border-dashed p-6 text-center text-sm text-gray-500">
+			No groups yet. Be the first to create one!
 		</li>
-	{/each}
+	{:else}
+		{#each groups.items as group}
+			<li class="flex items-center justify-between rounded border p-3">
+				<div>
+					<div class="font-medium">{group.name}</div>
+					<div class="text-sm text-gray-600">{group.description}</div>
+				</div>
+				<a class="text-sm text-blue-600" href={`/spaces/${space.id}/groups/${group.id}`}>View</a>
+			</li>
+		{/each}
+	{/if}
 </ul>

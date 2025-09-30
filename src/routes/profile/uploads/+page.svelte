@@ -22,7 +22,14 @@
 				filter: `author = "${$currentUser.id}" && attachments != ''`,
 				sort: '-created'
 			});
-			posts = result.items.filter((p) => Array.isArray(p.attachments) && p.attachments.length > 0);
+			// Normalize attachments: PocketBase returns string for single file, array for multiple
+			posts = result.items
+				.filter((p) => p.attachments)
+				.map((p) => ({
+					...p,
+					attachments: Array.isArray(p.attachments) ? p.attachments : [p.attachments]
+				}))
+				.filter((p) => p.attachments.length > 0);
 		} catch (e: any) {
 			error = 'Failed to load uploads';
 			console.error(e);

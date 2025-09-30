@@ -48,15 +48,7 @@
 	}
 </script>
 
-<div class="mx-auto max-w-4xl space-y-8 py-10 sm:py-12">
-	<section class="space-y-3 text-center">
-		<h1>Welcome to Campus</h1>
-		<p class="mx-auto max-w-2xl text-lg">
-			A lightweight social platform where faculty, students, and staff share updates, discover new
-			spaces, and celebrate campus life.
-		</p>
-	</section>
-
+<div class="mx-auto max-w-4xl space-y-6 py-6 sm:py-8">
 	{#if $currentUser}
 		<!-- Post creation form -->
 		<Card.Root class="mb-6">

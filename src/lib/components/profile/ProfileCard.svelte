@@ -2,6 +2,7 @@
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { User, MapPin, Calendar, Edit } from 'lucide-svelte';
+	import { pb } from '$lib/pocketbase.js';
 
 	interface UserProfile {
 		id: string;
@@ -37,7 +38,7 @@
 		<div class="mb-4 flex justify-center">
 			{#if user.avatar}
 				<img
-					src={user.avatar}
+					src={pb.files.getURL(user, user.avatar, { thumb: '80x80' })}
 					alt="{user.name}'s avatar"
 					class="h-20 w-20 rounded-full border-2 border-border object-cover"
 				/>

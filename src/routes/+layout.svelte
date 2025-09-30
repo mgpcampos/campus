@@ -4,7 +4,6 @@
 	import { currentUser, hydrateClientAuth } from '$lib/pocketbase.js';
 	import { onMount } from 'svelte';
 	import Header from '$lib/components/layout/Header.svelte';
-	import Footer from '$lib/components/layout/Footer.svelte';
 	import Sidebar from '$lib/components/layout/Sidebar.svelte';
 	import SkipLinks from '$lib/components/ui/SkipLinks.svelte';
 	import LiveRegion from '$lib/components/ui/LiveRegion.svelte';
@@ -77,9 +76,6 @@
 			{@render children?.()}
 		</main>
 	</div>
-
-	<!-- Footer -->
-	<Footer id="footer" />
 </div>
 
 <!-- Toast Notifications -->

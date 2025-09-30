@@ -8,3 +8,11 @@ export async function load({ locals }) {
 	// Redirect to home page
 	throw redirect(302, '/');
 }
+
+/** @type {import('./$types').Actions} */
+export const actions = {
+	default: async ({ locals }) => {
+		locals.pb.authStore.clear();
+		throw redirect(302, '/');
+	}
+};

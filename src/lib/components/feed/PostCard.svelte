@@ -148,8 +148,16 @@
 	}
 
 	function getFileUrl(filename: string) {
-		return pb.files.getUrl(post, filename);
+		return pb.files.getURL(post, filename);
 	}
+
+	// Normalize attachments to always be an array
+	// PocketBase returns a string for single file, array for multiple
+	$: attachments = (() => {
+		if (!post.attachments) return [];
+		if (Array.isArray(post.attachments)) return post.attachments;
+		return [post.attachments];
+	})();
 </script>
 
 <Card.Root class="w-full">
@@ -162,7 +170,7 @@
 				>
 					{#if author?.avatar}
 						<img
-							src={pb.files.getUrl(author, author.avatar, { thumb: '40x40' })}
+							src={pb.files.getURL(author, author.avatar, { thumb: '40x40' })}
 							alt="{author.name}'s avatar"
 							class="h-10 w-10 rounded-full object-cover ring-2 ring-transparent transition group-hover:ring-blue-200"
 						/>
@@ -244,14 +252,24 @@
 		</div>
 
 		<!-- Image attachments -->
-		{#if post.attachments && post.attachments.length > 0}
-			<div class="mt-3 grid gap-2 {post.attachments.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}">
-				{#each post.attachments as attachment}
+		{#if attachments.length > 0}
+			<div
+				class="mt-3 grid gap-2 {attachments.length === 1
+					? 'grid-cols-1'
+					: attachments.length === 2
+						? 'grid-cols-2'
+						: attachments.length === 3
+							? 'grid-cols-3'
+							: 'grid-cols-2'}"
+			>
+				{#each attachments as attachment}
 					<!-- Using dedicated component for future responsive sources -->
 					<ImageAttachment
 						src={getFileUrl(attachment)}
 						alt="Post attachment"
-						className={post.attachments.length === 1 ? 'max-h-96' : 'h-32'}
+						className={attachments.length === 1
+							? 'max-h-[500px] object-contain'
+							: 'h-48 object-cover'}
 					/>
 				{/each}
 			</div>

@@ -154,7 +154,7 @@
 
 	function getAuthorAvatar(author: any) {
 		if (author?.avatar) {
-			return pb.files.getUrl(author, author.avatar, { thumb: '32x32' });
+			return pb.files.getURL(author, author.avatar, { thumb: '32x32' });
 		}
 		return null;
 	}
@@ -184,7 +184,7 @@
 				<div class="flex space-x-3">
 					{#if $currentUser?.avatar}
 						<img
-							src={pb.files.getUrl($currentUser, $currentUser.avatar, { thumb: '32x32' })}
+							src={pb.files.getURL($currentUser, $currentUser.avatar, { thumb: '32x32' })}
 							alt="Your avatar"
 							class="h-8 w-8 flex-shrink-0 rounded-full object-cover"
 						/>
