@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { currentUser } from '$lib/pocketbase.js';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import { House, Users, User, Plus, Shield } from 'lucide-svelte';
+	import { MessageSquare, Users, User, Plus, Shield } from '@lucide/svelte';
 	import { page } from '$app/stores';
 
 	let { class: className = '' } = $props();
 
 	// Navigation items
 	const baseNavigationItems = [
-		{ href: '/', label: 'Home', icon: House, requiresAuth: false },
+		{ href: '/feed', label: 'Feed', icon: MessageSquare, requiresAuth: false },
 		{ href: '/spaces', label: 'Spaces', icon: Users, requiresAuth: true },
 		{ href: '/profile', label: 'Profile', icon: User, requiresAuth: true }
 	];
@@ -19,7 +19,10 @@
 		if (href === '/') {
 			return $page.url.pathname === '/';
 		}
-		return $page.url.pathname.startsWith(href);
+		return (
+			$page.url.pathname === href ||
+			$page.url.pathname.startsWith(href.endsWith('/') ? href : `${href}/`)
+		);
 	}
 </script>
 

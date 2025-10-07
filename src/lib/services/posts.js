@@ -3,10 +3,78 @@ import { browser } from '$app/environment';
 import { pb } from '../pocketbase.js';
 import { serverCaches, getOrSet } from '../utils/cache.js';
 import { isAuthError, normalizeError, withRetry } from '../utils/errors.js';
+import { sanitizeContent, sanitizePlainText } from '../utils/sanitize.js';
+
+const MIME_EXTENSION_MAP = {
+	'image/jpeg': 'jpg',
+	'image/png': 'png',
+	'image/webp': 'webp',
+	'image/gif': 'gif',
+	'image/heic': 'heic',
+	'image/heif': 'heif',
+	'video/mp4': 'mp4'
+};
 
 /**
- * @typedef {{ pb?: import('pocketbase').default }} ServiceOptions
+ * @typedef {Object} ModerationSignalPayload
+ * @property {'post'} resource
+ * @property {'global'|'space'|'group'} scope
+ * @property {'text'|'images'|'video'} mediaType
+ * @property {number} attachmentCount
+ * @property {boolean} hasAltText
+ * @property {boolean} hasPoster
+ * @property {number|null} videoDuration
+ * @property {number} contentLength
+ * @property {boolean} containsLinks
+ * @property {number} wordCount
+ * @property {string|null} postId
+ * @property {string|null} authorId
+ * @property {Record<string, unknown>} [extra]
  */
+
+/**
+ * @typedef {{
+ *  pb?: import('pocketbase').default;
+ *  emitModerationMetadata?: (metadata: ModerationSignalPayload) => void | Promise<void>;
+ * }} ServiceOptions
+ */
+
+/**
+ * @typedef {Object} ModerationMetadataParams
+ * @property {'global'|'space'|'group'} scope
+ * @property {'text'|'images'|'video'} mediaType
+ * @property {File[]} attachments
+ * @property {boolean} hasAltText
+ * @property {boolean} hasPoster
+ * @property {number|null} videoDuration
+ * @property {string} content
+ * @property {number} altTextLength
+ * @property {string | null | undefined} publishedAt
+ */
+
+/**
+ * @typedef {Object} ModerationMetadataBase
+ * @property {'global'|'space'|'group'} scope
+ * @property {'text'|'images'|'video'} mediaType
+ * @property {number} attachmentCount
+ * @property {boolean} hasAltText
+ * @property {boolean} hasPoster
+ * @property {number|null} videoDuration
+ * @property {number} contentLength
+ * @property {boolean} containsLinks
+ * @property {number} wordCount
+ * @property {Record<string, unknown>} extra
+ */
+
+/**
+ * @param {unknown} value
+ */
+function normalizePublishedAt(value) {
+	if (!value) return null;
+	if (value instanceof Date) return value.toISOString();
+	if (typeof value === 'string' && value.trim().length > 0) return value.trim();
+	return null;
+}
 
 /**
  * Resolve PocketBase client for service functions.
@@ -23,25 +91,42 @@ function resolveClient(provided) {
  * @param {'global'|'space'|'group'} postData.scope - Post scope
  * @param {string} [postData.space] - Space ID if scoped to space
  * @param {string} [postData.group] - Group ID if scoped to group
- * @param {File[]} [postData.attachments] - File attachments
+ * @param {File[]|Blob[]} [postData.attachments] - File attachments
+ * @param {'text'|'images'|'video'} [postData.mediaType]
+ * @param {string} [postData.mediaAltText]
+ * @param {File|Blob} [postData.videoPoster]
+ * @param {number|string} [postData.videoDuration]
+ * @param {Date|string|null} [postData.publishedAt]
  * @returns {Promise<Object>} Created post
  */
 export async function createPost(postData, serviceOptions = /** @type {ServiceOptions} */ ({})) {
 	const client = resolveClient(serviceOptions.pb);
 	const preferApi = shouldUseApiFallback(client, serviceOptions);
 	if (preferApi) {
-		return await createPostViaApi(postData);
+		const { formData, moderationMetadata } = buildPostPayload(postData, {
+			includeAuthor: false
+		});
+		return await createPostViaApi(formData, moderationMetadata, serviceOptions);
 	}
 
 	try {
-		const formData = buildPostFormData(postData, {
+		const { formData, moderationMetadata } = buildPostPayload(postData, {
 			includeAuthor: true,
 			client
 		});
-		return await client.collection('posts').create(formData);
+		const created = await client.collection('posts').create(formData);
+		await emitModerationMetadata(moderationMetadata, {
+			serviceOptions,
+			client,
+			post: created
+		});
+		return created;
 	} catch (err) {
 		if (shouldRetryWithApi(err, serviceOptions)) {
-			return await createPostViaApi(postData);
+			const { formData, moderationMetadata } = buildPostPayload(postData, {
+				includeAuthor: false
+			});
+			return await createPostViaApi(formData, moderationMetadata, serviceOptions);
 		}
 		throw normalizeError(err, { context: 'createPost' });
 	}
@@ -140,7 +225,7 @@ export async function getPosts(
 								const likeCount = p.likeCount || 0;
 								const commentCount = p.commentCount || 0;
 								const createdMs = Date.parse(p.created);
-								const ageHours = Math.max(1, (now - createdMs) / 3600_000);
+								const ageHours = Math.max(1, (now - createdMs) / 3_600_000);
 								const score = (likeCount * 2 + commentCount * 3) / Math.pow(ageHours, 0.6);
 								return { p, score };
 							})
@@ -194,7 +279,8 @@ export async function updatePost(
 ) {
 	try {
 		const client = resolveClient(serviceOptions.pb);
-		return await client.collection('posts').update(id, updateData);
+		const sanitized = prepareUpdatePayload(updateData);
+		return await client.collection('posts').update(id, sanitized);
 	} catch (err) {
 		throw normalizeError(err, { context: 'updatePost' });
 	}
@@ -267,49 +353,317 @@ function shouldRetryWithApi(error, serviceOptions) {
 
 /**
  * @param {any} postData
- * @param {{ includeAuthor: boolean; client?: import('pocketbase').default }} options
+ * @param {{ includeAuthor?: boolean; client?: import('pocketbase').default }} [options]
+ * @returns {{ formData: FormData; moderationMetadata: ModerationSignalPayload }}
  */
-function buildPostFormData(postData, { includeAuthor, client }) {
+function buildPostPayload(postData, options = {}) {
 	const formData = new FormData();
-	if (includeAuthor && client?.authStore.model?.id) {
-		formData.append('author', client.authStore.model.id);
+	const client = options.client;
+	const includeAuthor = Boolean(options.includeAuthor);
+	const authorId = client?.authStore.model?.id ?? null;
+	if (includeAuthor && authorId) {
+		formData.set('author', authorId);
 	}
-	if (typeof postData.content === 'string') {
-		formData.append('content', postData.content);
+
+	const sanitizedContent = sanitizeContent(
+		typeof postData.content === 'string' ? postData.content : ''
+	);
+	if (!sanitizedContent) {
+		throw new Error('Post content cannot be empty after sanitization');
 	}
-	formData.append('scope', postData.scope || 'global');
-	if (postData.space) {
-		formData.append('space', postData.space);
+	formData.set('content', sanitizedContent);
+
+	const scope = normalizeScope(postData.scope);
+	formData.set('scope', scope);
+	if (scope === 'space' && typeof postData.space === 'string' && postData.space) {
+		formData.set('space', postData.space);
 	}
-	if (postData.group) {
-		formData.append('group', postData.group);
+	if (scope === 'group' && typeof postData.group === 'string' && postData.group) {
+		formData.set('group', postData.group);
 	}
-	if (Array.isArray(postData.attachments)) {
-		postData.attachments
-			.filter(/** @param {File} file */ (file) => file instanceof File && file.size > 0)
-			.forEach(
-				/** @param {File} file */ (file) => {
-					formData.append('attachments', file);
-				}
-			);
+
+	const mediaType = normalizeMediaType(postData.mediaType);
+	formData.set('mediaType', mediaType);
+
+	const attachmentsInput = Array.isArray(postData.attachments) ? postData.attachments : [];
+	/** @type {File[]} */
+	const normalizedAttachments = [];
+	for (let i = 0; i < attachmentsInput.length; i += 1) {
+		const candidate = normalizeToFile(attachmentsInput[i], `attachment-${i + 1}`);
+		if (candidate) {
+			normalizedAttachments.push(candidate);
+			formData.append('attachments', candidate);
+		}
 	}
-	return formData;
+
+	const sanitizedAltText = sanitizePlainText(postData.mediaAltText || '').trim();
+	if (sanitizedAltText) {
+		formData.set('mediaAltText', sanitizedAltText);
+	}
+
+	const posterFile = normalizeToFile(postData.videoPoster, 'video-poster');
+	if (posterFile) {
+		formData.set('videoPoster', posterFile);
+	}
+
+	const coercedDuration = toVideoDuration(postData.videoDuration);
+	if (coercedDuration !== null) {
+		formData.set('videoDuration', String(coercedDuration));
+	}
+
+	const normalizedPublishedAt = normalizePublishedAt(postData.publishedAt);
+	if (normalizedPublishedAt) {
+		formData.set('publishedAt', normalizedPublishedAt);
+	}
+
+	const metadata = createModerationMetadata({
+		scope,
+		mediaType,
+		attachments: normalizedAttachments,
+		hasAltText: sanitizedAltText.length > 0,
+		hasPoster: Boolean(posterFile),
+		videoDuration: coercedDuration,
+		content: sanitizedContent,
+		altTextLength: sanitizedAltText.length,
+		publishedAt: normalizedPublishedAt
+	});
+
+	return {
+		formData,
+		moderationMetadata: {
+			resource: 'post',
+			postId: null,
+			authorId,
+			...metadata
+		}
+	};
 }
 
 /**
- * @param {{ content: string; scope: 'global'|'space'|'group'; space?: string; group?: string; attachments?: File[] }} postData
+ * @param {unknown} scope
+ * @returns {'global'|'space'|'group'}
  */
-async function createPostViaApi(postData) {
+function normalizeScope(scope) {
+	if (scope === 'space' || scope === 'group' || scope === 'global') {
+		return scope;
+	}
+	return 'global';
+}
+
+/**
+ * @param {unknown} mediaType
+ * @returns {'text'|'images'|'video'}
+ */
+function normalizeMediaType(mediaType) {
+	if (mediaType === 'images' || mediaType === 'video') {
+		return mediaType;
+	}
+	return 'text';
+}
+
+/**
+ * @param {unknown} fileLike
+ * @param {string} baseName
+ * @returns {File|null}
+ */
+function normalizeToFile(fileLike, baseName) {
+	if (!fileLike) return null;
+	if (typeof File !== 'undefined' && fileLike instanceof File) {
+		return fileLike;
+	}
+	if (typeof Blob !== 'undefined' && fileLike instanceof Blob) {
+		const nameProp = /** @type {{ name?: string }} */ (fileLike).name;
+		const name =
+			typeof nameProp === 'string' && nameProp
+				? nameProp
+				: `${baseName}.${guessExtension(fileLike.type)}`;
+		return new File([fileLike], name, {
+			type: fileLike.type || 'application/octet-stream'
+		});
+	}
+	return null;
+}
+
+/**
+ * @param {string|undefined} mime
+ * @returns {string}
+ */
+function guessExtension(mime) {
+	if (!mime || typeof mime !== 'string') return 'bin';
+	if (Object.prototype.hasOwnProperty.call(MIME_EXTENSION_MAP, mime)) {
+		return MIME_EXTENSION_MAP[/** @type {keyof typeof MIME_EXTENSION_MAP} */ (mime)];
+	}
+	return 'bin';
+}
+
+/**
+ * @param {unknown} value
+ * @returns {number|null}
+ */
+function toVideoDuration(value) {
+	if (value == null) return null;
+	const num = typeof value === 'string' ? Number.parseFloat(value) : Number(value);
+	if (!Number.isFinite(num)) return null;
+	const rounded = Math.round(num);
+	return Math.max(0, rounded);
+}
+
+/**
+ * @param {Record<string, any>} updateData
+ */
+function prepareUpdatePayload(updateData) {
+	const payload = {};
+	if (typeof updateData?.content === 'string') {
+		payload.content = sanitizeContent(updateData.content);
+	}
+	if (typeof updateData?.mediaAltText === 'string') {
+		const trimmedAlt = sanitizePlainText(updateData.mediaAltText).trim();
+		payload.mediaAltText = trimmedAlt;
+	}
+	if (typeof updateData?.mediaType === 'string') {
+		payload.mediaType = normalizeMediaType(updateData.mediaType);
+	}
+	if ('videoDuration' in updateData) {
+		const normalizedDuration = toVideoDuration(updateData.videoDuration);
+		payload.videoDuration = normalizedDuration;
+	}
+	if (typeof updateData?.scope === 'string') {
+		payload.scope = normalizeScope(updateData.scope);
+	}
+	if ('space' in updateData) {
+		const value =
+			typeof updateData.space === 'string' && updateData.space ? updateData.space : null;
+		payload.space = value;
+	}
+	if ('group' in updateData) {
+		const value =
+			typeof updateData.group === 'string' && updateData.group ? updateData.group : null;
+		payload.group = value;
+	}
+	if ('publishedAt' in updateData) {
+		if (updateData.publishedAt === null) {
+			payload.publishedAt = null;
+		} else {
+			const normalized = normalizePublishedAt(updateData.publishedAt);
+			if (normalized) {
+				payload.publishedAt = normalized;
+			} else {
+				payload.publishedAt = null;
+			}
+		}
+	}
+	return payload;
+}
+
+/**
+ * @param {{
+ *  scope: 'global'|'space'|'group';
+ *  mediaType: 'text'|'images'|'video';
+ *  attachments: File[];
+ *  hasAltText: boolean;
+ *  hasPoster: boolean;
+ *  videoDuration: number | null;
+ *  content: string;
+ *  altTextLength: number
+ *  publishedAt?: string | null
+ * }} params
+ * @returns {{
+ *  scope: 'global'|'space'|'group';
+ *  mediaType: 'text'|'images'|'video';
+ *  attachmentCount: number;
+ *  hasAltText: boolean;
+ *  hasPoster: boolean;
+ *  videoDuration: number|null;
+ *  contentLength: number;
+ *  containsLinks: boolean;
+ *  wordCount: number;
+ *  extra: Record<string, unknown>
+ * }}
+ */
+function createModerationMetadata({
+	scope,
+	mediaType,
+	attachments,
+	hasAltText,
+	hasPoster,
+	videoDuration,
+	content,
+	altTextLength,
+	publishedAt
+}) {
+	const plain = content
+		.replace(/<[^>]+>/g, ' ')
+		.replace(/\s+/g, ' ')
+		.trim();
+	const wordCount = plain ? plain.split(/\s+/).filter(Boolean).length : 0;
+	const containsLinks = /https?:\/\//i.test(plain);
+	return {
+		scope,
+		mediaType,
+		attachmentCount: attachments.length,
+		hasAltText,
+		hasPoster,
+		videoDuration: typeof videoDuration === 'number' ? videoDuration : null,
+		contentLength: plain.length,
+		containsLinks,
+		wordCount,
+		extra: {
+			attachmentMimeTypes: attachments.map((file) => file.type ?? null),
+			altTextLength,
+			hasDuration: typeof videoDuration === 'number',
+			publishedAt,
+			mediaSummary: {
+				hasAltText,
+				hasPoster
+			}
+		}
+	};
+}
+
+/**
+ * @param {ModerationSignalPayload} moderationMetadata
+ * @param {{ serviceOptions: ServiceOptions; client?: import('pocketbase').default; post?: any }} context
+ */
+async function emitModerationMetadata(moderationMetadata, { serviceOptions, client, post }) {
+	if (!moderationMetadata) return;
+	const emitter = serviceOptions?.emitModerationMetadata;
+	if (typeof emitter !== 'function') return;
+	const postId = typeof post?.id === 'string' ? post.id : moderationMetadata.postId;
+	const authorId =
+		moderationMetadata.authorId ??
+		client?.authStore?.model?.id ??
+		(typeof post?.author === 'string' ? post.author : null);
+	try {
+		await emitter({
+			...moderationMetadata,
+			postId,
+			authorId
+		});
+	} catch (error) {
+		console.warn('[posts] Failed to emit moderation metadata', error);
+	}
+}
+
+/**
+ * @param {FormData} formData
+ * @param {ModerationSignalPayload} moderationMetadata
+ * @param {ServiceOptions} serviceOptions
+ */
+async function createPostViaApi(formData, moderationMetadata, serviceOptions) {
 	if (!hasFetchSupport()) {
 		throw new Error('Fetch API unavailable for createPost via /api/posts');
 	}
-	const formData = buildPostFormData(postData, { includeAuthor: false });
 	const response = await fetch('/api/posts', {
 		method: 'POST',
 		credentials: 'include',
 		body: formData
 	});
-	return await handleApiResponse(response, 'createPost');
+	const payload = await handleApiResponse(response, 'createPost');
+	await emitModerationMetadata(moderationMetadata, {
+		serviceOptions,
+		post: payload
+	});
+	return payload;
 }
 
 /**

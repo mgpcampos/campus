@@ -1,20 +1,20 @@
-import { superValidate } from 'sveltekit-superforms';
-import { zod } from 'sveltekit-superforms/adapters';
+import { superValidate } from 'sveltekit-superforms/server';
 import { fail, redirect } from '@sveltejs/kit';
 import { loginSchema } from '$lib/utils/validation.js';
 import { getErrorMessage } from '$lib/utils/errors.js';
+import { withZod } from '$lib/validation';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load() {
 	return {
-		form: await superValidate(zod(loginSchema))
+		form: await superValidate(withZod(loginSchema))
 	};
 }
 
 /** @type {import('./$types').Actions} */
 export const actions = {
 	default: async ({ request, locals, url }) => {
-		const form = await superValidate(request, zod(loginSchema));
+		const form = await superValidate(request, withZod(loginSchema));
 
 		if (!form.valid) {
 			return fail(400, { form });
@@ -30,7 +30,7 @@ export const actions = {
 				throw redirect(302, returnUrl);
 			}
 
-			throw redirect(302, '/');
+			throw redirect(302, '/feed');
 		} catch (error) {
 			// If it's a redirect, re-throw it
 			if (error && typeof error === 'object' && 'status' in error && error.status === 302) {

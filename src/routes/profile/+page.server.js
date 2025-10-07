@@ -1,9 +1,9 @@
-import { superValidate, message } from 'sveltekit-superforms';
-import { zod } from 'sveltekit-superforms/adapters';
+import { superValidate, message } from 'sveltekit-superforms/server';
 import { fail, redirect } from '@sveltejs/kit';
 import { profileSchema } from '$lib/utils/validation.js';
 import { getErrorMessage } from '$lib/utils/errors.js';
 import { sanitizeContent } from '$lib/utils/sanitize.js';
+import { withZod } from '$lib/validation';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ locals }) {
@@ -25,7 +25,7 @@ export async function load({ locals }) {
 			username: user.username || '',
 			bio: user.bio || ''
 		},
-		zod(profileSchema)
+		withZod(profileSchema)
 	);
 
 	return {
@@ -42,7 +42,7 @@ export const actions = {
 			throw redirect(302, '/auth/login?returnUrl=/profile');
 		}
 
-		const form = await superValidate(request, zod(profileSchema));
+		const form = await superValidate(request, withZod(profileSchema));
 
 		if (!form.valid) {
 			return fail(400, { form });

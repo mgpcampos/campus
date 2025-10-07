@@ -1,7 +1,9 @@
 // Configuration constants
 export const ALLOWED_IMAGE_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+export const ALLOWED_VIDEO_MIME = ['video/mp4'];
 export const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
-export const MAX_ATTACHMENTS = 4;
+export const MAX_VIDEO_SIZE_BYTES = 250 * 1024 * 1024; // 250MB ceiling for 5 minute H.264 uploads
+export const MAX_ATTACHMENTS = 10;
 
 /** @type {any} */
 let sharpModule = null;
@@ -36,6 +38,64 @@ export function validateImages(files = []) {
 		}
 	}
 	return { valid: errors.length === 0, errors };
+}
+
+/**
+ * Validate a single video attachment (<= 5 minutes, MP4 container)
+ * @param {File | null | undefined} file
+ * @param {number | null | undefined} durationSeconds
+ * @returns {{ valid: boolean, errors: string[] }}
+ */
+export function validateVideo(file, durationSeconds) {
+	const errors = [];
+	if (!file) {
+		errors.push('Video file is required');
+		return { valid: false, errors };
+	}
+	if (!ALLOWED_VIDEO_MIME.includes(file.type)) {
+		errors.push('Video must be encoded as H.264 MP4');
+	}
+	if (file.size > MAX_VIDEO_SIZE_BYTES) {
+		errors.push('Video exceeds maximum size of 250MB');
+	}
+	if (typeof durationSeconds === 'number') {
+		if (!Number.isFinite(durationSeconds) || durationSeconds <= 0) {
+			errors.push('Video duration could not be determined');
+		} else if (durationSeconds > 300) {
+			errors.push('Video duration must be 5 minutes (300s) or less');
+		}
+	}
+	return { valid: errors.length === 0, errors };
+}
+
+/**
+ * Validate attachments for a feed post given selected media type.
+ * @param {{ mediaType: 'text'|'images'|'video'; attachments?: File[]; poster?: File | null; videoDuration?: number | null }} params
+ */
+export function validatePostMedia(params) {
+	const attachments = params.attachments ?? [];
+	switch (params.mediaType) {
+		case 'text':
+			if (attachments.length > 0) {
+				return { valid: false, errors: ['Text posts cannot include attachments'] };
+			}
+			return { valid: true, errors: [] };
+		case 'images':
+			return validateImages(attachments);
+		case 'video': {
+			const [file] = attachments;
+			const { valid, errors } = validateVideo(file, params.videoDuration ?? null);
+			if (!params.poster) {
+				errors.push('Video poster thumbnail is required for video posts');
+			}
+			if (attachments.length !== 1) {
+				errors.push('Video posts require exactly one video');
+			}
+			return { valid: valid && errors.length === 0, errors };
+		}
+		default:
+			return { valid: false, errors: ['Unsupported media type'] };
+	}
 }
 
 /**

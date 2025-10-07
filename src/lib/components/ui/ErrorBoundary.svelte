@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
-	import { AlertTriangle, RefreshCw } from 'lucide-svelte';
+	import { AlertTriangle, RefreshCw } from '@lucide/svelte';
 	import { normalizeError } from '$lib/utils/errors.js';
 	import LiveRegion from './LiveRegion.svelte';
 

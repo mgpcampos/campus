@@ -4,7 +4,7 @@
 	import * as Card from '$lib/components/ui/card/index.js';
 	import ImageAttachment from '$lib/components/media/ImageAttachment.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import { Loader2 } from 'lucide-svelte';
+	import { Loader2 } from '@lucide/svelte';
 	import SkeletonLoader from '$lib/components/ui/SkeletonLoader.svelte';
 
 	let loading = true;

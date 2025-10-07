@@ -10,7 +10,7 @@
 	} from '$lib/services/realtime.js';
 	import PostCard from './PostCard.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import { Loader2, RefreshCw } from 'lucide-svelte';
+	import { Loader2, RefreshCw } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
 	import { notifyError, withErrorToast } from '$lib/utils/errors.js';
 

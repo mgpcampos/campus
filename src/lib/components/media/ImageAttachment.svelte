@@ -65,6 +65,7 @@
 			on:error={handleError}
 			decoding="async"
 			{sizes}
+			style:aspect-ratio={aspect ?? undefined}
 		/>
 	</picture>
 {/if}

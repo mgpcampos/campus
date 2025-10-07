@@ -1,53 +1,25 @@
-import PocketBase from 'pocketbase';
 import type { Handle } from '@sveltejs/kit';
-import { PUBLIC_POCKETBASE_URL } from '$env/static/public';
-import { dev } from '$app/environment';
 import { rateLimit } from '$lib/utils/rate-limit.js';
-
-// Rate limiter now imported from shared util.
-
-// Helper to build secure cookie export options
-function cookieOptions(pathname?: string) {
-	const securityCritical =
-		pathname && (pathname.startsWith('/auth') || pathname.startsWith('/api/auth'));
-	/** @type {'lax' | 'strict'} */
-	const sameSite = securityCritical ? 'strict' : 'lax';
-	return {
-		secure: !dev,
-		httpOnly: true,
-		sameSite,
-		path: '/',
-		maxAge: 60 * 60 * 24 * 7
-	};
-}
+import { createPocketBaseClient, exportAuthCookie } from '$lib/server/pocketbase/client';
 
 export const handle: Handle = async ({ event, resolve }) => {
-	// Per-request PocketBase instance
-	const baseUrl = PUBLIC_POCKETBASE_URL || 'http://127.0.0.1:8090';
-	event.locals.pb = new PocketBase(baseUrl);
+	// Per-request PocketBase instance via helper
+	const { pb, syncAuthToLocals } = createPocketBaseClient(event);
+	event.locals.pb = pb;
 
-	// Load auth from incoming cookies
-	event.locals.pb.authStore.loadFromCookie(event.request.headers.get('cookie') || '');
-
-	const syncLocalsAuth = () => {
-		const { authStore } = event.locals.pb;
-		event.locals.user = authStore.model || null;
-		event.locals.sessionToken = authStore.isValid ? (authStore.token ?? null) : null;
-	};
-
-	syncLocalsAuth();
+	syncAuthToLocals();
 
 	// Attempt silent refresh if token still valid
 	try {
-		if (event.locals.pb.authStore.isValid) {
-			await event.locals.pb.collection('users').authRefresh();
+		if (pb.authStore.isValid) {
+			await pb.collection('users').authRefresh();
 		}
 		// Refresh may update auth data (e.g., rotated token)
-		syncLocalsAuth();
+		syncAuthToLocals();
 	} catch {
 		// Clear invalid auth (token expired, revoked, etc.)
-		event.locals.pb.authStore.clear();
-		syncLocalsAuth();
+		pb.authStore.clear();
+		syncAuthToLocals();
 	}
 
 	// Apply rate limiting to mutating requests under /api (POST/PUT/PATCH/DELETE)
@@ -64,15 +36,10 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const response = await resolve(event);
 
 	// Auth state might have changed during the request lifecycle (e.g., login/logout)
-	syncLocalsAuth();
+	syncAuthToLocals();
 
 	// Always re-export cookie so client stays in sync; httpOnly to mitigate XSS
-	response.headers.append(
-		'set-cookie',
-		event.locals.pb.authStore.exportToCookie({
-			...cookieOptions(event.url.pathname)
-		})
-	);
+	response.headers.append('set-cookie', exportAuthCookie(pb, event.url.pathname));
 
 	return response;
 };

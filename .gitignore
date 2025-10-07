@@ -1,10 +1,10 @@
 node_modules
 
 # Editor-specific
-.clinerules
 .github
 .idea
 .kiro
+.specify
 .vscode
 
 # Output
@@ -45,3 +45,4 @@ tmp_pb
 AGENTS.md
 docs
 /scripts
+/specs

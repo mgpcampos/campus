@@ -1,7 +1,7 @@
 <script lang="ts">
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import { X } from 'lucide-svelte';
+	import { X } from '@lucide/svelte';
 
 	let {
 		open = false,

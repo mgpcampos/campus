@@ -1,169 +1,91 @@
 <script lang="ts">
 	import { currentUser } from '$lib/pocketbase.js';
-	import * as Card from '$lib/components/ui/card/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import PostForm from '$lib/components/forms/PostForm.svelte';
-	import Feed from '$lib/components/feed/Feed.svelte';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
-	import { MessageSquare, Users, Plus } from 'lucide-svelte';
+	import { CheckCircle2, PlaySquare, Users, BookOpen } from '@lucide/svelte';
 
-	let feedComponent: any;
-	let refreshTrigger = 0;
-
-	// Feed discovery controls
-	let feedSearch: string = '';
-	let feedSort: 'new' | 'top' | 'trending' = 'new';
-	let timeframeHours: number = 48;
-
-	const trendingOptions = [6, 12, 24, 48, 72] as const;
-
-	// Simple debounce for search input
-	let searchDebounce: any;
-	function handleSearchInput(e: Event) {
-		const value = (e.target as HTMLInputElement).value;
-		clearTimeout(searchDebounce);
-		searchDebounce = setTimeout(() => {
-			feedSearch = value.trim();
-		}, 250);
-	}
-
-	function changeSort(s: 'new' | 'top' | 'trending') {
-		feedSort = s;
-	}
-
-	function changeTimeframe(e: Event) {
-		const v = Number((e.target as HTMLSelectElement).value);
-		timeframeHours = v;
-	}
-
-	function handlePostCreated(event: CustomEvent) {
-		const newPost = event.detail;
-		// Add the new post to the feed
-		if (feedComponent) {
-			feedComponent.addPost(newPost);
+	const highlights = [
+		{
+			title: 'Multimedia feed',
+			description:
+				'Share research updates with text, image galleries, or short video highlights — complete with accessibility metadata.'
+		},
+		{
+			title: 'Organise course resources',
+			description:
+				'Upload lecture materials and collaborative notes to the shared repository with powerful search built in.'
+		},
+		{
+			title: 'Coordinate events',
+			description:
+				'Plan study sessions and lab meetings on the shared calendar with automatic conflict detection.'
 		}
-		// Trigger a refresh to get updated data from server
-		refreshTrigger++;
-	}
+	];
 </script>
 
-<div class="mx-auto max-w-4xl space-y-6 py-6 sm:py-8">
-	{#if $currentUser}
-		<!-- Post creation form -->
-		<Card.Root class="mb-6">
-			<Card.Header>
-				<Card.Title class="text-lg">Share an update</Card.Title>
-			</Card.Header>
-			<Card.Content>
-				<PostForm on:postCreated={handlePostCreated} />
-			</Card.Content>
-		</Card.Root>
+<svelte:head>
+	<title>Campus &mdash; Academic collaboration</title>
+</svelte:head>
 
-		<!-- Global feed -->
+<section class="mx-auto flex max-w-5xl flex-col gap-10 py-10 sm:py-16">
+	<div class="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
 		<div class="space-y-6">
-			<Card.Root class="border border-border/60 bg-card/90 shadow-md">
-				<Card.Header class="gap-4 sm:flex-row sm:items-center sm:justify-between">
-					<div class="space-y-1 text-left sm:text-left">
-						<Card.Title class="text-2xl">Global Feed</Card.Title>
-						<Card.Description>
-							Stay up to date with what the Campus community is sharing right now.
-						</Card.Description>
-					</div>
-					<Card.Action class="sm:justify-self-end">
-						<Button href="/spaces" variant="secondary" size="sm">
-							<Users size={16} class="mr-1" />
-							Browse Spaces
-						</Button>
-					</Card.Action>
-				</Card.Header>
-				<Card.Content class="space-y-4">
-					<div class="flex flex-col gap-2 sm:max-w-sm">
-						<Label class="text-muted-foreground" for="feed-search">Search posts</Label>
-						<Input
-							id="feed-search"
-							type="search"
-							placeholder="Search by keyword"
-							autocomplete="off"
-							oninput={handleSearchInput}
-						/>
-					</div>
-					<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-						<div class="inline-flex rounded-lg border border-input bg-background p-1 shadow-xs">
-							<Button
-								variant={feedSort === 'new' ? 'default' : 'ghost'}
-								size="sm"
-								onclick={() => changeSort('new')}
-								aria-pressed={feedSort === 'new'}
-								class="px-3"
-							>
-								<MessageSquare size={16} class="mr-2" />
-								New
-							</Button>
-							<Button
-								variant={feedSort === 'top' ? 'default' : 'ghost'}
-								size="sm"
-								onclick={() => changeSort('top')}
-								aria-pressed={feedSort === 'top'}
-								class="px-3"
-							>
-								Top
-							</Button>
-							<Button
-								variant={feedSort === 'trending' ? 'default' : 'ghost'}
-								size="sm"
-								onclick={() => changeSort('trending')}
-								aria-pressed={feedSort === 'trending'}
-								class="px-3"
-							>
-								Trending
-							</Button>
-						</div>
-						{#if feedSort === 'trending'}
-							<div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-								<Label class="text-muted-foreground" for="timeframe-select">Trending window</Label>
-								<select
-									id="timeframe-select"
-									class="h-9 rounded-md border border-input bg-background px-3 text-sm shadow-xs focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
-									onchange={changeTimeframe}
-									aria-label="Trending timeframe"
-									bind:value={timeframeHours}
-								>
-									{#each trendingOptions as option}
-										<option value={option}>{option}h</option>
-									{/each}
-								</select>
-							</div>
-						{/if}
-					</div>
-				</Card.Content>
-			</Card.Root>
+			<h1 class="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
+				Collaborate across labs, courses, and cohorts
+			</h1>
+			<p class="text-lg text-muted-foreground sm:text-xl">
+				Campus brings together multimedia updates, resource sharing, and schedule planning so
+				academic teams can stay aligned without leaving the platform.
+			</p>
+			<div class="flex flex-wrap gap-3">
+				<Button href="/feed" size="lg">
+					<PlaySquare class="mr-2 h-5 w-5" aria-hidden="true" />
+					Explore the feed
+				</Button>
 
-			<Feed
-				bind:this={feedComponent}
-				scope="global"
-				{refreshTrigger}
-				q={feedSearch}
-				sort={feedSort}
-				{timeframeHours}
-				on:like={(e) => console.log('Like:', e.detail)}
-				on:comment={(e) => console.log('Comment:', e.detail)}
-				on:edit={(e) => console.log('Edit:', e.detail)}
-				on:delete={(e) => console.log('Delete:', e.detail)}
-			/>
+				{#if $currentUser}
+					<Button href="/materials" variant="outline" size="lg">
+						<BookOpen class="mr-2 h-5 w-5" aria-hidden="true" />
+						Browse materials
+					</Button>
+				{:else}
+					<Button href="/auth/register" variant="outline" size="lg">
+						<Users class="mr-2 h-5 w-5" aria-hidden="true" />
+						Create an account
+					</Button>
+				{/if}
+			</div>
 		</div>
-	{:else}
-		<Card.Root class="mx-auto max-w-2xl">
-			<Card.Header class="text-center">
-				<Card.Title class="text-2xl">Get Started</Card.Title>
-				<Card.Description class="text-lg">
-					Join the Campus community to connect with peers and share updates.
-				</Card.Description>
-			</Card.Header>
-			<Card.Footer class="flex justify-center space-x-4">
-				<Button href="/auth/register" size="lg">Sign Up</Button>
-				<Button href="/auth/login" variant="outline" size="lg">Sign In</Button>
-			</Card.Footer>
-		</Card.Root>
-	{/if}
-</div>
+		<div class="rounded-2xl border border-border/60 bg-card/90 p-6 shadow-xl">
+			<h2 class="text-lg font-semibold text-foreground">What’s new in Campus</h2>
+			<ul class="mt-5 space-y-4 text-sm text-muted-foreground">
+				<li class="flex items-start gap-3">
+					<CheckCircle2 class="mt-1 h-4 w-4 text-emerald-500" aria-hidden="true" />
+					<span
+						>Rich media feed with video poster support and accessibility-first publishing flow.</span
+					>
+				</li>
+				<li class="flex items-start gap-3">
+					<CheckCircle2 class="mt-1 h-4 w-4 text-emerald-500" aria-hidden="true" />
+					<span>Analytics instrumentation to keep timeline performance under 2 seconds.</span>
+				</li>
+				<li class="flex items-start gap-3">
+					<CheckCircle2 class="mt-1 h-4 w-4 text-emerald-500" aria-hidden="true" />
+					<span
+						>Moderation groundwork for upcoming messaging features and cross-surface reports.</span
+					>
+				</li>
+			</ul>
+		</div>
+	</div>
+
+	<div
+		class="grid gap-6 rounded-2xl border border-border/60 bg-card/95 p-6 shadow-sm sm:grid-cols-3"
+	>
+		{#each highlights as item}
+			<div class="space-y-2">
+				<h3 class="text-lg font-semibold text-foreground">{item.title}</h3>
+				<p class="text-sm text-muted-foreground">{item.description}</p>
+			</div>
+		{/each}
+	</div>
+</section>

@@ -8,7 +8,7 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Textarea } from '$lib/components/ui/textarea/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
-	import { MessageCircle, Send, Trash2, Edit } from 'lucide-svelte';
+	import { MessageCircle, Send, Trash2, Edit } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
 	import { withErrorToast } from '$lib/utils/errors.js';
 

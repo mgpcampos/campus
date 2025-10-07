@@ -1,6 +1,7 @@
 import { pb } from '../pocketbase.js';
 import { canModeratePost, canModerateComment } from './permissions.js';
 import { normalizeError } from '../utils/errors.js';
+import { ensureModerationCase } from './moderation.js';
 
 /**
  * Create a report
@@ -25,7 +26,20 @@ export async function reportContent({ targetType, targetId, reason }) {
 			data.comment = targetId;
 			delete data.post;
 		}
-		return await pb.collection('reports').create(data);
+		const created = await pb.collection('reports').create(data);
+		await ensureModerationCase({
+			sourceType: targetType,
+			sourceId: targetId,
+			evidence: {
+				type: 'user_report',
+				value: reason?.trim() || 'unspecified',
+				meta: {
+					reportId: created.id,
+					reporter: pb.authStore.model?.id ?? null
+				}
+			}
+		});
+		return created;
 	} catch (error) {
 		console.error('Error reporting content:', error);
 		throw normalizeError(error, { context: 'reportContent' });

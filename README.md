@@ -21,11 +21,11 @@ A lightweight, Twitter-like social network designed specifically for the educati
 - **Backend**: PocketBase (SQLite, REST API, real-time, file storage)
 - **UI**: Tailwind CSS + shadcn-svelte components
 - **Forms**: Zod schemas + sveltekit-superforms
-- **Icons**: lucide-svelte
+- **Icons**: @lucide/svelte
 
 ## Prerequisites
 
-- Node.js 18+
+- Node.js 24.9.0 (npm 10)
 - PocketBase server running on http://127.0.0.1:8090
 
 ## Setup

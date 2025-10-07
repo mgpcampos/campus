@@ -1,15 +1,15 @@
 <script>
-	import { superForm } from 'sveltekit-superforms';
-	import { zod } from 'sveltekit-superforms/adapters';
+	import { superForm } from 'sveltekit-superforms/client';
 	import { registerSchema } from '$lib/utils/validation.js';
 	import { getErrorMessage } from '$lib/utils/errors.js';
 	import { goto } from '$app/navigation';
+	import { createClientFormOptions } from '$lib/validation';
 
 	let { data } = $props();
 	let generalError = $state('');
 
 	const { form, errors, enhance, submitting } = superForm(data.form, {
-		validators: zod(registerSchema),
+		...createClientFormOptions(registerSchema),
 		onSubmit: () => {
 			generalError = '';
 		},
@@ -22,7 +22,7 @@
 
 			if (result.type === 'success') {
 				generalError = '';
-				goto('/');
+				goto('/feed');
 				return;
 			}
 

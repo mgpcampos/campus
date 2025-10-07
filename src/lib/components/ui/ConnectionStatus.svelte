@@ -3,7 +3,7 @@
 	import { online } from '$lib/stores/connection.js';
 	import { offlineQueue } from '$lib/utils/offline.js';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import { RefreshCw, Wifi, WifiOff } from 'lucide-svelte';
+	import { RefreshCw, Wifi, WifiOff } from '@lucide/svelte';
 
 	let queueStatus = $state({ pending: 0, processing: 0 });
 	let showDetails = $state(false);

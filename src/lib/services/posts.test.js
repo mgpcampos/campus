@@ -23,44 +23,81 @@ import { createPost, getPosts, getPost, updatePost, deletePost } from './posts.j
 describe('Posts Service', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		mockCollection.create.mockResolvedValue({ id: 'post123', content: 'clean content' });
 	});
 
 	describe('createPost', () => {
-		it('should create a post with valid data', async () => {
-			const mockPost = { id: 'post123', content: 'Test post', author: 'user123' };
-			mockCollection.create.mockResolvedValue(mockPost);
-
+		it('sanitizes content and emits moderation metadata', async () => {
+			const emitModerationMetadata = vi.fn();
+			const mockFile = new File(['image'], 'sample.png', { type: 'image/png' });
 			const postData = {
-				content: 'Test post',
-				scope: 'global'
+				content: '<script>alert(1)</script><p>Hello campus</p>',
+				scope: /** @type {'global'} */ ('global'),
+				mediaType: /** @type {'images'} */ ('images'),
+				attachments: [mockFile],
+				mediaAltText: '  accessible media  '
 			};
 
-			// @ts-ignore - Mock test data
+			// @ts-expect-no-error - mock data intentionally loose
+			const result = await createPost(postData, { emitModerationMetadata });
 
-			const result = await createPost(postData);
-
-			expect(mockCollection.create).toHaveBeenCalled();
-			expect(result).toEqual(mockPost);
-		});
-
-		it('should handle file attachments', async () => {
-			const mockPost = { id: 'post123', content: 'Test post with image' };
-			mockCollection.create.mockResolvedValue(mockPost);
-
-			const mockFile = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
-			const postData = {
-				content: 'Test post with image',
-				scope: 'global',
-				attachments: [mockFile]
-			};
-
-			// @ts-ignore - Mock test data
-
-			await createPost(postData);
-
-			expect(mockCollection.create).toHaveBeenCalled();
+			expect(result).toEqual({ id: 'post123', content: 'clean content' });
+			expect(mockCollection.create).toHaveBeenCalledTimes(1);
 			const formData = mockCollection.create.mock.calls[0][0];
 			expect(formData).toBeInstanceOf(FormData);
+			expect(formData.get('content')).toBe('<p>Hello campus</p>');
+			expect(formData.get('mediaType')).toBe('images');
+			expect(formData.get('mediaAltText')).toBe('accessible media');
+			const attachments = formData.getAll('attachments');
+			expect(attachments).toHaveLength(1);
+			expect(attachments[0]).toBe(mockFile);
+			expect(emitModerationMetadata).toHaveBeenCalledWith(
+				expect.objectContaining({
+					resource: 'post',
+					scope: 'global',
+					mediaType: 'images',
+					attachmentCount: 1,
+					hasAltText: true,
+					postId: 'post123',
+					authorId: 'user123'
+				})
+			);
+		});
+
+		it('normalizes blob attachments and poster metadata', async () => {
+			const emitModerationMetadata = vi.fn();
+			const videoBlob = new Blob(['video'], { type: 'video/mp4' });
+			const posterBlob = new Blob(['poster'], { type: 'image/jpeg' });
+			const postData = {
+				content: '<p>Lecture recording</p>',
+				scope: /** @type {'global'} */ ('global'),
+				mediaType: /** @type {'video'} */ ('video'),
+				attachments: [videoBlob],
+				mediaAltText: 'Lecture walk-through',
+				videoPoster: posterBlob,
+				videoDuration: 45
+			};
+
+			// @ts-expect-no-error - mock data intentionally loose
+			await createPost(postData, { emitModerationMetadata });
+
+			const formData = mockCollection.create.mock.calls[0][0];
+			expect(formData.get('mediaType')).toBe('video');
+			expect(formData.get('videoDuration')).toBe('45');
+			const videoPoster = formData.get('videoPoster');
+			expect(videoPoster).toBeInstanceOf(File);
+			expect((videoPoster instanceof File && videoPoster.name) || '').toBe('video-poster.jpg');
+			const [attachment] = formData.getAll('attachments');
+			expect(attachment).toBeInstanceOf(File);
+			expect((attachment instanceof File && attachment.name) || '').toBe('attachment-1.mp4');
+			expect(emitModerationMetadata).toHaveBeenCalledWith(
+				expect.objectContaining({
+					mediaType: 'video',
+					hasPoster: true,
+					videoDuration: 45,
+					attachmentCount: 1
+				})
+			);
 		});
 	});
 
@@ -112,15 +149,48 @@ describe('Posts Service', () => {
 	});
 
 	describe('updatePost', () => {
-		it('should update a post', async () => {
+		it('sanitizes payload and normalizes scheduling fields', async () => {
 			const mockPost = { id: 'post123', content: 'Updated content' };
 			mockCollection.update.mockResolvedValue(mockPost);
 
-			const updateData = { content: 'Updated content' };
+			const updateData = {
+				content: '<script>alert(1)</script><p>Updated <strong>post</strong></p>',
+				mediaAltText: '  sample alt  ',
+				mediaType: 'images',
+				videoDuration: '42.3',
+				publishedAt: new Date('2025-10-06T12:34:56.000Z'),
+				scope: 'group',
+				group: 'group123'
+			};
 			const result = await updatePost('post123', updateData);
 
-			expect(mockCollection.update).toHaveBeenCalledWith('post123', updateData);
+			expect(mockCollection.update).toHaveBeenCalledTimes(1);
+			const [, payload] = mockCollection.update.mock.calls[0];
+			expect(payload).toMatchObject({
+				content: '<p>Updated <strong>post</strong></p>',
+				mediaAltText: 'sample alt',
+				mediaType: 'images',
+				videoDuration: 42,
+				publishedAt: '2025-10-06T12:34:56.000Z',
+				scope: 'group',
+				group: 'group123'
+			});
 			expect(result).toEqual(mockPost);
+		});
+
+		it('drops blank fields and ignores invalid publishedAt', async () => {
+			mockCollection.update.mockResolvedValue({ id: 'post456' });
+			await updatePost('post456', {
+				content: '  Trim me  ',
+				mediaAltText: '',
+				publishedAt: '  '
+			});
+			const [, payload] = mockCollection.update.mock.calls[0];
+			expect(payload).toMatchObject({ content: 'Trim me' });
+			expect(Object.prototype.hasOwnProperty.call(payload, 'mediaAltText')).toBe(true);
+			expect(payload.mediaAltText).toBe('');
+			expect(Object.prototype.hasOwnProperty.call(payload, 'publishedAt')).toBe(true);
+			expect(payload.publishedAt).toBeNull();
 		});
 	});
 

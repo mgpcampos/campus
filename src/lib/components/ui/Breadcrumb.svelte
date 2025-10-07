@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ChevronRight, Home } from 'lucide-svelte';
+	import { ChevronRight, Home } from '@lucide/svelte';
 
 	interface BreadcrumbItem {
 		label: string;

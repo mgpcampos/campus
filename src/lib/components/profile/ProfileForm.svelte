@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { z } from 'zod';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
@@ -9,7 +8,9 @@
 	import { Textarea } from '$lib/components/ui/textarea/index.js';
 	import { toast } from 'svelte-sonner';
 	import { notifyError } from '$lib/utils/errors.js';
-	import { User, Save, LoaderCircle } from 'lucide-svelte';
+	import { User, Save, LoaderCircle } from '@lucide/svelte';
+	import { createClientFormOptions } from '$lib/validation';
+	import { fileLikeSchema } from '$lib/schemas/helpers.js';
 
 	// Profile form schema
 	const profileSchema = z.object({
@@ -20,7 +21,7 @@
 			.max(30, 'Username must be less than 30 characters')
 			.regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores'),
 		bio: z.string().max(500, 'Bio must be less than 500 characters').optional(),
-		avatar: z.instanceof(File).optional()
+		avatar: fileLikeSchema.optional()
 	});
 
 	let {
@@ -32,7 +33,7 @@
 	} = $props();
 
 	const { form, errors, enhance, submitting } = superForm(data, {
-		validators: zodClient(profileSchema),
+		...createClientFormOptions(profileSchema),
 		onUpdated: ({ form }) => {
 			if (form.valid) {
 				toast.success('Profile updated successfully!');

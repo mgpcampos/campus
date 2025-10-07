@@ -3,7 +3,7 @@
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Textarea } from '$lib/components/ui/textarea/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import { AlertCircle, Eye, EyeOff } from 'lucide-svelte';
+	import { AlertCircle, Eye, EyeOff } from '@lucide/svelte';
 
 	let {
 		type = 'text',

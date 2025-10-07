@@ -1,7 +1,7 @@
 <script lang="ts">
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import { User, MapPin, Calendar, Edit } from 'lucide-svelte';
+	import { User, MapPin, Calendar, Edit } from '@lucide/svelte';
 	import { pb } from '$lib/pocketbase.js';
 
 	interface UserProfile {

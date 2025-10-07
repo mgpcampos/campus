@@ -9,7 +9,7 @@
 	} from '$lib/services/notificationClient';
 	import { onMount } from 'svelte';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { Bell } from 'lucide-svelte';
+	import { Bell } from '@lucide/svelte';
 
 	let open = $state(false);
 	onMount(() => {

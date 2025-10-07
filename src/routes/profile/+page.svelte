@@ -1,14 +1,14 @@
 <script>
-	import { superForm } from 'sveltekit-superforms';
-	import { zod } from 'sveltekit-superforms/adapters';
+	import { superForm } from 'sveltekit-superforms/client';
 	import { profileSchema } from '$lib/utils/validation.js';
 	import { getErrorMessage } from '$lib/utils/errors.js';
 	import { currentUser } from '$lib/pocketbase.js';
+	import { createClientFormOptions } from '$lib/validation';
 
 	let { data } = $props();
 
 	const { form, errors, enhance, submitting, message } = superForm(data.form, {
-		validators: zod(profileSchema),
+		...createClientFormOptions(profileSchema),
 		resetForm: false
 	});
 

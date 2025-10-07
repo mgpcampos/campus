@@ -1,9 +1,10 @@
 import { json, error } from '@sveltejs/kit';
 import { createPostSchema, postQuerySchema } from '$lib/schemas/post.js';
-import { sanitizeContent } from '$lib/utils/sanitize.js';
 import { createPost, getPosts } from '$lib/services/posts.js';
-import { validateImages } from '$lib/utils/media.js';
+import { validatePostMedia } from '$lib/utils/media.js';
 import { normalizeError, toErrorPayload } from '$lib/utils/errors.js';
+import { trackFeedPerformance } from '$lib/server/analytics/feedPerformance';
+import { recordPostModerationSignal } from '$lib/services/moderation.js';
 
 /** @type {import('./$types').RequestHandler} */
 export async function GET({ url, locals }) {
@@ -15,7 +16,9 @@ export async function GET({ url, locals }) {
 		}
 		const validatedQuery = postQuerySchema.parse(queryParams);
 
-		const result = await getPosts(validatedQuery, { pb: locals.pb });
+		const result = await trackFeedPerformance(locals.pb, validatedQuery, () =>
+			getPosts(validatedQuery, { pb: locals.pb })
+		);
 		// Add short-lived HTTP cache for anonymous global first page to leverage CDN/browser caching
 		const headers = new Headers();
 		const isCacheable =
@@ -49,29 +52,55 @@ export async function POST({ request, locals }) {
 		const rawFiles = /** @type {File[]} */ (
 			formData.getAll('attachments').filter((f) => f instanceof File && f.size > 0)
 		);
+		const mediaTypeValue = (formData.get('mediaType') || 'text').toString();
+		const mediaType =
+			mediaTypeValue === 'images' || mediaTypeValue === 'video' ? mediaTypeValue : 'text';
+		const posterEntry = formData.get('videoPoster');
+		const videoPoster =
+			posterEntry instanceof File && posterEntry.size > 0 ? posterEntry : undefined;
+		const videoDurationRaw = formData.get('videoDuration');
+		const videoDuration =
+			typeof videoDurationRaw === 'string' && videoDurationRaw.trim().length > 0
+				? Number.parseFloat(videoDurationRaw)
+				: undefined;
+		const publishedAtRaw = formData.get('publishedAt');
+		const publishedAt =
+			typeof publishedAtRaw === 'string' && publishedAtRaw.trim().length > 0
+				? publishedAtRaw
+				: undefined;
+		const mediaAltTextValue = formData.get('mediaAltText');
+		const mediaAltText = typeof mediaAltTextValue === 'string' ? mediaAltTextValue : undefined;
 
-		// Validate images (server-side defense in depth)
-		const { valid, errors: imageErrors } = validateImages(rawFiles);
-		if (!valid) {
-			return error(400, imageErrors.join('; '));
+		const mediaValidation = validatePostMedia({
+			mediaType,
+			attachments: rawFiles,
+			poster: videoPoster,
+			videoDuration
+		});
+		if (!mediaValidation.valid) {
+			return error(400, mediaValidation.errors.join('; '));
 		}
 
-		// Extract form fields
 		const postData = {
 			content: formData.get('content'),
 			scope: formData.get('scope') || 'global',
 			space: formData.get('space') || undefined,
 			group: formData.get('group') || undefined,
-			attachments: rawFiles
+			attachments: rawFiles,
+			mediaType,
+			mediaAltText,
+			videoPoster,
+			videoDuration,
+			publishedAt
 		};
 
 		const validatedData = createPostSchema.parse(postData);
 
-		// Sanitize content to prevent XSS (defense in depth; UI should treat as plain text)
-		validatedData.content = sanitizeContent(validatedData.content);
-
-		// For now, we directly forward files to PocketBase. (Optional future: optimize server-side via sharp.)
-		const newPost = await createPost(validatedData, { pb: locals.pb });
+		const newPost = await createPost(validatedData, {
+			pb: locals.pb,
+			emitModerationMetadata: async (metadata) =>
+				await recordPostModerationSignal(metadata, { pbClient: locals.pb })
+		});
 		return json(newPost, { status: 201 });
 	} catch (err) {
 		const isZod = err instanceof Error && err.name === 'ZodError';
