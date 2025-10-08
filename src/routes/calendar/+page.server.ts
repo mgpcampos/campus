@@ -1,7 +1,7 @@
 import type { Actions, PageServerLoad } from './$types';
 import { error, fail } from '@sveltejs/kit';
 import { superValidate } from 'sveltekit-superforms/server';
-import { zod } from 'sveltekit-superforms/adapters';
+import { withZod } from '$lib/validation';
 import { z } from 'zod';
 import { hasConflict, validateEventData } from '$lib/server/events/conflicts';
 import { toUTC } from '$lib/utils/timezone';
@@ -70,10 +70,8 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		});
 
 		// Initialize forms
-		// @ts-expect-error - sveltekit-superforms v2 has type inference limitations with Zod adapter
-		const createForm = await superValidate(zod(eventCreateSchema));
-		// @ts-expect-error - sveltekit-superforms v2 has type inference limitations with Zod adapter
-		const rsvpForm = await superValidate(zod(rsvpSchema));
+		const createForm = await superValidate(withZod(eventCreateSchema));
+		const rsvpForm = await superValidate(withZod(rsvpSchema));
 
 		return {
 			events,
@@ -95,8 +93,7 @@ export const actions: Actions = {
 		}
 
 		try {
-			// @ts-expect-error - sveltekit-superforms v2 has type inference limitations with Zod adapter
-			const createForm = await superValidate(request, zod(eventCreateSchema));
+			const createForm = await superValidate(request, withZod(eventCreateSchema));
 
 			if (!createForm.valid) {
 				return fail(400, { createForm });
@@ -155,8 +152,7 @@ export const actions: Actions = {
 		} catch (err) {
 			const normalized = normalizeError(err, { context: 'create event' });
 			console.error('Error creating event:', normalized);
-			// @ts-expect-error - sveltekit-superforms v2 has type inference limitations with Zod adapter
-			const errorForm = await superValidate(request, zod(eventCreateSchema));
+			const errorForm = await superValidate(request, withZod(eventCreateSchema));
 			return fail(normalized.status || 500, {
 				createForm: errorForm,
 				message: normalized.userMessage || 'Failed to create event'
@@ -170,8 +166,7 @@ export const actions: Actions = {
 		}
 
 		try {
-			// @ts-expect-error - sveltekit-superforms v2 has type inference limitations with Zod adapter
-			const rsvpForm = await superValidate(request, zod(rsvpSchema));
+			const rsvpForm = await superValidate(request, withZod(rsvpSchema));
 
 			if (!rsvpForm.valid) {
 				return fail(400, { rsvpForm });
@@ -202,8 +197,7 @@ export const actions: Actions = {
 		} catch (err) {
 			const normalized = normalizeError(err, { context: 'rsvp event' });
 			console.error('Error RSVPing to event:', normalized);
-			// @ts-expect-error - sveltekit-superforms v2 has type inference limitations with Zod adapter
-			const errorForm = await superValidate(request, zod(rsvpSchema));
+			const errorForm = await superValidate(request, withZod(rsvpSchema));
 			return fail(normalized.status || 500, {
 				rsvpForm: errorForm,
 				message: normalized.userMessage || 'Failed to RSVP'

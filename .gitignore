@@ -5,6 +5,7 @@ node_modules
 .idea
 .kiro
 .specify
+.speckit
 .vscode
 
 # Output
