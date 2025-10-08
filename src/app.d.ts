@@ -9,6 +9,7 @@ declare global {
 			pb: PocketBase;
 			user?: import('pocketbase').RecordModel | null;
 			sessionToken?: string | null;
+			sessionId?: string | null;
 		}
 		// interface PageData {}
 		// interface PageState {}

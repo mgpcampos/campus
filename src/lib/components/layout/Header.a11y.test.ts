@@ -19,5 +19,5 @@ describe('Header accessibility', () => {
 		const results = await runAxe(container);
 		const critical = results.violations.filter((v: Result) => v.impact === 'critical');
 		expect(critical).toHaveLength(0);
-	});
+	}, 10000); // Increase timeout to 10s for axe-core accessibility checks
 });

@@ -264,6 +264,30 @@ export function trackVital(name: string, value: number, metadata?: Record<string
 	enqueue({ type: 'vital', name, value, metadata: metadata ?? null });
 }
 
+/**
+ * Track material view event
+ * @param materialId - ID of the viewed material
+ * @param metadata - Additional context (format, visibility, etc.)
+ */
+export function trackMaterialView(materialId: string, metadata?: Record<string, unknown>) {
+	trackEvent('material_view', {
+		materialId,
+		...metadata
+	});
+}
+
+/**
+ * Track material download event
+ * @param materialId - ID of the downloaded material
+ * @param metadata - Additional context (format, fileSize, etc.)
+ */
+export function trackMaterialDownload(materialId: string, metadata?: Record<string, unknown>) {
+	trackEvent('material_download', {
+		materialId,
+		...metadata
+	});
+}
+
 export function initAnalytics() {
 	if (!browser || initialized || !analytics.enabled) {
 		return () => {};
