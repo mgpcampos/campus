@@ -1,6 +1,42 @@
 // @vitest-environment node
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { validateImages, MAX_ATTACHMENTS, optimizeImage, sanitizeFilename } from './media.js';
+
+class FakeSharpPipeline {
+	/**
+	 * @param {Buffer} buffer
+	 */
+	constructor(buffer) {
+		this.buffer = buffer;
+	}
+
+	async metadata() {
+		return { format: 'png', width: 128 };
+	}
+
+	clone() {
+		return new FakeSharpPipeline(this.buffer);
+	}
+
+	resize() {
+		return this;
+	}
+
+	webp() {
+		return this;
+	}
+
+	async toBuffer() {
+		return Buffer.from(this.buffer);
+	}
+}
+
+vi.mock('sharp', () => ({
+	/**
+	 * @param {Buffer} buffer
+	 */
+	default: (buffer) => new FakeSharpPipeline(buffer)
+}));
 
 /**
  * @param {string} name
