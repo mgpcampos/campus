@@ -21,14 +21,14 @@ export function extractMentions(content) {
  * @param {Object} data
  * @param {string} data.user - recipient user id
  * @param {string} data.actor - actor user id
- * @param {'like'|'comment'|'mention'|'event_created'|'event_updated'|'event_reminder'|'event_cancelled'} data.type
+ * @param {'like'|'comment'|'mention'|'event_created'|'event_updated'|'event_reminder'|'event_cancelled'|'message_flagged'|'moderation_escalated'|'moderation_summary'|'message_removed'|'thread_locked'} data.type
  * @param {string} [data.post]
  * @param {string} [data.comment]
  * @param {string} [data.event]
  * @param {Object} [data.metadata] - Additional notification metadata
  */
 /**
- * @param {{user:string; actor:string; type:'like'|'comment'|'mention'|'event_created'|'event_updated'|'event_reminder'|'event_cancelled'; post?:string; comment?:string; event?:string; metadata?:Object}} data
+ * @param {{user:string; actor:string; type:'like'|'comment'|'mention'|'event_created'|'event_updated'|'event_reminder'|'event_cancelled'|'message_flagged'|'moderation_escalated'|'moderation_summary'|'message_removed'|'thread_locked'; post?:string; comment?:string; event?:string; metadata?:Object}} data
  */
 export async function createNotification(data) {
 	try {
@@ -145,4 +145,155 @@ export async function resolveUsernames(usernames) {
 		}
 	}
 	return map;
+}
+
+/**
+ * Notify moderators about a flagged message requiring review
+ * @param {string} messageId - Flagged message ID
+ * @param {string} threadId - Thread ID
+ * @param {string} reporterId - User who flagged the message
+ * @param {string} reason - Flag reason
+ * @param {string} caseId - Moderation case ID
+ */
+export async function notifyModeratorsMessageFlagged(messageId, threadId, reporterId, reason, caseId) {
+	try {
+		// Get all moderators (users with is_admin = true)
+		const moderators = await pb.collection('users').getFullList({
+			filter: 'is_admin = true'
+		});
+
+		for (const moderator of moderators) {
+			await createNotification({
+				user: moderator.id,
+				actor: reporterId,
+				type: 'message_flagged',
+				metadata: {
+					messageId,
+					threadId,
+					reason: reason.substring(0, 100), // Truncate for notification
+					caseId,
+					severity: 'high'
+				}
+			});
+		}
+	} catch (e) {
+		console.error('Failed to notify moderators about flagged message', e);
+	}
+}
+
+/**
+ * Notify moderators about an escalated moderation case (SLA breach)
+ * @param {string} caseId - Moderation case ID
+ * @param {string} sourceType - Source type (message, post, comment)
+ * @param {string} sourceId - Source ID
+ * @param {number} ageMinutes - How long the case has been open
+ */
+export async function notifyModeratorsEscalation(caseId, sourceType, sourceId, ageMinutes) {
+	try {
+		const moderators = await pb.collection('users').getFullList({
+			filter: 'is_admin = true'
+		});
+
+		for (const moderator of moderators) {
+			await createNotification({
+				user: moderator.id,
+				actor: moderator.id, // Self-notification for escalation
+				type: 'moderation_escalated',
+				metadata: {
+					caseId,
+					sourceType,
+					sourceId,
+					ageMinutes,
+					severity: 'critical'
+				}
+			});
+		}
+	} catch (e) {
+		console.error('Failed to notify moderators about escalation', e);
+	}
+}
+
+/**
+ * Notify moderators with daily moderation summary
+ * @param {Object} summary - Daily stats
+ * @param {number} summary.newCases - New cases opened
+ * @param {number} summary.resolvedCases - Cases resolved
+ * @param {number} summary.openCases - Cases still open
+ * @param {number} summary.escalatedCases - Escalated cases
+ */
+export async function notifyModeratorsDailySummary(summary) {
+	try {
+		const moderators = await pb.collection('users').getFullList({
+			filter: 'is_admin = true'
+		});
+
+		for (const moderator of moderators) {
+			await createNotification({
+				user: moderator.id,
+				actor: moderator.id,
+				type: 'moderation_summary',
+				metadata: {
+					...summary,
+					date: new Date().toISOString().split('T')[0],
+					severity: 'info'
+				}
+			});
+		}
+	} catch (e) {
+		console.error('Failed to send daily moderation summary', e);
+	}
+}
+
+/**
+ * Notify a user that their message was flagged and removed
+ * @param {string} userId - User whose message was removed
+ * @param {string} messageId - Removed message ID
+ * @param {string} threadId - Thread ID
+ * @param {string} moderatorId - Moderator who took action
+ * @param {string} reason - Reason for removal
+ */
+export async function notifyUserMessageRemoved(userId, messageId, threadId, moderatorId, reason) {
+	try {
+		await createNotification({
+			user: userId,
+			actor: moderatorId,
+			type: 'message_removed',
+			metadata: {
+				messageId,
+				threadId,
+				reason: reason.substring(0, 200),
+				severity: 'warning'
+			}
+		});
+	} catch (e) {
+		console.error('Failed to notify user about message removal', e);
+	}
+}
+
+/**
+ * Notify thread participants that the conversation was locked
+ * @param {string} threadId - Thread ID
+ * @param {string[]} memberIds - Thread member IDs
+ * @param {string} moderatorId - Moderator who locked the thread
+ * @param {string} reason - Reason for locking
+ */
+export async function notifyThreadLocked(threadId, memberIds, moderatorId, reason) {
+	try {
+		const uniqueMembers = [...new Set(memberIds)];
+
+		for (const userId of uniqueMembers) {
+			await createNotification({
+				user: userId,
+				actor: moderatorId,
+				type: 'thread_locked',
+				metadata: {
+					threadId,
+					reason: reason.substring(0, 200),
+					severity: 'warning'
+				}
+			});
+		}
+	} catch (e) {
+		console.error('Failed to notify users about thread lock', e);
+	}
 }

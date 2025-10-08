@@ -42,10 +42,10 @@ npm install
 cp .env.example .env
 ```
 
-3. Start PocketBase server (download from https://pocketbase.io/):
+3. Start PocketBase server (download from https://pocketbase.io/ or install system-wide):
 
 ```sh
-./pocketbase serve
+pocketbase serve
 ```
 
 4. Start the development server:

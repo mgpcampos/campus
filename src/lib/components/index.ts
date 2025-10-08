@@ -12,6 +12,12 @@ export { default as PostForm } from './forms/PostForm.svelte';
 export { default as PostCard } from './feed/PostCard.svelte';
 export { default as Feed } from './feed/Feed.svelte';
 
+// Messaging Components
+export { default as ThreadList } from './messaging/ThreadList.svelte';
+export { default as MessageTimeline } from './messaging/MessageTimeline.svelte';
+export { default as MessageComposer } from './messaging/MessageComposer.svelte';
+export { default as FlagDialog } from './messaging/FlagDialog.svelte';
+
 // UI Components
 export { default as LoadingSpinner } from './ui/LoadingSpinner.svelte';
 export { default as EmptyState } from './ui/EmptyState.svelte';
