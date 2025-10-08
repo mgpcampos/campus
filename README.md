@@ -25,7 +25,7 @@ A lightweight, Twitter-like social network designed specifically for the educati
 
 ## Prerequisites
 
-- Node.js 24.9.0 (npm 10)
+- Node.js 24.9.0 (npm 11.6.1)
 - PocketBase server running on http://127.0.0.1:8090
 
 ## Setup
