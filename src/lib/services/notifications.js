@@ -21,12 +21,14 @@ export function extractMentions(content) {
  * @param {Object} data
  * @param {string} data.user - recipient user id
  * @param {string} data.actor - actor user id
- * @param {'like'|'comment'|'mention'} data.type
+ * @param {'like'|'comment'|'mention'|'event_created'|'event_updated'|'event_reminder'|'event_cancelled'} data.type
  * @param {string} [data.post]
  * @param {string} [data.comment]
+ * @param {string} [data.event]
+ * @param {Object} [data.metadata] - Additional notification metadata
  */
 /**
- * @param {{user:string; actor:string; type:'like'|'comment'|'mention'; post?:string; comment?:string}} data
+ * @param {{user:string; actor:string; type:'like'|'comment'|'mention'|'event_created'|'event_updated'|'event_reminder'|'event_cancelled'; post?:string; comment?:string; event?:string; metadata?:Object}} data
  */
 export async function createNotification(data) {
 	try {
@@ -36,10 +38,87 @@ export async function createNotification(data) {
 			type: data.type,
 			post: data.post || undefined,
 			comment: data.comment || undefined,
+			event: data.event || undefined,
+			metadata: data.metadata ? JSON.stringify(data.metadata) : undefined,
 			read: false
 		});
 	} catch (e) {
 		console.warn('Failed to create notification', e);
+	}
+}
+
+/**
+ * Notify participants about event creation
+ * @param {string} eventId - Event ID
+ * @param {string} creatorId - Creator user ID
+ * @param {string[]} participantIds - Array of participant user IDs
+ */
+export async function notifyEventCreated(eventId, creatorId, participantIds) {
+	const uniqueParticipants = [...new Set(participantIds)].filter((id) => id !== creatorId);
+
+	for (const userId of uniqueParticipants) {
+		await createNotification({
+			user: userId,
+			actor: creatorId,
+			type: 'event_created',
+			event: eventId
+		});
+	}
+}
+
+/**
+ * Notify participants about event updates
+ * @param {string} eventId - Event ID
+ * @param {string} updaterId - User who updated the event
+ * @param {string[]} participantIds - Array of participant user IDs
+ * @param {Object} changes - Description of changes
+ */
+export async function notifyEventUpdated(eventId, updaterId, participantIds, changes) {
+	const uniqueParticipants = [...new Set(participantIds)].filter((id) => id !== updaterId);
+
+	for (const userId of uniqueParticipants) {
+		await createNotification({
+			user: userId,
+			actor: updaterId,
+			type: 'event_updated',
+			event: eventId,
+			metadata: changes
+		});
+	}
+}
+
+/**
+ * Send event reminders to participants
+ * @param {string} eventId - Event ID
+ * @param {string[]} participantIds - Array of participant user IDs
+ */
+export async function notifyEventReminder(eventId, participantIds) {
+	for (const userId of participantIds) {
+		await createNotification({
+			user: userId,
+			actor: userId, // Self-notification for reminders
+			type: 'event_reminder',
+			event: eventId
+		});
+	}
+}
+
+/**
+ * Notify participants about event cancellation
+ * @param {string} eventId - Event ID
+ * @param {string} cancellerId - User who cancelled the event
+ * @param {string[]} participantIds - Array of participant user IDs
+ */
+export async function notifyEventCancelled(eventId, cancellerId, participantIds) {
+	const uniqueParticipants = [...new Set(participantIds)].filter((id) => id !== cancellerId);
+
+	for (const userId of uniqueParticipants) {
+		await createNotification({
+			user: userId,
+			actor: cancellerId,
+			type: 'event_cancelled',
+			event: eventId
+		});
 	}
 }
 
