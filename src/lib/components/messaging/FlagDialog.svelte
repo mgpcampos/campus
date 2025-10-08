@@ -78,7 +78,7 @@
 	}
 </script>
 
-<Dialog.Root open={open} onOpenChange={handleOpenChange}>
+<Dialog.Root {open} onOpenChange={handleOpenChange}>
 	<Dialog.Content class="sm:max-w-md">
 		<Dialog.Header>
 			<div class="flex items-center gap-2">

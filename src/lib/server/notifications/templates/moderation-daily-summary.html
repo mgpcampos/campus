@@ -1,220 +1,226 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Moderation Summary</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background-color: #f6f6f6;
-            color: #333333;
-        }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #ffffff;
-        }
-        .header {
-            background-color: #1e40af;
-            padding: 32px 24px;
-            text-align: center;
-        }
-        .header h1 {
-            margin: 0;
-            color: #ffffff;
-            font-size: 24px;
-            font-weight: 600;
-        }
-        .header p {
-            margin: 8px 0 0 0;
-            color: #dbeafe;
-            font-size: 14px;
-        }
-        .content {
-            padding: 32px 24px;
-        }
-        .stats-grid {
-            display: table;
-            width: 100%;
-            margin: 24px 0;
-        }
-        .stat-card {
-            display: table-cell;
-            width: 50%;
-            padding: 16px;
-            text-align: center;
-            vertical-align: top;
-        }
-        .stat-card:nth-child(odd) {
-            background-color: #eff6ff;
-        }
-        .stat-card:nth-child(even) {
-            background-color: #f0f9ff;
-        }
-        .stat-value {
-            font-size: 32px;
-            font-weight: 700;
-            color: #1e40af;
-            margin: 0;
-        }
-        .stat-label {
-            font-size: 14px;
-            color: #6b7280;
-            margin: 4px 0 0 0;
-        }
-        .section {
-            margin: 24px 0;
-        }
-        .section h3 {
-            color: #1f2937;
-            font-size: 18px;
-            margin: 0 0 12px 0;
-        }
-        .metric-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 12px 16px;
-            background-color: #f9fafb;
-            margin: 8px 0;
-            border-radius: 6px;
-        }
-        .metric-label {
-            color: #4b5563;
-        }
-        .metric-value {
-            font-weight: 600;
-            color: #1f2937;
-        }
-        .status-good {
-            color: #059669;
-        }
-        .status-warning {
-            color: #d97706;
-        }
-        .status-critical {
-            color: #dc2626;
-        }
-        .button {
-            display: inline-block;
-            background-color: #1e40af;
-            color: #ffffff;
-            text-decoration: none;
-            padding: 12px 24px;
-            border-radius: 6px;
-            font-weight: 600;
-            margin: 16px 0;
-        }
-        .footer {
-            background-color: #f9fafb;
-            padding: 24px;
-            text-align: center;
-            color: #6b7280;
-            font-size: 14px;
-        }
-        .footer a {
-            color: #1e40af;
-            text-decoration: none;
-        }
-        @media only screen and (max-width: 600px) {
-            .stats-grid {
-                display: block;
-            }
-            .stat-card {
-                display: block;
-                width: 100%;
-                margin: 8px 0;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>📊 Daily Moderation Summary</h1>
-            <p>{{date}}</p>
-        </div>
-        
-        <div class="content">
-            <p>Hello Moderator,</p>
-            
-            <p>Here's your daily overview of moderation activity across the Campus platform.</p>
-            
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <p class="stat-value">{{newCases}}</p>
-                    <p class="stat-label">New Cases</p>
-                </div>
-                <div class="stat-card">
-                    <p class="stat-value">{{resolvedCases}}</p>
-                    <p class="stat-label">Resolved</p>
-                </div>
-                <div class="stat-card">
-                    <p class="stat-value">{{openCases}}</p>
-                    <p class="stat-label">Still Open</p>
-                </div>
-                <div class="stat-card">
-                    <p class="stat-value {{#if escalatedCases}}status-warning{{/if}}">{{escalatedCases}}</p>
-                    <p class="stat-label">Escalated</p>
-                </div>
-            </div>
-            
-            <div class="section">
-                <h3>Performance Metrics</h3>
-                <div class="metric-row">
-                    <span class="metric-label">Average Resolution Time</span>
-                    <span class="metric-value {{resolutionTimeClass}}">{{avgResolutionTime}}</span>
-                </div>
-                <div class="metric-row">
-                    <span class="metric-label">SLA Compliance</span>
-                    <span class="metric-value {{slaComplianceClass}}">{{slaCompliance}}%</span>
-                </div>
-                <div class="metric-row">
-                    <span class="metric-label">Response Time (First Action)</span>
-                    <span class="metric-value">{{avgResponseTime}}</span>
-                </div>
-            </div>
-            
-            <div class="section">
-                <h3>Content Breakdown</h3>
-                <div class="metric-row">
-                    <span class="metric-label">Messages Flagged</span>
-                    <span class="metric-value">{{messageFlags}}</span>
-                </div>
-                <div class="metric-row">
-                    <span class="metric-label">Posts Reported</span>
-                    <span class="metric-value">{{postReports}}</span>
-                </div>
-                <div class="metric-row">
-                    <span class="metric-label">Comments Flagged</span>
-                    <span class="metric-value">{{commentFlags}}</span>
-                </div>
-            </div>
-            
-            {{#if openCases}}
-            <p style="background-color: #fef3c7; padding: 16px; border-radius: 6px; margin: 16px 0;">
-                <strong>⚠️ Action Required:</strong> You have {{openCases}} open cases that need attention.
-            </p>
-            {{/if}}
-            
-            <center>
-                <a href="{{dashboardUrl}}" class="button">View Full Dashboard</a>
-            </center>
-            
-            <p style="margin-top: 24px; font-size: 14px; color: #6b7280;">
-                <strong>Trend:</strong> {{trend}} compared to yesterday
-            </p>
-        </div>
-        
-        <div class="footer">
-            <p>This is your daily summary from Campus Collaboration Platform</p>
-            <p><a href="{{dashboardUrl}}">Moderation Dashboard</a> | <a href="{{analyticsUrl}}">Analytics</a> | <a href="{{guidelinesUrl}}">Guidelines</a></p>
-            <p style="margin-top: 16px; font-size: 12px;">
-                To adjust your notification preferences, visit your <a href="{{settingsUrl}}">account settings</a>.
-            </p>
-        </div>
-    </div>
-</body>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Daily Moderation Summary</title>
+		<style>
+			body {
+				margin: 0;
+				padding: 0;
+				font-family:
+					-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+				background-color: #f6f6f6;
+				color: #333333;
+			}
+			.container {
+				max-width: 600px;
+				margin: 0 auto;
+				background-color: #ffffff;
+			}
+			.header {
+				background-color: #1e40af;
+				padding: 32px 24px;
+				text-align: center;
+			}
+			.header h1 {
+				margin: 0;
+				color: #ffffff;
+				font-size: 24px;
+				font-weight: 600;
+			}
+			.header p {
+				margin: 8px 0 0 0;
+				color: #dbeafe;
+				font-size: 14px;
+			}
+			.content {
+				padding: 32px 24px;
+			}
+			.stats-grid {
+				display: table;
+				width: 100%;
+				margin: 24px 0;
+			}
+			.stat-card {
+				display: table-cell;
+				width: 50%;
+				padding: 16px;
+				text-align: center;
+				vertical-align: top;
+			}
+			.stat-card:nth-child(odd) {
+				background-color: #eff6ff;
+			}
+			.stat-card:nth-child(even) {
+				background-color: #f0f9ff;
+			}
+			.stat-value {
+				font-size: 32px;
+				font-weight: 700;
+				color: #1e40af;
+				margin: 0;
+			}
+			.stat-label {
+				font-size: 14px;
+				color: #6b7280;
+				margin: 4px 0 0 0;
+			}
+			.section {
+				margin: 24px 0;
+			}
+			.section h3 {
+				color: #1f2937;
+				font-size: 18px;
+				margin: 0 0 12px 0;
+			}
+			.metric-row {
+				display: flex;
+				justify-content: space-between;
+				padding: 12px 16px;
+				background-color: #f9fafb;
+				margin: 8px 0;
+				border-radius: 6px;
+			}
+			.metric-label {
+				color: #4b5563;
+			}
+			.metric-value {
+				font-weight: 600;
+				color: #1f2937;
+			}
+			.status-good {
+				color: #059669;
+			}
+			.status-warning {
+				color: #d97706;
+			}
+			.status-critical {
+				color: #dc2626;
+			}
+			.button {
+				display: inline-block;
+				background-color: #1e40af;
+				color: #ffffff;
+				text-decoration: none;
+				padding: 12px 24px;
+				border-radius: 6px;
+				font-weight: 600;
+				margin: 16px 0;
+			}
+			.footer {
+				background-color: #f9fafb;
+				padding: 24px;
+				text-align: center;
+				color: #6b7280;
+				font-size: 14px;
+			}
+			.footer a {
+				color: #1e40af;
+				text-decoration: none;
+			}
+			@media only screen and (max-width: 600px) {
+				.stats-grid {
+					display: block;
+				}
+				.stat-card {
+					display: block;
+					width: 100%;
+					margin: 8px 0;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<div class="header">
+				<h1>📊 Daily Moderation Summary</h1>
+				<p>{{date}}</p>
+			</div>
+
+			<div class="content">
+				<p>Hello Moderator,</p>
+
+				<p>Here's your daily overview of moderation activity across the Campus platform.</p>
+
+				<div class="stats-grid">
+					<div class="stat-card">
+						<p class="stat-value">{{newCases}}</p>
+						<p class="stat-label">New Cases</p>
+					</div>
+					<div class="stat-card">
+						<p class="stat-value">{{resolvedCases}}</p>
+						<p class="stat-label">Resolved</p>
+					</div>
+					<div class="stat-card">
+						<p class="stat-value">{{openCases}}</p>
+						<p class="stat-label">Still Open</p>
+					</div>
+					<div class="stat-card">
+						<p class="stat-value {{#if escalatedCases}}status-warning{{/if}}">{{escalatedCases}}</p>
+						<p class="stat-label">Escalated</p>
+					</div>
+				</div>
+
+				<div class="section">
+					<h3>Performance Metrics</h3>
+					<div class="metric-row">
+						<span class="metric-label">Average Resolution Time</span>
+						<span class="metric-value {{resolutionTimeClass}}">{{avgResolutionTime}}</span>
+					</div>
+					<div class="metric-row">
+						<span class="metric-label">SLA Compliance</span>
+						<span class="metric-value {{slaComplianceClass}}">{{slaCompliance}}%</span>
+					</div>
+					<div class="metric-row">
+						<span class="metric-label">Response Time (First Action)</span>
+						<span class="metric-value">{{avgResponseTime}}</span>
+					</div>
+				</div>
+
+				<div class="section">
+					<h3>Content Breakdown</h3>
+					<div class="metric-row">
+						<span class="metric-label">Messages Flagged</span>
+						<span class="metric-value">{{messageFlags}}</span>
+					</div>
+					<div class="metric-row">
+						<span class="metric-label">Posts Reported</span>
+						<span class="metric-value">{{postReports}}</span>
+					</div>
+					<div class="metric-row">
+						<span class="metric-label">Comments Flagged</span>
+						<span class="metric-value">{{commentFlags}}</span>
+					</div>
+				</div>
+
+				{{#if openCases}}
+				<p style="background-color: #fef3c7; padding: 16px; border-radius: 6px; margin: 16px 0">
+					<strong>⚠️ Action Required:</strong> You have {{openCases}} open cases that need
+					attention.
+				</p>
+				{{/if}}
+
+				<center>
+					<a href="{{dashboardUrl}}" class="button">View Full Dashboard</a>
+				</center>
+
+				<p style="margin-top: 24px; font-size: 14px; color: #6b7280">
+					<strong>Trend:</strong> {{trend}} compared to yesterday
+				</p>
+			</div>
+
+			<div class="footer">
+				<p>This is your daily summary from Campus Collaboration Platform</p>
+				<p>
+					<a href="{{dashboardUrl}}">Moderation Dashboard</a> |
+					<a href="{{analyticsUrl}}">Analytics</a> | <a href="{{guidelinesUrl}}">Guidelines</a>
+				</p>
+				<p style="margin-top: 16px; font-size: 12px">
+					To adjust your notification preferences, visit your
+					<a href="{{settingsUrl}}">account settings</a>.
+				</p>
+			</div>
+		</div>
+	</body>
 </html>

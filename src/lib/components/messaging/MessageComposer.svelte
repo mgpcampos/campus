@@ -173,7 +173,10 @@
 			</Button>
 		</div>
 
-		<Button type="submit" disabled={disabled || isSubmitting || (!body.trim() && files.length === 0)}>
+		<Button
+			type="submit"
+			disabled={disabled || isSubmitting || (!body.trim() && files.length === 0)}
+		>
 			{#if isSubmitting}
 				<Loader2 class="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
 				Sending...

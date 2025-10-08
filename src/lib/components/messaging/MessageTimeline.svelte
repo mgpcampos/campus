@@ -48,7 +48,10 @@
 		return `/api/files/messages/${messageId}/${filename}`;
 	}
 
-	function getMessageStatus(status: string): { label: string; variant: 'default' | 'destructive' | 'secondary' } {
+	function getMessageStatus(status: string): {
+		label: string;
+		variant: 'default' | 'destructive' | 'secondary';
+	} {
 		switch (status) {
 			case 'visible':
 				return { label: '', variant: 'default' };
@@ -103,7 +106,7 @@
 					<Card.Content class="p-4">
 						{#if !isOwnMessage}
 							<div class="mb-2 flex items-center justify-between gap-2">
-								<p class="font-semibold text-sm">
+								<p class="text-sm font-semibold">
 									{message.expand?.author?.name || 'Unknown User'}
 								</p>
 								<time class="text-xs text-muted-foreground" datetime={message.created}>
@@ -125,11 +128,11 @@
 						{/if}
 
 						{#if message.body && message.status !== 'removed'}
-							<p class="whitespace-pre-wrap break-words text-sm leading-relaxed">
+							<p class="text-sm leading-relaxed break-words whitespace-pre-wrap">
 								{message.body}
 							</p>
 						{:else if message.status === 'removed'}
-							<p class="italic text-sm text-muted-foreground">
+							<p class="text-sm text-muted-foreground italic">
 								This message has been removed by a moderator
 							</p>
 						{/if}
@@ -141,7 +144,10 @@
 										class="flex items-center justify-between rounded border border-border bg-muted/50 p-2"
 									>
 										<div class="flex min-w-0 flex-1 items-center gap-2">
-											<FileText class="h-4 w-4 flex-shrink-0 text-muted-foreground" aria-hidden="true" />
+											<FileText
+												class="h-4 w-4 flex-shrink-0 text-muted-foreground"
+												aria-hidden="true"
+											/>
 											<span class="truncate text-sm">{attachment}</span>
 										</div>
 										<Button

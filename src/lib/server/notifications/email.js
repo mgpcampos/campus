@@ -32,7 +32,15 @@ function renderTemplate(template, variables) {
  */
 export function renderEmailTemplate(templateName, variables) {
 	try {
-		const templatePath = join(process.cwd(), 'src', 'lib', 'server', 'notifications', 'templates', `${templateName}.html`);
+		const templatePath = join(
+			process.cwd(),
+			'src',
+			'lib',
+			'server',
+			'notifications',
+			'templates',
+			`${templateName}.html`
+		);
 		const template = readFileSync(templatePath, 'utf-8');
 		return renderTemplate(template, variables);
 	} catch (error) {
@@ -155,7 +163,11 @@ export function renderModerationDailySummaryEmail(params) {
 				: 'status-critical';
 
 	const slaComplianceClass =
-		params.slaCompliance >= 95 ? 'status-good' : params.slaCompliance >= 90 ? 'status-warning' : 'status-critical';
+		params.slaCompliance >= 95
+			? 'status-good'
+			: params.slaCompliance >= 90
+				? 'status-warning'
+				: 'status-critical';
 
 	return renderEmailTemplate('moderation-daily-summary', {
 		...params,

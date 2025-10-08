@@ -104,7 +104,9 @@ describe('SLA Monitoring', () => {
 			const metadata = JSON.parse(latestEvent.metadata);
 
 			expect(metadata.responseWithinSLA).toBe(false);
-			expect(metadata.responseTimeMinutes).toBeGreaterThan(SLA_THRESHOLDS.MODERATION_RESPONSE_MINUTES);
+			expect(metadata.responseTimeMinutes).toBeGreaterThan(
+				SLA_THRESHOLDS.MODERATION_RESPONSE_MINUTES
+			);
 		});
 
 		it('should track case exceeding resolution SLA', async () => {
@@ -124,7 +126,9 @@ describe('SLA Monitoring', () => {
 			const metadata = JSON.parse(latestEvent.metadata);
 
 			expect(metadata.resolutionWithinSLA).toBe(false);
-			expect(metadata.resolutionTimeMinutes).toBeGreaterThan(SLA_THRESHOLDS.MODERATION_RESOLUTION_MINUTES);
+			expect(metadata.resolutionTimeMinutes).toBeGreaterThan(
+				SLA_THRESHOLDS.MODERATION_RESOLUTION_MINUTES
+			);
 		});
 
 		it('should handle unresolved cases', async () => {

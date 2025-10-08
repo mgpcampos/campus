@@ -16,10 +16,7 @@ export type ThreadCreateData = z.infer<typeof threadCreateSchema>;
  */
 export const messageCreateSchema = z.object({
 	body: z.string().optional(),
-	attachments: z
-		.array(z.instanceof(File))
-		.max(5, 'Maximum 5 attachments allowed')
-		.optional()
+	attachments: z.array(z.instanceof(File)).max(5, 'Maximum 5 attachments allowed').optional()
 });
 
 export type MessageCreateData = z.infer<typeof messageCreateSchema>;

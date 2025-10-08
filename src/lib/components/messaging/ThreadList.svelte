@@ -21,7 +21,9 @@
 		}
 
 		// For direct messages, show the other participant's name
-		const otherMember = thread.expand?.members?.find((m: { id: string; name?: string; email?: string }) => m.id !== currentUserId);
+		const otherMember = thread.expand?.members?.find(
+			(m: { id: string; name?: string; email?: string }) => m.id !== currentUserId
+		);
 		return otherMember?.name || 'Unknown User';
 	}
 

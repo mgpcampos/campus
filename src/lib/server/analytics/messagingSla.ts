@@ -101,7 +101,12 @@ export async function trackMessageDelivery(messageId: string, threadId: string, 
  * @param {Date | null} firstResponseAt
  * @param {Date | null} resolvedAt
  */
-export async function trackModerationCase(caseId: string, createdAt: Date, firstResponseAt: Date | null, resolvedAt: Date | null) {
+export async function trackModerationCase(
+	caseId: string,
+	createdAt: Date,
+	firstResponseAt: Date | null,
+	resolvedAt: Date | null
+) {
 	try {
 		const responseTimeMinutes = firstResponseAt
 			? (firstResponseAt.getTime() - createdAt.getTime()) / (1000 * 60)
@@ -341,7 +346,8 @@ export async function getDashboardMetrics() {
 			avgResponseTime24h: avgCaseResponseTime,
 			messagesLast24h: recentDeliveries.length,
 			casesLast24h: recentCases.length,
-			slaStatus: deliverySuccessRate >= SLA_THRESHOLDS.UPTIME_TARGET_PERCENT ? 'healthy' : 'degraded',
+			slaStatus:
+				deliverySuccessRate >= SLA_THRESHOLDS.UPTIME_TARGET_PERCENT ? 'healthy' : 'degraded',
 			needsEscalation: needsEscalation
 		};
 	} catch (error) {

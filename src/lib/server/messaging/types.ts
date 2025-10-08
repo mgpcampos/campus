@@ -202,10 +202,7 @@ export interface MessageFlagResponse {
 }
 
 // Utility function types
-export type ThreadMembershipChecker = (
-	userId: string,
-	threadId: string
-) => Promise<boolean>;
+export type ThreadMembershipChecker = (userId: string, threadId: string) => Promise<boolean>;
 
 export type MessagePermissionChecker = (
 	userId: string,

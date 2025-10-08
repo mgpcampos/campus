@@ -57,7 +57,10 @@
 	$effect(() => {
 		if (messageTimelineElement && messages.length > 0) {
 			setTimeout(() => {
-				messageTimelineElement?.scrollTo({ top: messageTimelineElement.scrollHeight, behavior: 'auto' });
+				messageTimelineElement?.scrollTo({
+					top: messageTimelineElement.scrollHeight,
+					behavior: 'auto'
+				});
 			}, 100);
 		}
 	});
@@ -78,7 +81,10 @@
 				// Scroll to bottom
 				setTimeout(() => {
 					if (messageTimelineElement) {
-						messageTimelineElement.scrollTo({ top: messageTimelineElement.scrollHeight, behavior: 'smooth' });
+						messageTimelineElement.scrollTo({
+							top: messageTimelineElement.scrollHeight,
+							behavior: 'smooth'
+						});
 					}
 				}, 100);
 			}
@@ -100,7 +106,9 @@
 		}
 
 		// For direct messages, show the other participant's name
-		const otherMember = data.thread.expand?.members?.find((m: { id: string; name?: string; email?: string }) => m.id !== $currentUser.id);
+		const otherMember = data.thread.expand?.members?.find(
+			(m: { id: string; name?: string; email?: string }) => m.id !== $currentUser.id
+		);
 		return otherMember?.name || 'Unknown User';
 	}
 
@@ -114,7 +122,12 @@
 <div class="mx-auto flex h-[calc(100vh-4rem)] max-w-5xl flex-col py-4">
 	<!-- Header -->
 	<header class="mb-4 flex items-center gap-4 border-b border-border pb-4">
-		<Button variant="ghost" size="sm" onclick={() => goto('/messages')} aria-label="Back to messages">
+		<Button
+			variant="ghost"
+			size="sm"
+			onclick={() => goto('/messages')}
+			aria-label="Back to messages"
+		>
 			<ArrowLeft class="h-4 w-4" aria-hidden="true" />
 		</Button>
 
@@ -171,7 +184,7 @@
 			class="flex-1 overflow-y-auto rounded-lg border border-border bg-muted/30 p-4"
 		>
 			<MessageTimeline
-				messages={messages}
+				{messages}
 				currentUserId={$currentUser.id}
 				onFlagMessage={handleFlagMessage}
 			/>

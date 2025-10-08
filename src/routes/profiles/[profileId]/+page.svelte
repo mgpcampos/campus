@@ -107,11 +107,12 @@
 									<div class="flex-1">
 										<h3 class="text-lg font-semibold text-gray-900">{pub.title}</h3>
 
-									{#if pub.authors && pub.authors.length > 0}
-										<p class="mt-1 text-sm text-gray-600">
-											{formatAuthors(pub.authors)}
-										</p>
-									{/if}										<div class="mt-2 flex items-center gap-4 text-sm text-gray-500">
+										{#if pub.authors && pub.authors.length > 0}
+											<p class="mt-1 text-sm text-gray-600">
+												{formatAuthors(pub.authors)}
+											</p>
+										{/if}
+										<div class="mt-2 flex items-center gap-4 text-sm text-gray-500">
 											{#if pub.year}
 												<span class="flex items-center">
 													<Calendar size={14} class="mr-1" />

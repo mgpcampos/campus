@@ -26,6 +26,7 @@ src/lib/server/notifications/
 **Sent to**: All moderators (users with `is_admin = true`)
 
 **Variables**:
+
 - `caseId`: Moderation case identifier
 - `threadTitle`: Name/title of the conversation thread
 - `reporterName`: Name of user who flagged the message
@@ -38,6 +39,7 @@ src/lib/server/notifications/
 - `settingsUrl`: Link to notification settings
 
 **Features**:
+
 - Red header with warning icon for high priority
 - Case information box with key details
 - Highlighted reason section
@@ -51,6 +53,7 @@ src/lib/server/notifications/
 **Sent to**: All moderators
 
 **Variables**:
+
 - `caseId`: Moderation case identifier
 - `sourceType`: Type of content (message, post, comment)
 - `ageMinutes`: How long the case has been open
@@ -61,6 +64,7 @@ src/lib/server/notifications/
 - `slaReportUrl`: Link to SLA compliance report
 
 **Features**:
+
 - Dark red/orange header for critical urgency
 - Large timer display showing case age
 - SLA breach warning box
@@ -74,6 +78,7 @@ src/lib/server/notifications/
 **Sent to**: All moderators
 
 **Variables**:
+
 - `date`: Summary date
 - `newCases`: Number of new cases opened
 - `resolvedCases`: Number of cases resolved
@@ -89,6 +94,7 @@ src/lib/server/notifications/
 - Status classes dynamically applied based on metrics
 
 **Features**:
+
 - Blue header for informational summary
 - 2x2 grid of key metrics
 - Performance metrics with color-coded status
@@ -350,6 +356,7 @@ console.log('Test email saved to test-email.html');
 ### Email Client Testing
 
 For production, test on:
+
 - Gmail (web, iOS, Android)
 - Outlook (web, desktop)
 - Apple Mail (macOS, iOS)
@@ -387,6 +394,7 @@ Track these email metrics:
 - Spam complaints
 
 Use your email service's analytics or integrate with:
+
 - Google Analytics (UTM parameters in links)
 - Custom analytics events
 - Email service webhooks
@@ -427,6 +435,7 @@ Use your email service's analytics or integrate with:
 ## Support
 
 For issues or questions:
+
 - Check email service documentation
 - Review PocketBase email configuration
 - See `docs/realtime-notifications.md` for notification system overview

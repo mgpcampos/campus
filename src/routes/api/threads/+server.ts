@@ -17,15 +17,13 @@ export async function GET({ url, locals }) {
 		const validatedQuery = threadListSchema.parse(queryParams);
 
 		// Fetch threads where current user is a member
-		const result = await locals.pb.collection('conversation_threads').getList(
-			validatedQuery.page,
-			validatedQuery.perPage,
-			{
+		const result = await locals.pb
+			.collection('conversation_threads')
+			.getList(validatedQuery.page, validatedQuery.perPage, {
 				filter: `members ~ "${locals.user.id}"`,
 				sort: '-lastMessageAt',
 				expand: 'members,createdBy'
-			}
-		);
+			});
 
 		return json({
 			items: result.items,
@@ -38,7 +36,7 @@ export async function GET({ url, locals }) {
 		console.error('Error fetching threads:', n.toString());
 		return json({ error: toErrorPayload(n) }, { status: n.status || 500 });
 	}
-};
+}
 
 /**
  * POST /api/threads

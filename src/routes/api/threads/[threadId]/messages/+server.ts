@@ -38,15 +38,13 @@ export async function GET({ params, url, locals }) {
 		const filterString = filters.join(' && ');
 
 		// Fetch messages
-		const result = await locals.pb.collection('messages').getList(
-			validatedQuery.page,
-			validatedQuery.perPage,
-			{
+		const result = await locals.pb
+			.collection('messages')
+			.getList(validatedQuery.page, validatedQuery.perPage, {
 				filter: filterString,
 				sort: '-created',
 				expand: 'author'
-			}
-		);
+			});
 
 		return json({
 			items: result.items,
@@ -60,7 +58,7 @@ export async function GET({ params, url, locals }) {
 		console.error('Error fetching messages:', n.toString());
 		return json({ error: toErrorPayload(n) }, { status: n.status || 500 });
 	}
-};
+}
 
 /**
  * POST /api/threads/[threadId]/messages
@@ -113,7 +111,10 @@ export async function POST({ params, request, locals }) {
 		const validatedData = messageCreateSchema.parse({ body, attachments });
 
 		// Ensure at least body or attachments are present
-		if (!validatedData.body && (!validatedData.attachments || validatedData.attachments.length === 0)) {
+		if (
+			!validatedData.body &&
+			(!validatedData.attachments || validatedData.attachments.length === 0)
+		) {
 			return error(400, 'Message must have either body text or attachments');
 		}
 

@@ -155,7 +155,13 @@ export async function resolveUsernames(usernames) {
  * @param {string} reason - Flag reason
  * @param {string} caseId - Moderation case ID
  */
-export async function notifyModeratorsMessageFlagged(messageId, threadId, reporterId, reason, caseId) {
+export async function notifyModeratorsMessageFlagged(
+	messageId,
+	threadId,
+	reporterId,
+	reason,
+	caseId
+) {
 	try {
 		// Get all moderators (users with is_admin = true)
 		const moderators = await pb.collection('users').getFullList({
