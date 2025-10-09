@@ -362,6 +362,7 @@
 							variant="outline"
 							class="flex-1"
 							target="_blank"
+							rel="noopener noreferrer"
 							aria-label="View details for {material.title}"
 						>
 							View

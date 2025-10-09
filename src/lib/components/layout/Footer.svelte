@@ -17,7 +17,7 @@
 				<a
 					href="https://github.com"
 					target="_blank"
-					rel="noreferrer"
+					rel="noopener noreferrer"
 					class="font-medium underline underline-offset-4"
 				>
 					Open Source

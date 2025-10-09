@@ -25,6 +25,7 @@
 		{#each links as link}
 			<a
 				href={link.href}
+				data-skip-link
 				class="inline-block rounded-md bg-primary px-4 py-2 text-primary-foreground transition-colors hover:bg-primary/90 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none"
 			>
 				{link.label}

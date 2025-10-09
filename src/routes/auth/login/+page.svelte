@@ -8,6 +8,12 @@
 
 	let { data } = $props();
 	let generalError = $state('');
+	let attemptedSubmit = $state(false);
+	const touched = $state({
+		email: false,
+		password: false
+	});
+
 	const errorIds = {
 		email: 'login-email-error',
 		password: 'login-password-error'
@@ -21,12 +27,14 @@
 		onResult: ({ result }) => {
 			if (result.type === 'redirect') {
 				generalError = '';
+				attemptedSubmit = false;
 				goto(result.location);
 				return;
 			}
 
 			if (result.type === 'success') {
 				generalError = '';
+				attemptedSubmit = false;
 				goto('/feed');
 				return;
 			}
@@ -35,6 +43,7 @@
 				const serverMessage =
 					typeof result.data?.error === 'string' ? result.data.error : undefined;
 				generalError = serverMessage ?? '';
+				attemptedSubmit = false;
 				return;
 			}
 
@@ -43,6 +52,61 @@
 			}
 		}
 	});
+
+	const clientValidation = $derived.by(() => {
+		const result = loginSchema.safeParse({
+			email: $form.email,
+			password: $form.password
+		});
+
+		if (result.success) {
+			return {
+				valid: true,
+				errors: {
+					email: '',
+					password: ''
+				}
+			} as const;
+		}
+
+		const fieldErrors = result.error.flatten().fieldErrors;
+		return {
+			valid: false,
+			errors: {
+				email: fieldErrors.email?.[0] ?? 'Please enter a valid email address',
+				password: fieldErrors.password?.[0] ?? 'Password is required'
+			}
+		} as const;
+	});
+
+	const canSubmit = $derived.by(() => clientValidation.valid && !$submitting);
+
+	const emailErrorText = $derived.by(() => {
+		const serverError = $errors.email;
+		if (serverError) return serverError;
+		const message = clientValidation.errors.email;
+		if (!message) return '';
+		return attemptedSubmit || touched.email ? message : '';
+	});
+
+	const passwordErrorText = $derived.by(() => {
+		const serverError = $errors.password;
+		if (serverError) return serverError;
+		const message = clientValidation.errors.password;
+		if (!message) return '';
+		return attemptedSubmit || touched.password ? message : '';
+	});
+
+	const enhanceSubmit = enhance(({ cancel }) => {
+		attemptedSubmit = true;
+		if (!clientValidation.valid) {
+			cancel();
+		}
+	});
+
+	function handleBlur(field) {
+		touched[field] = true;
+	}
 </script>
 
 <svelte:head>
@@ -63,7 +127,7 @@
 			</p>
 		</div>
 
-		<form method="POST" use:enhance class="mt-8 space-y-6">
+		<form method="POST" use:enhanceSubmit class="mt-8 space-y-6" novalidate>
 			{#if generalError}
 				<div
 					class="rounded border border-red-200 bg-red-50 px-4 py-3 text-red-700"
@@ -86,12 +150,17 @@
 						bind:value={$form.email}
 						class="relative mt-1 block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-blue-500 focus:ring-blue-500 focus:outline-none sm:text-sm"
 						placeholder="Email address"
-						use:ariaValidity={{ invalid: Boolean($errors.email), errorId: errorIds.email }}
-						oninput={() => (generalError = '')}
+						aria-invalid={emailErrorText ? 'true' : undefined}
+						aria-describedby={emailErrorText ? errorIds.email : undefined}
+						use:ariaValidity={{ invalid: Boolean(emailErrorText), errorId: errorIds.email }}
+						oninput={() => {
+							generalError = '';
+						}}
+						onblur={() => handleBlur('email')}
 					/>
-					{#if $errors.email}
+					{#if emailErrorText}
 						<p class="mt-1 text-sm text-red-600" id={errorIds.email} role="alert">
-							{$errors.email}
+							{emailErrorText}
 						</p>
 					{/if}
 				</div>
@@ -107,12 +176,17 @@
 						bind:value={$form.password}
 						class="relative mt-1 block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-blue-500 focus:ring-blue-500 focus:outline-none sm:text-sm"
 						placeholder="Password"
-						use:ariaValidity={{ invalid: Boolean($errors.password), errorId: errorIds.password }}
-						oninput={() => (generalError = '')}
+						aria-invalid={passwordErrorText ? 'true' : undefined}
+						aria-describedby={passwordErrorText ? errorIds.password : undefined}
+						use:ariaValidity={{ invalid: Boolean(passwordErrorText), errorId: errorIds.password }}
+						oninput={() => {
+							generalError = '';
+						}}
+						onblur={() => handleBlur('password')}
 					/>
-					{#if $errors.password}
+					{#if passwordErrorText}
 						<p class="mt-1 text-sm text-red-600" id={errorIds.password} role="alert">
-							{$errors.password}
+							{passwordErrorText}
 						</p>
 					{/if}
 				</div>
@@ -121,7 +195,7 @@
 			<div>
 				<button
 					type="submit"
-					disabled={$submitting}
+					disabled={!canSubmit}
 					class="group relative flex w-full justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 				>
 					{#if $submitting}
