@@ -14,7 +14,14 @@ export const load: PageLoad = async ({ fetch }) => {
 		return {
 			threads: data.items as ThreadWithMessages[],
 			totalPages: data.totalPages,
-			page: data.page
+			page: data.page,
+			meta: {
+				title: 'Messages — Campus',
+				description:
+					data.summary ??
+					'Catch up on direct and group conversations with your campus communities in the Messages hub.',
+				ogImage: '/og-default.png'
+			}
 		};
 	} catch (error) {
 		console.error('Error loading threads:', error);

@@ -47,10 +47,6 @@
 	}
 </script>
 
-<svelte:head>
-	<title>Campus Feed</title>
-</svelte:head>
-
 <div class="mx-auto max-w-5xl space-y-8 py-6 sm:py-10">
 	<header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
 		<div class="space-y-1">
@@ -115,14 +111,16 @@
 				<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 					<div
 						class="inline-flex rounded-lg border border-input bg-background p-1 shadow-xs"
-						role="group"
+						role="tablist"
 						aria-label="Feed sort options"
 					>
 						<Button
 							variant={feedSort === 'new' ? 'default' : 'ghost'}
 							size="sm"
 							onclick={() => changeSort('new')}
-							aria-pressed={feedSort === 'new'}
+							role="tab"
+							aria-selected={feedSort === 'new'}
+							tabindex={feedSort === 'new' ? 0 : -1}
 							class="px-3"
 						>
 							<MessageSquare class="mr-2 h-4 w-4" aria-hidden="true" />
@@ -132,7 +130,9 @@
 							variant={feedSort === 'top' ? 'default' : 'ghost'}
 							size="sm"
 							onclick={() => changeSort('top')}
-							aria-pressed={feedSort === 'top'}
+							role="tab"
+							aria-selected={feedSort === 'top'}
+							tabindex={feedSort === 'top' ? 0 : -1}
 							class="px-3"
 						>
 							Top
@@ -141,7 +141,9 @@
 							variant={feedSort === 'trending' ? 'default' : 'ghost'}
 							size="sm"
 							onclick={() => changeSort('trending')}
-							aria-pressed={feedSort === 'trending'}
+							role="tab"
+							aria-selected={feedSort === 'trending'}
+							tabindex={feedSort === 'trending' ? 0 : -1}
 							class="px-3"
 						>
 							Trending

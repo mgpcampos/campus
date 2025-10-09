@@ -27,10 +27,15 @@ export const load: PageLoad = async ({ fetch, params }) => {
 		const messagesData = await messagesResponse.json();
 
 		return {
-			thread: thread as ThreadWithMessages,
-			messages: messagesData.items as MessageWithDetails[],
-			totalPages: messagesData.totalPages,
-			page: messagesData.page
+			thread: threadData.thread,
+			messages: threadData.messages,
+			meta: {
+				title: `${threadData.thread?.name ?? 'Conversation'} — Messages — Campus`,
+				description:
+					threadData.thread?.description ??
+					'Continue the discussion with your classmates and teams in Campus messaging.',
+				ogImage: '/og-default.png'
+			}
 		};
 	} catch (error) {
 		console.error('Error loading thread:', error);

@@ -1,9 +1,5 @@
 <svelte:head>
 	<title>About Campus</title>
-	<meta
-		name="description"
-		content="Learn about Campus, our mission, and the team building a collaborative academic network."
-	/>
 </svelte:head>
 
 <section class="mx-auto flex max-w-4xl flex-col gap-8 px-4 py-12">

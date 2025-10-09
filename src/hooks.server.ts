@@ -8,6 +8,11 @@ export const handle: Handle = async ({ event, resolve }) => {
 	event.locals.pb = pb;
 
 	syncAuthToLocals();
+	const initialState = {
+		token: pb.authStore.token ?? null,
+		modelId: pb.authStore.model?.id ?? null,
+		isValid: pb.authStore.isValid
+	};
 
 	// Attempt silent refresh if token still valid
 	try {
@@ -38,8 +43,28 @@ export const handle: Handle = async ({ event, resolve }) => {
 	// Auth state might have changed during the request lifecycle (e.g., login/logout)
 	syncAuthToLocals();
 
-	// Always re-export cookie so client stays in sync; httpOnly to mitigate XSS
-	response.headers.append('set-cookie', exportAuthCookie(pb, event.url.pathname));
+	// Only emit cookie when auth state changed to avoid noisy/expired Set-Cookie headers
+	const finalState = {
+		token: pb.authStore.token ?? null,
+		modelId: pb.authStore.model?.id ?? null,
+		isValid: pb.authStore.isValid
+	};
+
+	const authChanged =
+		initialState.token !== finalState.token ||
+		initialState.modelId !== finalState.modelId ||
+		initialState.isValid !== finalState.isValid;
+
+	if (authChanged) {
+		const secure = event.url.protocol === 'https:';
+		response.headers.append(
+			'set-cookie',
+			exportAuthCookie(pb, {
+				pathname: event.url.pathname,
+				secure
+			})
+		);
+	}
 
 	return response;
 };

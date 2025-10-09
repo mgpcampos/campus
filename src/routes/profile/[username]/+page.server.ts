@@ -15,5 +15,14 @@ export const load: PageServerLoad = async ({ params, locals, url }) => {
 	const posts = await listUserPosts(locals.pb, user.id, { page, perPage });
 	const memberships = await listUserMemberships(locals.pb, user.id);
 
-	return { profile: user, posts, memberships };
+	return {
+		profile: user,
+		posts,
+		memberships,
+		meta: {
+			title: `${user.name} (@${user.username}) - Campus`,
+			description: user.bio || `${user.name}'s profile on Campus`,
+			ogImage: user.avatar ? locals.pb.files.getURL(user, user.avatar) : '/og-default.png'
+		}
+	};
 };

@@ -25,6 +25,7 @@
 				type="button"
 				class="relative inline-flex items-center justify-center rounded-full p-2 hover:bg-gray-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
 				aria-label="Notifications"
+				aria-keyshortcuts="Alt+T"
 				aria-haspopup="true"
 				aria-expanded={open}
 			>
@@ -38,7 +39,11 @@
 			</button>
 		{/snippet}
 	</DropdownMenu.Trigger>
-	<DropdownMenu.Content class="max-h-96 w-80 overflow-y-auto">
+	<DropdownMenu.Content
+		class="max-h-96 w-80 overflow-y-auto"
+		role="region"
+		aria-label="Notifications"
+	>
 		<div class="mb-1 flex items-center justify-between border-b px-2 py-1">
 			<span class="text-sm font-semibold">Notifications</span>
 			{#if $unreadCount > 0}

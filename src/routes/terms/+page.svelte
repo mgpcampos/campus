@@ -1,9 +1,5 @@
 <svelte:head>
 	<title>Terms of Service | Campus</title>
-	<meta
-		name="description"
-		content="Campus terms of service outlining acceptable use, responsibilities, and user rights."
-	/>
 </svelte:head>
 
 <section class="mx-auto flex max-w-4xl flex-col gap-8 px-4 py-12">

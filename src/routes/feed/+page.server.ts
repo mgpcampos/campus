@@ -32,7 +32,13 @@ export const load: PageServerLoad = async () => {
 	});
 
 	return {
-		form
+		form,
+		meta: {
+			title: 'Campus Feed — Latest updates',
+			description:
+				'See the latest posts, research updates, and questions from across Campus in the collaborative community feed.',
+			ogImage: '/og-default.png'
+		}
 	};
 };
 

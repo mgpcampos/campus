@@ -1,9 +1,5 @@
 <svelte:head>
 	<title>Privacy Policy | Campus</title>
-	<meta
-		name="description"
-		content="Campus privacy policy outlining data collection, usage, and user rights."
-	/>
 </svelte:head>
 
 <section class="mx-auto flex max-w-4xl flex-col gap-8 px-4 py-12">

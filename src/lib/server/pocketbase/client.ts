@@ -7,12 +7,13 @@ const DEFAULT_PB_URL = 'http://127.0.0.1:8090';
 
 export const getPocketBaseUrl = () => PUBLIC_POCKETBASE_URL || DEFAULT_PB_URL;
 
-export const getAuthCookieOptions = (pathname?: string) => {
+export const getAuthCookieOptions = (pathname?: string, secureOverride?: boolean) => {
 	const securityCritical = pathname?.startsWith('/auth') || pathname?.startsWith('/api/auth');
 	const sameSite = securityCritical ? 'strict' : 'lax';
+	const secure = secureOverride !== undefined ? secureOverride : !dev;
 
 	return {
-		secure: !dev,
+		secure,
 		httpOnly: true,
 		sameSite,
 		path: '/',
@@ -35,5 +36,10 @@ export const createPocketBaseClient = (event: RequestEvent) => {
 	return { pb, syncAuthToLocals };
 };
 
-export const exportAuthCookie = (pb: PocketBase, pathname?: string) =>
-	pb.authStore.exportToCookie({ ...getAuthCookieOptions(pathname) });
+export const exportAuthCookie = (
+	pb: PocketBase,
+	options?: { pathname?: string; secure?: boolean }
+) =>
+	pb.authStore.exportToCookie({
+		...getAuthCookieOptions(options?.pathname, options?.secure)
+	});

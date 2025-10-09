@@ -1,10 +1,11 @@
 <script lang="ts">
 	import '../app.css';
-	import favicon from '$lib/assets/favicon.svg';
 	import { currentUser, hydrateClientAuth } from '$lib/pocketbase.js';
+	import { config } from '$lib/config.js';
 	import { onMount } from 'svelte';
 	import { SvelteURL } from 'svelte/reactivity';
 	import { page } from '$app/stores';
+	import { dev } from '$app/environment';
 	import Header from '$lib/components/layout/Header.svelte';
 	import Footer from '$lib/components/layout/Footer.svelte';
 	import Sidebar from '$lib/components/layout/Sidebar.svelte';
@@ -19,12 +20,64 @@
 
 	const themeColor = '#0f172a';
 
+	const siteOrigin = dev ? undefined : config.app.origin;
+
+	const defaultMeta = {
+		title: 'Campus - Academic Social Network',
+		description: 'A lightweight social network for the education community',
+		ogTitle: 'Campus — Academic collaboration',
+		ogDescription:
+			'Collaborate across labs, courses, and cohorts with Campus: share updates, resources, and events in one place.',
+		ogType: 'website',
+		ogImage: '/og-default.png',
+		ogUrl: siteOrigin ?? 'http://localhost:4173/',
+		twitterCard: 'summary_large_image',
+		twitterTitle: 'Campus — Academic collaboration',
+		twitterDescription:
+			'Join Campus to publish research updates, manage course materials, and coordinate events with your academic community.',
+		twitterImage: '/og-default.png'
+	};
+
+	const profiledMeta = $derived.by(() => {
+		const dataMeta = $page.data?.meta ?? {};
+
+		const mergeImage = (value?: string) => {
+			if (!value) return defaultMeta.ogImage;
+			return value.startsWith('http')
+				? value
+				: `${siteOrigin ?? ''}${value.startsWith('/') ? value : `/${value}`}`;
+		};
+
+		const ogImage = mergeImage(dataMeta.ogImage);
+		const twitterImage = mergeImage(dataMeta.twitterImage ?? dataMeta.ogImage);
+
+		return {
+			...defaultMeta,
+			...dataMeta,
+			title: dataMeta.title ?? defaultMeta.title,
+			description: dataMeta.description ?? defaultMeta.description,
+			ogTitle: dataMeta.ogTitle ?? dataMeta.title ?? defaultMeta.ogTitle,
+			ogDescription: dataMeta.ogDescription ?? dataMeta.description ?? defaultMeta.ogDescription,
+			ogType: dataMeta.ogType ?? defaultMeta.ogType,
+			ogImage,
+			ogUrl: dataMeta.ogUrl ?? defaultMeta.ogUrl,
+			twitterCard: dataMeta.twitterCard ?? defaultMeta.twitterCard,
+			twitterTitle: dataMeta.twitterTitle ?? dataMeta.title ?? defaultMeta.twitterTitle,
+			twitterDescription:
+				dataMeta.twitterDescription ?? dataMeta.description ?? defaultMeta.twitterDescription,
+			twitterImage
+		};
+	});
+
 	const canonicalHref = $derived.by(() => {
 		const { url } = $page;
-		if (!url?.origin) return '';
+
+		if (!siteOrigin) {
+			return dev ? '' : (url?.href ?? '');
+		}
 
 		try {
-			const canonical = new SvelteURL(url.pathname, url.origin);
+			const canonical = new SvelteURL(url.pathname, siteOrigin);
 			canonical.search = '';
 			canonical.hash = '';
 			return canonical.toString();
@@ -111,13 +164,27 @@
 </script>
 
 <svelte:head>
-	<link rel="icon" href={favicon} />
-	<title>Campus - Academic Social Network</title>
-	<meta name="description" content="A lightweight social network for the education community" />
+	<title>{profiledMeta.title}</title>
+	<meta name="description" content={profiledMeta.description} />
+	<meta name="theme-color" content={themeColor} />
+	<meta name="robots" content={$page.data?.robots ?? config.app.robots} />
+	<link rel="icon" href="/favicon.svg" />
+	<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+	<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+	<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+	<link rel="manifest" href="/manifest.webmanifest" />
 	{#if canonicalHref}
 		<link rel="canonical" href={canonicalHref} />
 	{/if}
-	<meta name="theme-color" content={themeColor} />
+	<meta property="og:title" content={profiledMeta.ogTitle} />
+	<meta property="og:description" content={profiledMeta.ogDescription} />
+	<meta property="og:type" content={profiledMeta.ogType} />
+	<meta property="og:image" content={profiledMeta.ogImage} />
+	<meta property="og:url" content={canonicalHref || profiledMeta.ogUrl} />
+	<meta name="twitter:card" content={profiledMeta.twitterCard} />
+	<meta name="twitter:title" content={profiledMeta.twitterTitle} />
+	<meta name="twitter:description" content={profiledMeta.twitterDescription} />
+	<meta name="twitter:image" content={profiledMeta.twitterImage} />
 </svelte:head>
 
 <div class="min-h-screen bg-background text-foreground">

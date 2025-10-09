@@ -5,7 +5,6 @@
 
 <svelte:head>
 	<title>{profile.name} (@{profile.username}) - Campus</title>
-	<meta name="description" content={profile.bio || `${profile.name}'s profile on Campus`} />
 </svelte:head>
 
 <div class="mx-auto max-w-4xl space-y-8 p-4">
