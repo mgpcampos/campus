@@ -69,7 +69,7 @@ describe('feed actions', () => {
 		await actions.default({
 			request,
 			locals: {
-				pb: { collection }
+				pb: { collection, authStore: { isValid: true } }
 			} as any
 		} as unknown as Parameters<(typeof actions)['default']>[0]);
 

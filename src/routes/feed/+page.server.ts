@@ -43,7 +43,8 @@ export const actions: Actions = {
 			allowFiles: true
 		});
 
-		if (!locals.pb.authStore.isValid) {
+		const pbClient = locals.pb;
+		if (!pbClient || !pbClient.authStore?.isValid) {
 			return message(
 				form,
 				{ type: 'error', text: 'You need to sign in to post updates.' },
@@ -61,9 +62,9 @@ export const actions: Actions = {
 				publishedAt: form.data.publishedAt ?? undefined
 			};
 			const createdPost = await createPost(postPayload, {
-				pb: locals.pb,
+				pb: pbClient,
 				emitModerationMetadata: async (metadata) =>
-					await recordPostModerationSignal(metadata, { pbClient: locals.pb })
+					await recordPostModerationSignal(metadata, { pbClient })
 			});
 
 			let hydratedPost = createdPost;
@@ -76,7 +77,7 @@ export const actions: Actions = {
 					: null;
 			if (createdPostId) {
 				try {
-					hydratedPost = await locals.pb.collection('posts').getOne(createdPostId, {
+					hydratedPost = await pbClient.collection('posts').getOne(createdPostId, {
 						expand: 'author,space,group'
 					});
 				} catch (err) {

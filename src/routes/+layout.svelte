@@ -3,6 +3,7 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import { currentUser, hydrateClientAuth } from '$lib/pocketbase.js';
 	import { onMount } from 'svelte';
+	import { SvelteURL } from 'svelte/reactivity';
 	import { page } from '$app/stores';
 	import Header from '$lib/components/layout/Header.svelte';
 	import Footer from '$lib/components/layout/Footer.svelte';

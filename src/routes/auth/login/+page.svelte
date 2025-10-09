@@ -1,23 +1,45 @@
-<script>
+<script lang="ts">
 	import { superForm } from 'sveltekit-superforms/client';
 	import { loginSchema } from '$lib/utils/validation.js';
 	import { getErrorMessage } from '$lib/utils/errors.js';
 	import { goto } from '$app/navigation';
 	import { createClientFormOptions } from '$lib/validation';
 	import { ariaValidity } from '$lib/actions/ariaValidity';
+	import type { PageData } from './$types';
 
-	let { data } = $props();
+	type LoginForm = {
+		email: string;
+		password: string;
+	};
+
+	let { data } = $props<{ data: PageData }>();
 	let generalError = $state('');
 	let attemptedSubmit = $state(false);
-	const touched = $state({
+	const touched = $state<Record<keyof LoginForm, boolean>>({
 		email: false,
 		password: false
 	});
 
-	const errorIds = {
+	const errorIds: Record<keyof LoginForm, string> = {
 		email: 'login-email-error',
 		password: 'login-password-error'
 	};
+
+	function coerceErrorMessage(error: unknown): string {
+		if (typeof error === 'string') return error;
+		if (Array.isArray(error)) {
+			const first = error.find((value): value is string => typeof value === 'string');
+			if (first) return first;
+		}
+		if (error && typeof error === 'object' && '_errors' in error) {
+			const nested = (error as { _errors?: unknown })._errors;
+			if (Array.isArray(nested)) {
+				const first = nested.find((value): value is string => typeof value === 'string');
+				if (first) return first;
+			}
+		}
+		return '';
+	}
 
 	const { form, errors, enhance, submitting } = superForm(data.form, {
 		...createClientFormOptions(loginSchema),
@@ -53,7 +75,12 @@
 		}
 	});
 
-	const clientValidation = $derived.by(() => {
+	type ValidationState = {
+		valid: boolean;
+		errors: Record<keyof LoginForm, string>;
+	};
+
+	const clientValidation = $derived.by<ValidationState>(() => {
 		const result = loginSchema.safeParse({
 			email: $form.email,
 			password: $form.password
@@ -66,7 +93,7 @@
 					email: '',
 					password: ''
 				}
-			} as const;
+			};
 		}
 
 		const fieldErrors = result.error.flatten().fieldErrors;
@@ -76,13 +103,13 @@
 				email: fieldErrors.email?.[0] ?? 'Please enter a valid email address',
 				password: fieldErrors.password?.[0] ?? 'Password is required'
 			}
-		} as const;
+		};
 	});
 
 	const canSubmit = $derived.by(() => clientValidation.valid && !$submitting);
 
 	const emailErrorText = $derived.by(() => {
-		const serverError = $errors.email;
+		const serverError = coerceErrorMessage($errors.email);
 		if (serverError) return serverError;
 		const message = clientValidation.errors.email;
 		if (!message) return '';
@@ -90,21 +117,28 @@
 	});
 
 	const passwordErrorText = $derived.by(() => {
-		const serverError = $errors.password;
+		const serverError = coerceErrorMessage($errors.password);
 		if (serverError) return serverError;
 		const message = clientValidation.errors.password;
 		if (!message) return '';
 		return attemptedSubmit || touched.password ? message : '';
 	});
 
-	const enhanceSubmit = enhance(({ cancel }) => {
-		attemptedSubmit = true;
-		if (!clientValidation.valid) {
-			cancel();
-		}
-	});
+	const enhanceSubmit: typeof enhance = (formElement, options) =>
+		enhance(formElement, {
+			...options,
+			onSubmit: async (event) => {
+				attemptedSubmit = true;
+				if (!clientValidation.valid) {
+					event.cancel();
+					return;
+				}
 
-	function handleBlur(field) {
+				return options?.onSubmit ? options.onSubmit(event) : undefined;
+			}
+		});
+
+	function handleBlur(field: keyof LoginForm) {
 		touched[field] = true;
 	}
 </script>
