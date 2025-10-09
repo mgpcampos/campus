@@ -1,32 +1,33 @@
-<script>
+<svelte:options runes />
+
+<script lang="ts">
 	import { invalidate } from '$app/navigation';
 
-	/**
-	 * @typedef {Object} SpaceGroupPermissions
-	 * @property {boolean} canCreateGroups
-	 * @property {boolean} [isMember]
-	 * @property {boolean} [isOwner]
-	 * @property {boolean} [isModerator]
-	 * @property {string | null} [membershipRole]
-	 */
+	interface SpaceGroupPermissions {
+		canCreateGroups?: boolean;
+		isMember?: boolean;
+		isOwner?: boolean;
+		isModerator?: boolean;
+		membershipRole?: string | null;
+	}
 
-	/** @type {{ space: any; groups: any; search: string; permissions: SpaceGroupPermissions }} */
-	export let data;
-	let space;
-	let groups;
-	let search;
-	/** @type {SpaceGroupPermissions} */
-	let permissions = data.permissions;
-	let creating = false;
-	/** @type {string | null} */
-	let error = null;
-	/** @type {string | null} */
-	let success = null;
+	let { data }: { data: Record<string, any> } = $props();
+	const spaceLinkId = $derived.by(() => (data?.space?.slug ?? data?.space?.id ?? '') as string);
+	const spaceDisplayName = $derived.by(() => (data?.space?.name ?? spaceLinkId) || 'this space');
+	const groupItems = $derived.by(
+		() => (Array.isArray(data?.groups?.items) ? data.groups.items : []) as any[]
+	);
+	const search = $derived.by(() => (data?.search ?? '').toString());
+	const permissions = $derived.by(
+		() => (data?.permissions ?? null) as SpaceGroupPermissions | null
+	);
+	const pageTitle = $derived.by(() => `${spaceDisplayName} Groups – Campus`);
 
-	$: ({ space, groups, search, permissions } = data);
+	let creating = $state(false);
+	let error = $state<string | null>(null);
+	let success = $state<string | null>(null);
 
-	/** @param {SubmitEvent} e */
-	async function createGroupAction(e) {
+	async function createGroupAction(e: SubmitEvent) {
 		e.preventDefault();
 		if (creating) return;
 		if (!permissions?.canCreateGroups) {
@@ -58,7 +59,11 @@
 	}
 </script>
 
-<h1 class="mb-4 text-2xl font-bold">Groups in {space.name}</h1>
+<svelte:head>
+	<title>{pageTitle}</title>
+</svelte:head>
+
+<h1 class="mb-4 text-2xl font-bold">Groups in {spaceDisplayName}</h1>
 
 <!-- Search groups -->
 <form method="GET" class="mb-6 flex items-center gap-2">
@@ -66,7 +71,7 @@
 		type="text"
 		name="q"
 		placeholder="Search groups..."
-		value={search}
+		value={search ?? ''}
 		class="flex-1 rounded border px-2 py-1 text-sm"
 	/>
 	<button class="rounded bg-gray-200 px-3 py-1 text-sm" type="submit">Search</button>
@@ -75,7 +80,7 @@
 	{/if}
 </form>
 
-<form on:submit|preventDefault={createGroupAction} class="mb-6 space-y-2 rounded border p-4">
+<form onsubmit={createGroupAction} class="mb-6 space-y-2 rounded border p-4">
 	<div>
 		<label class="block text-sm font-medium" for="group_name">Name</label>
 		<input
@@ -126,18 +131,22 @@
 </form>
 
 <ul class="space-y-3">
-	{#if groups.items.length === 0}
+	{#if groupItems.length === 0}
 		<li class="rounded border border-dashed p-6 text-center text-sm text-gray-500">
 			No groups yet. Be the first to create one!
 		</li>
 	{:else}
-		{#each groups.items as group}
+		{#each groupItems as group}
 			<li class="flex items-center justify-between rounded border p-3">
 				<div>
 					<div class="font-medium">{group.name}</div>
 					<div class="text-sm text-gray-600">{group.description}</div>
 				</div>
-				<a class="text-sm text-blue-600" href={`/spaces/${space.id}/groups/${group.id}`}>View</a>
+				<a
+					class="text-sm text-blue-600"
+					href={spaceLinkId ? `/spaces/${spaceLinkId}/groups/${group.id}` : `#group-${group.id}`}
+					>View</a
+				>
 			</li>
 		{/each}
 	{/if}

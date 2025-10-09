@@ -1,6 +1,20 @@
 import { redirect, fail } from '@sveltejs/kit';
+import { ClientResponseError } from 'pocketbase';
 import { createSpace } from '$lib/services/spaces.js';
 import { toErrorPayload } from '$lib/utils/errors.js';
+
+/**
+ * Normalize a slug to a URL-safe format.
+ * @param {string} value
+ */
+function slugify(value) {
+	return value
+		.trim()
+		.toLowerCase()
+		.replace(/[^a-z0-9-]/g, '-')
+		.replace(/-+/g, '-')
+		.replace(/^-|-$/g, '');
+}
 
 /** @type {import('./$types').PageServerLoad} */
 export function load({ locals }) {
@@ -27,10 +41,39 @@ export const actions = {
 				values: { name, slug, description, isPublic }
 			});
 		}
+
+		const normalizedSlug = slugify(slug);
+		if (!normalizedSlug) {
+			return fail(400, {
+				error: 'Slug must contain letters or numbers and may include dashes.',
+				values: { name, slug, description, isPublic }
+			});
+		}
+
 		try {
-			const payload = { name, slug, description, isPublic, ...(avatar ? { avatar } : {}) };
+			const safeSlug = normalizedSlug.replaceAll('"', '\\"');
+			await locals.pb.collection('spaces').getFirstListItem(`slug = "${safeSlug}"`);
+			return fail(400, {
+				error: 'That slug is already in use. Pick another one.',
+				values: { name, slug, description, isPublic }
+			});
+		} catch (lookupError) {
+			if (!(lookupError instanceof ClientResponseError) || lookupError.status !== 404) {
+				throw lookupError;
+			}
+		}
+
+		try {
+			const payload = {
+				name,
+				slug: normalizedSlug,
+				description,
+				isPublic,
+				...(avatar ? { avatar } : {})
+			};
 			const space = await createSpace(payload, { pb: locals.pb });
-			throw redirect(303, `/spaces/${space.id}`);
+			const targetSlug = space.slug || space.id;
+			throw redirect(303, `/spaces/${targetSlug}`);
 		} catch (e) {
 			if (e && typeof e === 'object' && 'status' in e && e.status === 303) {
 				throw e; // Re-throw redirects

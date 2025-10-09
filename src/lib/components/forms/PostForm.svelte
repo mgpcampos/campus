@@ -22,6 +22,7 @@
 	import { toast } from 'svelte-sonner';
 	import { validateImages, validateVideo, MAX_ATTACHMENTS } from '$lib/utils/media.js';
 	import { writable } from 'svelte/store';
+	import { ariaValidity } from '$lib/actions/ariaValidity';
 
 	type PostFormMessage = {
 		type: 'success' | 'error';
@@ -62,12 +63,62 @@
 	const generalError = writable<string | null>(null);
 	const videoDurationDisplay = writable<number | null>(null);
 
+	const errorIds = {
+		content: 'post-content-error',
+		mediaAltText: 'post-media-alt-text-error'
+	} as const;
+
+	const nativeInvalid = $state({
+		content: false,
+		mediaAltText: false
+	});
+
+	const contentInvalid = $derived.by(
+		() => (Array.isArray($errors.content) && $errors.content.length > 0) || nativeInvalid.content
+	);
+	const mediaAltInvalid = $derived.by(
+		() =>
+			(Array.isArray($errors.mediaAltText) && $errors.mediaAltText.length > 0) ||
+			nativeInvalid.mediaAltText
+	);
+
+	let contentField = $state<HTMLTextAreaElement | null>(null);
+	let mediaAltField = $state<HTMLTextAreaElement | null>(null);
+
+	$effect(() => {
+		if (!contentField) return;
+		const action = ariaValidity(contentField, {
+			invalid: contentInvalid,
+			errorId: errorIds.content
+		});
+		return () => action.destroy();
+	});
+
+	$effect(() => {
+		if (!mediaAltField) return;
+		const action = ariaValidity(mediaAltField, {
+			invalid: mediaAltInvalid,
+			errorId: errorIds.mediaAltText
+		});
+		return () => action.destroy();
+	});
+
+	function handleNativeInvalid(field: 'content' | 'mediaAltText') {
+		nativeInvalid[field] = true;
+	}
+
+	function handleNativeInput(field: 'content' | 'mediaAltText') {
+		if (nativeInvalid[field]) {
+			nativeInvalid[field] = false;
+		}
+	}
+
 	let imageInput = $state<HTMLInputElement | null>(null);
 	let videoInput = $state<HTMLInputElement | null>(null);
 	let posterInput = $state<HTMLInputElement | null>(null);
 
 	const { form, errors, enhance, submitting, message } = superForm(formData, {
-		...createClientFormOptions(createPostSchema, { SPA: true }),
+		...createClientFormOptions(createPostSchema),
 		applyAction: true,
 		resetForm: false,
 		delayMs: 120,
@@ -84,6 +135,7 @@
 					if (actionMessage.post) {
 						dispatch('postCreated', actionMessage.post);
 					}
+					$form.content = '';
 					clearMediaState();
 				} else if (actionMessage?.type === 'error') {
 					$uploadError = actionMessage.text;
@@ -342,14 +394,21 @@
 		<Textarea
 			id="post-content"
 			name="content"
+			ref={contentField}
 			bind:value={$form.content}
 			placeholder="Share a progress update, insightful resource, or question for the community."
 			rows={4}
 			disabled={disabled || $submitting}
 			class="resize-none"
+			aria-invalid={contentInvalid ? 'true' : undefined}
+			aria-describedby={contentInvalid ? errorIds.content : undefined}
+			oninvalid={() => handleNativeInvalid('content')}
+			oninput={() => handleNativeInput('content')}
 		/>
 		{#if $errors.content}
-			<p class="text-sm text-red-600">{$errors.content[0]}</p>
+			<p class="text-sm text-red-600" id={errorIds.content} role="alert">
+				{$errors.content[0]}
+			</p>
 		{/if}
 		<div class="text-right text-xs text-muted-foreground">
 			{$form.content.length}/2000
@@ -538,15 +597,22 @@
 				id="media-alt-text"
 				name="mediaAltText"
 				rows={2}
+				ref={mediaAltField}
 				bind:value={$form.mediaAltText}
 				disabled={disabled || $submitting}
+				aria-invalid={mediaAltInvalid ? 'true' : undefined}
+				aria-describedby={mediaAltInvalid ? errorIds.mediaAltText : undefined}
+				oninvalid={() => handleNativeInvalid('mediaAltText')}
+				oninput={() => handleNativeInput('mediaAltText')}
 			/>
 			<div class="flex items-center justify-between text-xs text-muted-foreground">
 				<span>Describe the media for screen readers.</span>
 				<span>{altLength}/2000</span>
 			</div>
 			{#if $errors.mediaAltText}
-				<p class="text-sm text-red-600">{$errors.mediaAltText[0]}</p>
+				<p class="text-sm text-red-600" id={errorIds.mediaAltText} role="alert">
+					{$errors.mediaAltText[0]}
+				</p>
 			{/if}
 		</div>
 	{/if}

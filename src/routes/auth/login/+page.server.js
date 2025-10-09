@@ -1,5 +1,6 @@
 import { superValidate } from 'sveltekit-superforms/server';
 import { fail, redirect } from '@sveltejs/kit';
+import { ClientResponseError } from 'pocketbase';
 import { loginSchema } from '$lib/utils/validation.js';
 import { getErrorMessage } from '$lib/utils/errors.js';
 import { withZod } from '$lib/validation';
@@ -39,7 +40,13 @@ export const actions = {
 
 			// Handle authentication errors
 			const errorMessage = getErrorMessage(error);
-			return fail(400, {
+			const status =
+				error instanceof ClientResponseError
+					? error.status === 400 || error.status === 404
+						? 401
+						: error.status
+					: 500;
+			return fail(status, {
 				form,
 				error: errorMessage
 			});

@@ -60,17 +60,36 @@ export const actions: Actions = {
 				...form.data,
 				publishedAt: form.data.publishedAt ?? undefined
 			};
-			const newPost = await createPost(postPayload, {
+			const createdPost = await createPost(postPayload, {
 				pb: locals.pb,
 				emitModerationMetadata: async (metadata) =>
 					await recordPostModerationSignal(metadata, { pbClient: locals.pb })
 			});
 
+			let hydratedPost = createdPost;
+			const createdPostId =
+				typeof createdPost === 'object' &&
+				createdPost !== null &&
+				'id' in createdPost &&
+				typeof (createdPost as { id?: unknown }).id === 'string'
+					? (createdPost as { id: string }).id
+					: null;
+			if (createdPostId) {
+				try {
+					hydratedPost = await locals.pb.collection('posts').getOne(createdPostId, {
+						expand: 'author,space,group'
+					});
+				} catch (err) {
+					// Hydration failures shouldn't block the optimistic success path
+					console.warn('posts:create:hydrateFailed', err);
+				}
+			}
+
 			form.data = createDefaultFormState() as CreatePostInput;
 
 			return message(
 				form,
-				{ type: 'success', text: 'Post published successfully!', post: newPost },
+				{ type: 'success', text: 'Post published successfully!', post: hydratedPost },
 				{ removeFiles: true }
 			);
 		} catch (error) {

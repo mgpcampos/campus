@@ -4,9 +4,17 @@
 	import { getErrorMessage } from '$lib/utils/errors.js';
 	import { goto } from '$app/navigation';
 	import { createClientFormOptions } from '$lib/validation';
+	import { ariaValidity } from '$lib/actions/ariaValidity';
 
 	let { data } = $props();
 	let generalError = $state('');
+	const errorIds = {
+		name: 'register-name-error',
+		username: 'register-username-error',
+		email: 'register-email-error',
+		password: 'register-password-error',
+		passwordConfirm: 'register-password-confirm-error'
+	};
 
 	const { form, errors, enhance, submitting } = superForm(data.form, {
 		...createClientFormOptions(registerSchema),
@@ -28,9 +36,8 @@
 
 			if (result.type === 'failure') {
 				const serverMessage =
-					(typeof result.data?.error === 'string' && result.data.error) ||
-					getErrorMessage(result.data?.error ?? result);
-				generalError = serverMessage;
+					typeof result.data?.error === 'string' ? result.data.error : undefined;
+				generalError = serverMessage ?? '';
 				return;
 			}
 
@@ -59,7 +66,11 @@
 
 		<form method="POST" use:enhance class="mt-8 space-y-6">
 			{#if generalError}
-				<div class="rounded border border-red-200 bg-red-50 px-4 py-3 text-red-700">
+				<div
+					class="rounded border border-red-200 bg-red-50 px-4 py-3 text-red-700"
+					role="alert"
+					aria-live="assertive"
+				>
 					{generalError}
 				</div>
 			{/if}
@@ -76,9 +87,11 @@
 						bind:value={$form.name}
 						class="relative mt-1 block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-blue-500 focus:ring-blue-500 focus:outline-none sm:text-sm"
 						placeholder="Full name"
+						use:ariaValidity={{ invalid: Boolean($errors.name), errorId: errorIds.name }}
+						oninput={() => (generalError = '')}
 					/>
 					{#if $errors.name}
-						<p class="mt-1 text-sm text-red-600">{$errors.name}</p>
+						<p class="mt-1 text-sm text-red-600" id={errorIds.name} role="alert">{$errors.name}</p>
 					{/if}
 				</div>
 
@@ -93,9 +106,13 @@
 						bind:value={$form.username}
 						class="relative mt-1 block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-blue-500 focus:ring-blue-500 focus:outline-none sm:text-sm"
 						placeholder="Username"
+						use:ariaValidity={{ invalid: Boolean($errors.username), errorId: errorIds.username }}
+						oninput={() => (generalError = '')}
 					/>
 					{#if $errors.username}
-						<p class="mt-1 text-sm text-red-600">{$errors.username}</p>
+						<p class="mt-1 text-sm text-red-600" id={errorIds.username} role="alert">
+							{$errors.username}
+						</p>
 					{/if}
 				</div>
 
@@ -110,9 +127,13 @@
 						bind:value={$form.email}
 						class="relative mt-1 block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-blue-500 focus:ring-blue-500 focus:outline-none sm:text-sm"
 						placeholder="Email address"
+						use:ariaValidity={{ invalid: Boolean($errors.email), errorId: errorIds.email }}
+						oninput={() => (generalError = '')}
 					/>
 					{#if $errors.email}
-						<p class="mt-1 text-sm text-red-600">{$errors.email}</p>
+						<p class="mt-1 text-sm text-red-600" id={errorIds.email} role="alert">
+							{$errors.email}
+						</p>
 					{/if}
 				</div>
 
@@ -127,9 +148,13 @@
 						bind:value={$form.password}
 						class="relative mt-1 block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-blue-500 focus:ring-blue-500 focus:outline-none sm:text-sm"
 						placeholder="Password"
+						use:ariaValidity={{ invalid: Boolean($errors.password), errorId: errorIds.password }}
+						oninput={() => (generalError = '')}
 					/>
 					{#if $errors.password}
-						<p class="mt-1 text-sm text-red-600">{$errors.password}</p>
+						<p class="mt-1 text-sm text-red-600" id={errorIds.password} role="alert">
+							{$errors.password}
+						</p>
 					{/if}
 				</div>
 
@@ -146,9 +171,16 @@
 						bind:value={$form.passwordConfirm}
 						class="relative mt-1 block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-blue-500 focus:ring-blue-500 focus:outline-none sm:text-sm"
 						placeholder="Confirm password"
+						use:ariaValidity={{
+							invalid: Boolean($errors.passwordConfirm),
+							errorId: errorIds.passwordConfirm
+						}}
+						oninput={() => (generalError = '')}
 					/>
 					{#if $errors.passwordConfirm}
-						<p class="mt-1 text-sm text-red-600">{$errors.passwordConfirm}</p>
+						<p class="mt-1 text-sm text-red-600" id={errorIds.passwordConfirm} role="alert">
+							{$errors.passwordConfirm}
+						</p>
 					{/if}
 				</div>
 			</div>

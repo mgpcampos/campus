@@ -18,19 +18,27 @@ export async function load({ locals }) {
 		throw redirect(302, '/auth/login?returnUrl=/profile');
 	}
 
+	let freshUser;
+	try {
+		freshUser = await locals.pb.collection('users').getOne(user.id);
+	} catch (error) {
+		console.warn('profile:load user fetch failed', error);
+		throw redirect(302, '/auth/login?returnUrl=/profile');
+	}
+
 	// Pre-populate form with current user data
 	const form = await superValidate(
 		{
-			name: user.name || '',
-			username: user.username || '',
-			bio: user.bio || ''
+			name: freshUser.name || '',
+			username: freshUser.username || '',
+			bio: freshUser.bio || ''
 		},
 		withZod(profileSchema)
 	);
 
 	return {
 		form,
-		user
+		user: freshUser
 	};
 }
 

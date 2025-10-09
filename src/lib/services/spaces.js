@@ -78,10 +78,25 @@ export async function getSpaces(
 	);
 }
 
-/** @param {string} id */
-export async function getSpace(id, serviceOptions = /** @type {ServiceOptions} */ ({})) {
+/**
+ * Fetch a space by its record id or slug.
+ * @param {string} identifier
+ */
+export async function getSpace(identifier, serviceOptions = /** @type {ServiceOptions} */ ({})) {
 	const client = resolveClient(serviceOptions.pb);
-	return await client.collection('spaces').getOne(id, { expand: 'owners,moderators' });
+	try {
+		return await client.collection('spaces').getOne(identifier, {
+			expand: 'owners,moderators'
+		});
+	} catch (error) {
+		if (error instanceof ClientResponseError && error.status === 404) {
+			const safeSlug = identifier.replaceAll('"', '\\"');
+			return await client.collection('spaces').getFirstListItem(`slug = "${safeSlug}"`, {
+				expand: 'owners,moderators'
+			});
+		}
+		throw error;
+	}
 }
 
 /** @param {string} id @param {Record<string, any>} data */

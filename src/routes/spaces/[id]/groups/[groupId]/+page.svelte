@@ -1,11 +1,37 @@
-<script>
-	export let data;
-	let { group, memberCount, membershipRole, member, posts } = data;
-	// Derive postsItems with loose typing to satisfy svelte-check without structural assert
-	const postsItems = /** @type {any} */ (posts)?.items || [];
-	let working = false;
-	/** @param {string} name */
-	async function action(name) {
+<svelte:options runes />
+
+<script lang="ts">
+	type GroupRecord = Record<string, any>;
+	type GroupPost = Record<string, any>;
+
+	let { data }: { data: Record<string, any> } = $props();
+	const group = $derived.by<GroupRecord | undefined>(() => data?.group as GroupRecord | undefined);
+	const memberCount = $derived.by<number | null>(() =>
+		typeof data?.memberCount === 'number' ? (data.memberCount as number) : null
+	);
+	const member = $derived.by<boolean>(() => Boolean(data?.member));
+	const postsItems = $derived.by<GroupPost[]>(() =>
+		Array.isArray(data?.posts?.items) ? (data.posts.items as GroupPost[]) : []
+	);
+	const spaceName = $derived.by<string | null>(() => {
+		const expandedSpace = (group?.expand as { space?: { name?: string } } | undefined)?.space;
+		return expandedSpace?.name ?? null;
+	});
+	const groupName = $derived.by<string>(() => group?.name ?? 'Group');
+	const groupDescription = $derived.by<string>(
+		() => group?.description ?? 'No description available.'
+	);
+	const numberFormatter = new Intl.NumberFormat();
+	const pageTitle = $derived.by<string>(() =>
+		spaceName ? `${groupName} – ${spaceName} – Campus` : `${groupName} – Campus`
+	);
+	const displayMemberCount = $derived.by<string>(() => {
+		if (memberCount === null) return 'Hidden';
+		return numberFormatter.format(memberCount);
+	});
+	let working = $state(false);
+
+	async function action(name: string) {
 		working = true;
 		const fd = new FormData();
 		const res = await fetch('?/' + name, { method: 'POST', body: fd });
@@ -14,11 +40,15 @@
 	}
 </script>
 
+<svelte:head>
+	<title>{pageTitle}</title>
+</svelte:head>
+
 <div class="mb-6 flex items-start gap-6">
 	<div>
-		<h1 class="text-2xl font-bold">{group.name}</h1>
-		<div class="text-gray-600">{group.description}</div>
-		<div class="mt-1 text-sm">Members: {memberCount}</div>
+		<h1 class="text-2xl font-bold">{groupName}</h1>
+		<div class="text-gray-600">{groupDescription}</div>
+		<div class="mt-1 text-sm">Members: {displayMemberCount}</div>
 		<div class="mt-3 flex gap-2">
 			{#if member}
 				<button

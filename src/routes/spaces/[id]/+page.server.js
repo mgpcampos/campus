@@ -7,16 +7,17 @@ import { getPosts } from '$lib/services/posts.js';
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ params, locals }) {
 	if (!locals.user) throw redirect(302, '/auth/login');
-	const id = params.id;
+	const identifier = params.id;
 	try {
-		const space = await getSpace(id, { pb: locals.pb });
-		const memberCount = await getSpaceMemberCount(id, { pb: locals.pb });
-		const membershipRole = await getMembershipRole(id, { pb: locals.pb });
+		const space = await getSpace(identifier, { pb: locals.pb });
+		const spaceId = space.id;
+		const memberCount = await getSpaceMemberCount(spaceId, { pb: locals.pb });
+		const membershipRole = await getMembershipRole(spaceId, { pb: locals.pb });
 		const member = membershipRole != null;
 		let postsRestricted = false;
 		let posts;
 		try {
-			posts = await getPosts({ scope: 'space', space: id }, { pb: locals.pb });
+			posts = await getPosts({ scope: 'space', space: spaceId }, { pb: locals.pb });
 		} catch (err) {
 			const unknownErr = /** @type {any} */ (err);
 			const status = err instanceof ClientResponseError ? err.status : unknownErr?.status;
@@ -64,8 +65,12 @@ export const actions = {
 	join: async ({ params, locals }) => {
 		if (!locals.user) throw redirect(302, '/auth/login');
 		try {
-			await joinSpace(params.id, { pb: locals.pb });
-		} catch {
+			const space = await getSpace(params.id, { pb: locals.pb });
+			await joinSpace(space.id, { pb: locals.pb });
+		} catch (err) {
+			if (err instanceof ClientResponseError && err.status === 404) {
+				return fail(404, { error: 'Space not found' });
+			}
 			return fail(400, { error: 'Failed to join space' });
 		}
 		return { success: true };
@@ -73,8 +78,12 @@ export const actions = {
 	leave: async ({ params, locals }) => {
 		if (!locals.user) throw redirect(302, '/auth/login');
 		try {
-			await leaveSpace(params.id, { pb: locals.pb });
-		} catch {
+			const space = await getSpace(params.id, { pb: locals.pb });
+			await leaveSpace(space.id, { pb: locals.pb });
+		} catch (err) {
+			if (err instanceof ClientResponseError && err.status === 404) {
+				return fail(404, { error: 'Space not found' });
+			}
 			return fail(400, { error: 'Failed to leave space' });
 		}
 		return { success: true };

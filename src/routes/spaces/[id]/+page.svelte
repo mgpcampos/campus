@@ -24,6 +24,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>{space.name} – Campus</title>
+</svelte:head>
+
 <div class="mb-6 flex items-start gap-6">
 	<div>
 		<h1 class="text-2xl font-bold">{space.name}</h1>
@@ -32,7 +36,7 @@
 			Members: {memberCount === null ? '—' : memberCount}
 		</div>
 		<div class="mt-1 text-sm">
-			<a class="text-blue-600 underline" href={`/spaces/${space.id}/groups`}>View Groups</a>
+			<a class="text-blue-600 underline" href={`/spaces/${space.slug}/groups`}>View Groups</a>
 		</div>
 		<div class="mt-3 flex gap-2">
 			{#if member}
@@ -45,7 +49,7 @@
 				</form>
 			{/if}
 			{#if membershipRole === 'owner' || membershipRole === 'moderator'}
-				<a href={`/spaces/${space.id}/manage`} class="rounded bg-indigo-600 px-3 py-1 text-white"
+				<a href={`/spaces/${space.slug}/manage`} class="rounded bg-indigo-600 px-3 py-1 text-white"
 					>Manage</a
 				>
 			{/if}

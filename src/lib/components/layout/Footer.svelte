@@ -2,7 +2,12 @@
 	let { class: className = '', id, ...restProps } = $props();
 </script>
 
-<footer class="border-t border-border/40 bg-background/95 {className}" {id} {...restProps}>
+<footer
+	class="border-t border-border/40 bg-background/95 {className}"
+	{id}
+	tabindex="-1"
+	{...restProps}
+>
 	<div
 		class="container flex flex-col items-center justify-between gap-4 py-10 md:h-24 md:flex-row md:py-0"
 	>

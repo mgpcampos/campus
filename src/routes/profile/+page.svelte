@@ -3,6 +3,7 @@
 	import { profileSchema } from '$lib/utils/validation.js';
 	import { getErrorMessage } from '$lib/utils/errors.js';
 	import { currentUser } from '$lib/pocketbase.js';
+	import { onMount } from 'svelte';
 	import { createClientFormOptions } from '$lib/validation';
 
 	let { data } = $props();
@@ -14,6 +15,19 @@
 
 	let generalError = $state('');
 	let successMessage = $state('');
+
+	onMount(() => {
+		const defaults = data?.form?.data ?? {};
+		if (typeof defaults.name === 'string' && defaults.name.length && !$form.name) {
+			$form.name = defaults.name;
+		}
+		if (typeof defaults.username === 'string' && defaults.username.length && !$form.username) {
+			$form.username = defaults.username;
+		}
+		if (typeof defaults.bio === 'string' && defaults.bio.length && !$form.bio) {
+			$form.bio = defaults.bio;
+		}
+	});
 
 	// Handle form updates
 	$effect(() => {

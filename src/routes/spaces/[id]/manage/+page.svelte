@@ -4,6 +4,10 @@
 	let description = space.description || '';
 </script>
 
+<svelte:head>
+	<title>Manage {space.name} – Campus</title>
+</svelte:head>
+
 <h1 class="mb-4 text-2xl font-bold">Manage Space: {space.name}</h1>
 <form method="POST" action="?/update" class="space-y-3">
 	<div>

@@ -2,6 +2,10 @@
 	export let form;
 </script>
 
+<svelte:head>
+	<title>Create Space – Campus</title>
+</svelte:head>
+
 <h1 class="mb-4 text-2xl font-bold">Create Space</h1>
 {#if form?.error}
 	<div class="mb-4 rounded bg-red-100 p-2 text-red-700">{form.error}</div>
@@ -14,6 +18,9 @@
 	<div>
 		<label for="slug" class="block text-sm font-medium">Slug</label>
 		<input id="slug" name="slug" required class="w-full rounded border px-2 py-1" />
+		<p class="mt-1 text-xs text-gray-500">
+			Choose a short, unique slug. It becomes the URL, like <code>/spaces/your-slug</code>.
+		</p>
 	</div>
 	<div>
 		<label for="description" class="block text-sm font-medium">Description</label>
