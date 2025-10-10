@@ -21,27 +21,42 @@
 	tabindex="-1"
 	{...restProps}
 >
-	<div class="container flex h-14 max-w-screen-2xl items-center justify-between px-4 pb-2">
-		<!-- Main Navigation -->
-		<nav class="flex items-center gap-6">
-			<a href="/" class="text-lg font-semibold">Campus</a>
-			{#if $currentUser}
-				<div class="hidden items-center gap-4 md:flex">
-					<a href="/feed" class="text-sm font-medium transition-colors hover:text-primary">
-						Feed
-					</a>
-					<a href="/materials" class="text-sm font-medium transition-colors hover:text-primary">
-						Materials
-					</a>
-					<a href="/calendar" class="text-sm font-medium transition-colors hover:text-primary">
-						Calendar
-					</a>
-					<a href="/profiles" class="text-sm font-medium transition-colors hover:text-primary">
-						Profiles
-					</a>
+	<div class="flex h-14 items-center justify-between px-4">
+		<!-- Logo/Brand -->
+		<div class="flex items-center">
+			<a href="/" class="flex items-center space-x-2">
+				<div class="flex h-8 w-8 items-center justify-center rounded-full bg-primary">
+					<span class="text-lg font-bold text-primary-foreground">C</span>
 				</div>
-			{/if}
-		</nav>
+				<span class="hidden text-xl font-bold text-foreground lg:block">Campus</span>
+			</a>
+		</div>
+
+		<!-- Search Bar (Desktop) -->
+		<div class="mx-4 hidden max-w-md flex-1 md:flex">
+			<div class="relative w-full">
+				<input
+					type="search"
+					placeholder="Search Campus..."
+					class="h-9 w-full rounded-full border border-border/40 bg-muted/50 px-4 pr-10 text-sm placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/50 focus:outline-none"
+				/>
+				<div class="absolute inset-y-0 right-0 flex items-center pr-3">
+					<svg
+						class="h-4 w-4 text-muted-foreground"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+						/>
+					</svg>
+				</div>
+			</div>
+		</div>
 
 		<!-- User Menu -->
 		<nav class="flex items-center gap-2">
