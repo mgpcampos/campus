@@ -3,7 +3,6 @@
 	import { currentUser, pb } from '$lib/pocketbase.js';
 	import { formatDistanceToNow } from 'date-fns';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import * as Card from '$lib/components/ui/card/index.js';
 	import ImageAttachment from '$lib/components/media/ImageAttachment.svelte';
 	import VideoAttachment from '$lib/components/media/VideoAttachment.svelte';
 	import { Heart, MessageCircle, MoreHorizontal, Edit, Trash2 } from '@lucide/svelte';
@@ -23,7 +22,7 @@
 		return CommentSectionPromise;
 	}
 	import { toast } from 'svelte-sonner';
-	import { notifyError, withErrorToast } from '$lib/utils/errors.js';
+	import { notifyError } from '$lib/utils/errors.js';
 
 	export let post: any;
 	export let showActions = true;
@@ -165,174 +164,193 @@
 	$: isImagePost = mediaType === 'images' || (!isVideoPost && attachments.length > 0);
 </script>
 
-<Card.Root class="w-full" data-has-media={attachments.length > 0}>
-	<Card.Header class="pb-3">
-		<div class="flex items-start justify-between">
-			<div class="flex items-center space-x-3">
+<article class="border-b border-border/40 bg-background hover:bg-muted/30 transition-colors" data-has-media={attachments.length > 0}>
+	<div class="p-4">
+		<div class="flex space-x-3">
+			<!-- Avatar -->
+			<div class="flex-shrink-0">
 				<a
 					href={author ? `/profile/${author.username}` : '#'}
-					class="group rounded-full focus:ring-2 focus:ring-blue-500 focus:outline-none"
+					class="block rounded-full focus:ring-2 focus:ring-primary/50 focus:outline-none"
 				>
 					{#if author?.avatar}
 						<img
 							src={pb.files.getURL(author, author.avatar, { thumb: '40x40' })}
 							alt="{author.name}'s avatar"
-							class="h-10 w-10 rounded-full object-cover ring-2 ring-transparent transition group-hover:ring-blue-200"
+							class="h-10 w-10 rounded-full object-cover"
 						/>
 					{:else}
-						<div
-							class="flex h-10 w-10 items-center justify-center rounded-full bg-gray-300 ring-2 ring-transparent transition group-hover:ring-blue-200"
-						>
-							<span class="font-medium text-gray-600">
+						<div class="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+							<span class="text-sm font-medium text-muted-foreground">
 								{author?.name?.charAt(0)?.toUpperCase() || '?'}
 							</span>
 						</div>
 					{/if}
 				</a>
-				<div>
-					<h3 class="text-sm font-semibold">
+			</div>
+
+			<!-- Content -->
+			<div class="flex-1 min-w-0">
+				<!-- Header -->
+				<div class="flex items-center justify-between mb-1">
+					<div class="flex items-center space-x-1">
 						<a
 							href={author ? `/profile/${author.username}` : '#'}
-							class="rounded-sm hover:underline focus:ring-2 focus:ring-blue-500 focus:outline-none"
+							class="font-semibold text-foreground hover:underline focus:outline-none focus:ring-2 focus:ring-primary/50 rounded"
 						>
 							{author?.name || 'Unknown User'}
 						</a>
-					</h3>
-					<p class="text-xs text-gray-500">@{author?.username || 'unknown'}</p>
+						<span class="text-muted-foreground">·</span>
+						<a
+							href={author ? `/profile/${author.username}` : '#'}
+							class="text-muted-foreground hover:underline focus:outline-none focus:ring-2 focus:ring-primary/50 rounded"
+						>
+							@{author?.username || 'unknown'}
+						</a>
+						<span class="text-muted-foreground">·</span>
+						<time class="text-muted-foreground text-sm" datetime={post.created}>
+							{formattedDate}
+						</time>
+					</div>
+
+					{#if (isOwner || canModerate) && showActions}
+						<DropdownMenu.Root>
+							<DropdownMenu.Trigger>
+								<Button variant="ghost" size="sm" class="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+									<MoreHorizontal size={14} />
+								</Button>
+							</DropdownMenu.Trigger>
+							<DropdownMenu.Content align="end">
+								{#if isOwner}
+									<DropdownMenu.Item onclick={handleEdit}>
+										<Edit size={16} class="mr-2" />
+										Edit
+									</DropdownMenu.Item>
+								{/if}
+								{#if canModerate}
+									<DropdownMenu.Item onclick={handleDelete} class="text-destructive">
+										<Trash2 size={16} class="mr-2" />
+										Delete
+									</DropdownMenu.Item>
+								{/if}
+								{#if !isOwner}
+									<DropdownMenu.Item
+										onclick={async () => {
+											try {
+												await reportContent({
+													targetType: 'post',
+													targetId: post.id,
+													reason: 'inappropriate'
+												});
+												toast.success('Reported');
+											} catch (e) {
+												await notifyError(e, { context: 'reportPost' });
+											}
+										}}
+									>
+										<Trash2 size={16} class="mr-2" />
+										Report
+									</DropdownMenu.Item>
+								{/if}
+							</DropdownMenu.Content>
+						</DropdownMenu.Root>
+					{/if}
 				</div>
-			</div>
 
-			<div class="flex items-center space-x-2">
-				<span class="text-xs text-gray-500">{formattedDate}</span>
+				<!-- Post Content -->
+				<div class="prose prose-sm max-w-none text-foreground">
+					{@html linkedContent}
+				</div>
 
-				{#if (isOwner || canModerate) && showActions}
-					<DropdownMenu.Root>
-						<DropdownMenu.Trigger>
-							<Button variant="ghost" size="sm" class="h-8 w-8 p-0">
-								<MoreHorizontal size={16} />
-							</Button>
-						</DropdownMenu.Trigger>
-						<DropdownMenu.Content align="end">
-							{#if isOwner}
-								<DropdownMenu.Item onclick={handleEdit}>
-									<Edit size={16} class="mr-2" />
-									Edit
-								</DropdownMenu.Item>
-							{/if}
-							{#if canModerate}
-								<DropdownMenu.Item onclick={handleDelete} class="text-red-600">
-									<Trash2 size={16} class="mr-2" />
-									Delete
-								</DropdownMenu.Item>
-							{/if}
-							{#if !isOwner}
-								<DropdownMenu.Item
-									onclick={async () => {
-										try {
-											await reportContent({
-												targetType: 'post',
-												targetId: post.id,
-												reason: 'inappropriate'
-											});
-											toast.success('Reported');
-										} catch (e) {
-											await notifyError(e, { context: 'reportPost' });
-										}
-									}}
-								>
-									<Trash2 size={16} class="mr-2" />
-									Report
-								</DropdownMenu.Item>
-							{/if}
-						</DropdownMenu.Content>
-					</DropdownMenu.Root>
+				<!-- Media attachments -->
+				{#if isVideoPost && attachments.length > 0}
+					<div class="mt-3">
+						<VideoAttachment
+							{post}
+							videoFile={attachments[0]}
+							posterFile={post.videoPoster}
+							altText={post.mediaAltText || ''}
+						/>
+					</div>
+				{:else if isImagePost && attachments.length > 0}
+					<div
+						class="mt-3 grid gap-2 rounded-lg overflow-hidden {attachments.length === 1
+							? 'grid-cols-1'
+							: attachments.length === 2
+								? 'grid-cols-2'
+								: attachments.length === 3
+									? 'grid-cols-3'
+									: 'grid-cols-2'}"
+					>
+						{#each attachments as attachment (attachment)}
+							<ImageAttachment
+								src={getFileUrl(attachment)}
+								alt="Post attachment"
+								className={attachments.length === 1
+									? 'max-h-[500px] object-contain'
+									: 'h-48 object-cover'}
+							/>
+						{/each}
+					</div>
+				{/if}
+
+				<!-- Actions -->
+				{#if showActions}
+					<div class="mt-3 flex items-center justify-between max-w-md">
+						<Button
+							variant="ghost"
+							size="sm"
+							onclick={handleLike}
+							disabled={!canInteract || likePending}
+							class="flex items-center space-x-1 text-muted-foreground hover:text-red-500 transition-colors {isLiked ? 'text-red-500' : ''}"
+						>
+							<Heart size={16} class={isLiked ? 'fill-current' : ''} />
+							<span class="text-sm">{likeCount}</span>
+						</Button>
+
+						<Button
+							variant="ghost"
+							size="sm"
+							onclick={handleComment}
+							class="flex items-center space-x-1 text-muted-foreground hover:text-blue-500 transition-colors"
+						>
+							<MessageCircle size={16} />
+							<span class="text-sm">{commentCount}</span>
+						</Button>
+
+						<Button
+							variant="ghost"
+							size="sm"
+							class="flex items-center space-x-1 text-muted-foreground hover:text-green-500 transition-colors"
+						>
+							<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+							</svg>
+							<span class="text-sm">Share</span>
+						</Button>
+					</div>
+
+					<!-- Comment Section (lazy) -->
+					{#if CommentSectionModule}
+						<div class="mt-4">
+							<svelte:component
+								this={CommentSectionModule}
+								postId={post.id}
+								initialCommentCount={commentCount}
+								on:commentCountChanged={handleCommentCountChanged}
+							/>
+						</div>
+					{:else}
+						<button
+							class="mt-2 text-sm text-blue-500 hover:underline"
+							onclick={loadCommentSection}
+							type="button"
+						>
+							Load comments...
+						</button>
+					{/if}
 				{/if}
 			</div>
 		</div>
-	</Card.Header>
-
-	<Card.Content class="pt-0">
-		<div class="prose prose-sm max-w-none">
-			{@html linkedContent}
-		</div>
-
-		<!-- Video attachment -->
-		{#if isVideoPost && attachments.length > 0}
-			<div class="mt-3">
-				<VideoAttachment
-					{post}
-					videoFile={attachments[0]}
-					posterFile={post.videoPoster}
-					altText={post.mediaAltText || ''}
-				/>
-			</div>
-		{/if}
-
-		<!-- Image attachments -->
-		{#if isImagePost && attachments.length > 0}
-			<div
-				class="mt-3 grid gap-2 {attachments.length === 1
-					? 'grid-cols-1'
-					: attachments.length === 2
-						? 'grid-cols-2'
-						: attachments.length === 3
-							? 'grid-cols-3'
-							: 'grid-cols-2'}"
-			>
-				{#each attachments as attachment}
-					<!-- Using dedicated component for future responsive sources -->
-					<ImageAttachment
-						src={getFileUrl(attachment)}
-						alt="Post attachment"
-						className={attachments.length === 1
-							? 'max-h-[500px] object-contain'
-							: 'h-48 object-cover'}
-					/>
-				{/each}
-			</div>
-		{/if}
-	</Card.Content>
-
-	{#if showActions}
-		<Card.Footer class="pt-3">
-			<div class="mb-3 flex items-center space-x-4">
-				<Button
-					variant="ghost"
-					size="sm"
-					onclick={handleLike}
-					disabled={!canInteract || likePending}
-					class="text-gray-600 transition-colors hover:text-red-500 {isLiked ? 'text-red-500' : ''}"
-				>
-					<Heart size={16} class="mr-1 {isLiked ? 'fill-current' : ''}" />
-					{likeCount}
-				</Button>
-
-				<Button
-					variant="ghost"
-					size="sm"
-					onclick={handleComment}
-					class="text-gray-600 transition-colors hover:text-blue-500"
-				>
-					<MessageCircle size={16} class="mr-1" />
-					{commentCount}
-				</Button>
-			</div>
-
-			<!-- Comment Section (lazy) -->
-			{#if CommentSectionModule}
-				<svelte:component
-					this={CommentSectionModule}
-					postId={post.id}
-					initialCommentCount={commentCount}
-					on:commentCountChanged={handleCommentCountChanged}
-				/>
-			{:else}
-				<button
-					class="text-xs text-blue-600 hover:underline"
-					onclick={loadCommentSection}
-					type="button">Load comments...</button
-				>
-			{/if}
-		</Card.Footer>
-	{/if}
-</Card.Root>
+	</div>
+</article>

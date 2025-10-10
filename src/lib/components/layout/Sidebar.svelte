@@ -36,10 +36,7 @@
 		{ href: '/profile', label: 'Profile', icon: User, requiresAuth: true }
 	];
 
-	const adminNavItems = [
-		{ href: '/admin', label: 'Admin Dashboard', icon: Shield, requiresAuth: true },
-		{ href: '/admin/moderation', label: 'Moderation', icon: Shield, requiresAuth: true }
-	];
+	const adminNavItem = { href: '/admin', label: 'Admin', icon: Shield, requiresAuth: true };
 
 	function isActive(href: string): boolean {
 		if (href === '/') {
@@ -166,102 +163,70 @@
 
 {#if $currentUser}
 	<aside
-		class="hidden w-64 flex-shrink-0 border-r border-border/40 bg-background/95 md:block {className}"
+		class="hidden md:block flex-shrink-0 border-r border-border/40 bg-background/95 {className}"
 		aria-label="Sidebar navigation"
 	>
-		<div class="sticky top-14 h-[calc(100vh-3.5rem)] overflow-y-auto px-4 py-6">
-			<nav class="space-y-2">
-				{#each baseNavigationItems as item}
+		<div class="sticky top-14 h-[calc(100vh-3.5rem)] overflow-y-auto">
+			<nav class="space-y-1 p-2">
+				{#each $currentUser?.isAdmin ? [...baseNavigationItems, adminNavItem] : baseNavigationItems as item (item.href)}
 					{#if !item.requiresAuth || $currentUser}
-						<Button
-							variant={isActive(item.href) ? 'secondary' : 'ghost'}
-							class="w-full justify-start focus:ring-2 focus:ring-ring focus:ring-offset-2"
+						<a
 							href={item.href}
+							class="flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/50 {isActive(item.href) ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}"
 							aria-current={isActive(item.href) ? 'page' : undefined}
 						>
-							{@const IconComponent = item.icon}
-							<IconComponent class="mr-2 h-4 w-4" aria-hidden="true" />
-							{item.label}
-						</Button>
+							<item.icon class="h-5 w-5 lg:mr-3" aria-hidden="true" />
+							<span class="hidden lg:block">{item.label}</span>
+						</a>
 					{/if}
 				{/each}
 
-				<!-- Admin Section -->
-				{#if $currentUser?.isAdmin}
-					<div class="pt-6">
-						<h3
-							class="mb-3 px-3 text-sm font-semibold tracking-tight text-muted-foreground"
-							id="admin-section-heading"
-						>
-							Admin
-						</h3>
-						<div class="space-y-1" role="group" aria-labelledby="admin-section-heading">
-							{#each adminNavItems as item}
-								<Button
-									variant={isActive(item.href) ? 'secondary' : 'ghost'}
-									class="w-full justify-start focus:ring-2 focus:ring-ring focus:ring-offset-2"
-									href={item.href}
-									aria-current={isActive(item.href) ? 'page' : undefined}
-								>
-									{@const IconComponent = item.icon}
-									<IconComponent class="mr-2 h-4 w-4" aria-hidden="true" />
-									{item.label}
-								</Button>
-							{/each}
-						</div>
-					</div>
-				{/if}
+				<!-- Compose Button -->
+				<div class="pt-4">
+					<Button
+						class="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-full h-12 lg:h-10"
+						href="/feed"
+					>
+						<Plus class="h-5 w-5 lg:mr-2" aria-hidden="true" />
+						<span class="hidden lg:block">Compose</span>
+					</Button>
+				</div>
 
 				<!-- Quick Actions -->
-				<div class="pt-6">
-					<h3
-						class="mb-3 px-3 text-sm font-semibold tracking-tight text-muted-foreground"
-						id="quick-actions-heading"
-					>
-						Quick Actions
-					</h3>
-					<div class="space-y-1" role="group" aria-labelledby="quick-actions-heading">
-						<Button
-							variant="ghost"
-							class="w-full justify-start focus:ring-2 focus:ring-ring focus:ring-offset-2"
+				<div class="pt-4">
+					<div class="space-y-1" role="group">
+						<a
 							href="/spaces/create"
+							class="flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/50 text-muted-foreground hover:text-foreground"
 						>
-							<Plus class="mr-2 h-4 w-4" aria-hidden="true" />
-							Create Space
-						</Button>
+							<Plus class="h-5 w-5 lg:mr-3" aria-hidden="true" />
+							<span class="hidden lg:block">Create Space</span>
+						</a>
 					</div>
 				</div>
 
-				<!-- Recent Spaces (placeholder for future implementation) -->
-				<div class="pt-6">
-					<h3
-						class="mb-3 px-3 text-sm font-semibold tracking-tight text-muted-foreground"
-						id="recent-spaces-heading"
-					>
-						Recent Spaces
-					</h3>
-					<div class="space-y-1" role="group" aria-labelledby="recent-spaces-heading">
+				<!-- Recent Spaces -->
+				<div class="pt-4">
+					<div class="space-y-1" role="group">
 						{#if spacesLoading}
-							<p class="px-3 text-sm text-muted-foreground">Loading your spaces...</p>
+							<div class="px-3 py-2">
+								<div class="h-4 bg-muted/50 rounded animate-pulse"></div>
+							</div>
 						{:else if spacesError}
-							<p class="px-3 text-sm text-red-600" role="alert">{spacesError}</p>
+							<p class="px-3 text-xs text-destructive" role="alert">{spacesError}</p>
 						{:else if recentSpaces.length === 0}
-							<p class="px-3 text-sm text-muted-foreground">Join some spaces to see them here</p>
+							<p class="px-3 text-xs text-muted-foreground">No recent spaces</p>
 						{:else}
-							<ul class="space-y-1">
-								{#each recentSpaces as space}
-									<li>
-										<Button
-											variant={isActive(`/spaces/${space.slug}`) ? 'secondary' : 'ghost'}
-											class="w-full justify-start text-left focus:ring-2 focus:ring-ring focus:ring-offset-2"
-											href={`/spaces/${space.slug}`}
-											aria-current={isActive(`/spaces/${space.slug}`) ? 'page' : undefined}
-										>
-											{space.name}
-										</Button>
-									</li>
-								{/each}
-							</ul>
+							{#each recentSpaces.slice(0, 3) as space (space.id)}
+								<a
+									href={`/spaces/${space.slug}`}
+									class="flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/50 {isActive(`/spaces/${space.slug}`) ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}"
+									aria-current={isActive(`/spaces/${space.slug}`) ? 'page' : undefined}
+								>
+									<Users class="h-4 w-4 lg:mr-2 flex-shrink-0" aria-hidden="true" />
+									<span class="hidden lg:block truncate">{space.name}</span>
+								</a>
+							{/each}
 						{/if}
 					</div>
 				</div>

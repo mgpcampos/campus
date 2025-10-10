@@ -1,12 +1,11 @@
+<svelte:options runes />
+
 <script lang="ts">
-	import { currentUser } from '$lib/pocketbase.js';
-	import * as Card from '$lib/components/ui/card/index.js';
+	import { currentUser, pb } from '$lib/pocketbase.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import PostForm from '$lib/components/forms/PostForm.svelte';
 	import Feed from '$lib/components/feed/Feed.svelte';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
-	import { MessageSquare, Users } from '@lucide/svelte';
+	import { MessageSquare } from '@lucide/svelte';
 
 	let { data } = $props();
 
@@ -47,130 +46,145 @@
 	}
 </script>
 
-<div class="mx-auto max-w-5xl space-y-8 py-6 sm:py-10">
-	<header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-		<div class="space-y-1">
-			<h1 class="text-3xl font-semibold tracking-tight text-foreground">Community Feed</h1>
-			<p class="text-base text-muted-foreground">
-				Share updates, research progress, and resources with the broader Campus community.
-			</p>
+<div class="min-h-screen bg-background">
+	<!-- Timeline Header -->
+	<div class="sticky top-14 z-10 bg-background/95 backdrop-blur border-b border-border/40">
+		<div class="flex items-center justify-between px-4 py-3">
+			<div class="flex items-center space-x-4">
+				<h1 class="text-xl font-bold text-foreground">Home</h1>
+			</div>
+			<div class="flex items-center space-x-2">
+				<Button variant="ghost" size="sm" class="h-8 w-8 p-0">
+					<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+					</svg>
+				</Button>
+			</div>
 		</div>
-		{#if $currentUser}
-			<Button href="/spaces" variant="outline" size="sm" class="self-start sm:self-auto">
-				<Users class="mr-2 h-4 w-4" aria-hidden="true" />
-				Browse Spaces
-			</Button>
-		{/if}
-	</header>
+	</div>
 
+	<!-- Compose Section -->
 	{#if $currentUser}
-		<Card.Root class="border border-border/60 bg-card/95 shadow-sm">
-			<Card.Header>
-				<Card.Title class="text-lg font-semibold">Create a post</Card.Title>
-				<Card.Description>
-					Upload images or short videos (≤ 5 minutes) with descriptive alt text for accessibility.
-				</Card.Description>
-			</Card.Header>
-			<Card.Content>
-				<PostForm formData={data.form} on:postCreated={handlePostCreated} />
-			</Card.Content>
-		</Card.Root>
+		<div class="border-b border-border/40 bg-card/50">
+			<div class="p-4">
+				<div class="flex space-x-3">
+					<!-- User Avatar -->
+					<div class="flex-shrink-0">
+						{#if $currentUser.avatar}
+							<img
+								src={pb.files.getURL($currentUser, $currentUser.avatar, { thumb: '40x40' })}
+								alt="{$currentUser.name}'s avatar"
+								class="h-10 w-10 rounded-full object-cover"
+							/>
+						{:else}
+							<div class="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+								<span class="text-sm font-medium text-muted-foreground">
+									{$currentUser.name?.charAt(0)?.toUpperCase() || '?'}
+								</span>
+							</div>
+						{/if}
+					</div>
+					
+					<!-- Compose Form -->
+					<div class="flex-1">
+						<PostForm formData={data.form} on:postCreated={handlePostCreated} />
+					</div>
+				</div>
+			</div>
+		</div>
 	{:else}
-		<Card.Root class="border border-border/60 bg-card/95 shadow-sm">
-			<Card.Content class="space-y-3">
-				<p class="text-base text-foreground">Sign in to share updates with your peers.</p>
-				<div class="flex gap-3">
+		<div class="border-b border-border/40 bg-card/50">
+			<div class="p-4 text-center">
+				<p class="text-foreground mb-3">Sign in to share updates with your peers.</p>
+				<div class="flex gap-3 justify-center">
 					<Button href="/auth/login" size="sm">Sign In</Button>
 					<Button href="/auth/register" variant="outline" size="sm">Create Account</Button>
 				</div>
-			</Card.Content>
-		</Card.Root>
+			</div>
+		</div>
 	{/if}
 
-	<section class="space-y-6">
-		<Card.Root class="border border-border/60 bg-card/95 shadow-sm">
-			<Card.Header class="gap-4 sm:flex-row sm:items-center sm:justify-between">
-				<div class="space-y-1 text-left">
-					<Card.Title class="text-2xl">Global Feed</Card.Title>
-					<Card.Description>
-						Stay up to date with what the Campus community is sharing right now.
-					</Card.Description>
-				</div>
-			</Card.Header>
-			<Card.Content class="space-y-4">
-				<div class="flex flex-col gap-2 sm:max-w-sm">
-					<Label for="feed-search" class="text-sm text-muted-foreground">Search posts</Label>
-					<Input
-						id="feed-search"
-						type="search"
-						placeholder="Search by keyword"
-						autocomplete="off"
-						oninput={handleSearchInput}
-					/>
-				</div>
-				<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-					<div
-						class="inline-flex rounded-lg border border-input bg-background p-1 shadow-xs"
-						role="tablist"
-						aria-label="Feed sort options"
+	<!-- Feed Controls -->
+	<div class="border-b border-border/40 bg-card/50">
+		<div class="p-4">
+			<div class="flex items-center justify-between">
+				<!-- Sort Tabs -->
+				<div
+					class="inline-flex rounded-lg border border-input bg-background p-1"
+					role="tablist"
+					aria-label="Feed sort options"
+				>
+					<Button
+						variant={feedSort === 'new' ? 'default' : 'ghost'}
+						size="sm"
+						onclick={() => changeSort('new')}
+						role="tab"
+						aria-selected={feedSort === 'new'}
+						tabindex={feedSort === 'new' ? 0 : -1}
+						class="px-3"
 					>
-						<Button
-							variant={feedSort === 'new' ? 'default' : 'ghost'}
-							size="sm"
-							onclick={() => changeSort('new')}
-							role="tab"
-							aria-selected={feedSort === 'new'}
-							tabindex={feedSort === 'new' ? 0 : -1}
-							class="px-3"
-						>
-							<MessageSquare class="mr-2 h-4 w-4" aria-hidden="true" />
-							New
-						</Button>
-						<Button
-							variant={feedSort === 'top' ? 'default' : 'ghost'}
-							size="sm"
-							onclick={() => changeSort('top')}
-							role="tab"
-							aria-selected={feedSort === 'top'}
-							tabindex={feedSort === 'top' ? 0 : -1}
-							class="px-3"
-						>
-							Top
-						</Button>
-						<Button
-							variant={feedSort === 'trending' ? 'default' : 'ghost'}
-							size="sm"
-							onclick={() => changeSort('trending')}
-							role="tab"
-							aria-selected={feedSort === 'trending'}
-							tabindex={feedSort === 'trending' ? 0 : -1}
-							class="px-3"
-						>
-							Trending
-						</Button>
-					</div>
-					{#if feedSort === 'trending'}
-						<div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-							<Label for="timeframe-select" class="text-sm text-muted-foreground"
-								>Trending window</Label
-							>
-							<select
-								id="timeframe-select"
-								class="h-9 rounded-md border border-input bg-background px-3 text-sm shadow-xs focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
-								onchange={changeTimeframe}
-								aria-label="Trending timeframe"
-								value={timeframeHours}
-							>
-								{#each trendingOptions as option}
-									<option value={option}>{option}h</option>
-								{/each}
-							</select>
-						</div>
-					{/if}
+						<MessageSquare class="mr-2 h-4 w-4" aria-hidden="true" />
+						New
+					</Button>
+					<Button
+						variant={feedSort === 'top' ? 'default' : 'ghost'}
+						size="sm"
+						onclick={() => changeSort('top')}
+						role="tab"
+						aria-selected={feedSort === 'top'}
+						tabindex={feedSort === 'top' ? 0 : -1}
+						class="px-3"
+					>
+						Top
+					</Button>
+					<Button
+						variant={feedSort === 'trending' ? 'default' : 'ghost'}
+						size="sm"
+						onclick={() => changeSort('trending')}
+						role="tab"
+						aria-selected={feedSort === 'trending'}
+						tabindex={feedSort === 'trending' ? 0 : -1}
+						class="px-3"
+					>
+						Trending
+					</Button>
 				</div>
-			</Card.Content>
-		</Card.Root>
 
+				<!-- Search and Timeframe -->
+				<div class="flex items-center space-x-3">
+					{#if feedSort === 'trending'}
+						<select
+							class="h-8 rounded-md border border-input bg-background px-2 text-sm focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
+							onchange={changeTimeframe}
+							aria-label="Trending timeframe"
+							value={timeframeHours}
+						>
+							{#each trendingOptions as option (option)}
+								<option value={option}>{option}h</option>
+							{/each}
+						</select>
+					{/if}
+
+					<div class="relative">
+						<input
+							type="search"
+							placeholder="Search posts..."
+							class="h-8 w-48 rounded-full border border-input bg-background px-3 pr-8 text-sm placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
+							oninput={handleSearchInput}
+						/>
+						<div class="absolute inset-y-0 right-0 flex items-center pr-2">
+							<svg class="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+							</svg>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Feed Timeline -->
+	<section aria-label="Feed timeline">
 		<Feed
 			bind:this={feedComponent}
 			scope="global"
