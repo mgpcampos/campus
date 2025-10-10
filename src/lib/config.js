@@ -26,7 +26,7 @@ export const config = {
 		name: 'Campus',
 		description: 'A lightweight social network for the education community',
 		version: '0.0.1',
-		origin: publicEnv.PUBLIC_SITE_URL || 'http://127.0.0.1:4173',
+		origin: publicEnv.PUBLIC_SITE_URL || 'http://localhost:4173',
 		robots:
 			publicEnv.PUBLIC_ROBOTS || (publicEnv.PUBLIC_SITE_URL ? 'index,follow' : 'noindex, nofollow')
 	},

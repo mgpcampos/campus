@@ -4,7 +4,7 @@
 </script>
 
 <svelte:head>
-	<title>{profile.name} (@{profile.username}) - Campus</title>
+	<title>{profile.name} (@{profile.username}) | Campus</title>
 </svelte:head>
 
 <div class="mx-auto max-w-4xl space-y-8 p-4">

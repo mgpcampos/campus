@@ -4,7 +4,11 @@ import { writable } from 'svelte/store';
 import { browser } from '$app/environment';
 
 // Single PocketBase instance for client runtime only. On server we always use event.locals.pb
-export const pb = new PocketBase(PUBLIC_POCKETBASE_URL || 'http://127.0.0.1:8090');
+const defaultOrigin =
+	typeof window === 'undefined'
+		? 'http://127.0.0.1:8090'
+		: window.location.origin.replace(/(?::\d+)?$/, ':8090');
+export const pb = new PocketBase(PUBLIC_POCKETBASE_URL || defaultOrigin);
 
 // Writable store tracking current authenticated user model
 export const currentUser = writable(pb.authStore.model);

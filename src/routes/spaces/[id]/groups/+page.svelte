@@ -21,7 +21,7 @@
 	const permissions = $derived.by(
 		() => (data?.permissions ?? null) as SpaceGroupPermissions | null
 	);
-	const pageTitle = $derived.by(() => `${spaceDisplayName} Groups – Campus`);
+	const pageTitle = $derived.by(() => `${spaceDisplayName} Groups | Campus`);
 
 	let creating = $state(false);
 	let error = $state<string | null>(null);

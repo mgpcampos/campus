@@ -73,7 +73,7 @@
 </script>
 
 <svelte:head>
-	<title>Admin dashboard · Campus</title>
+	<title>Admin Dashboard | Campus</title>
 </svelte:head>
 
 <div class="space-y-6">

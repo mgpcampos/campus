@@ -30,7 +30,7 @@ export const load: PageLoad = async ({ fetch, params }) => {
 			thread: threadData.thread,
 			messages: threadData.messages,
 			meta: {
-				title: `${threadData.thread?.name ?? 'Conversation'} — Messages — Campus`,
+				title: `${threadData.thread?.name ?? 'Conversation'} • Messages | Campus`,
 				description:
 					threadData.thread?.description ??
 					'Continue the discussion with your classmates and teams in Campus messaging.',

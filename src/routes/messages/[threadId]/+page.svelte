@@ -116,7 +116,7 @@
 </script>
 
 <svelte:head>
-	<title>{getThreadTitle()} - Messages - Campus</title>
+	<title>{getThreadTitle()} • Messages | Campus</title>
 </svelte:head>
 
 <div class="mx-auto flex h-[calc(100vh-4rem)] max-w-5xl flex-col py-4">

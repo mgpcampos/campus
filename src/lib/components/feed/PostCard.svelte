@@ -160,7 +160,7 @@
 	})();
 </script>
 
-<Card.Root class="w-full">
+<Card.Root class="w-full" data-has-media={attachments.length > 0}>
 	<Card.Header class="pb-3">
 		<div class="flex items-start justify-between">
 			<div class="flex items-center space-x-3">

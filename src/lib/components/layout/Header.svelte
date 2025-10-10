@@ -3,7 +3,6 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import { User, LogOut, Settings, Shield } from '@lucide/svelte';
-	import NotificationsDropdown from '$lib/components/notifications/NotificationsDropdown.svelte';
 	import { cn } from '$lib/utils.js';
 
 	const logoutFormId = 'user-menu-logout-form';
@@ -26,7 +25,6 @@
 		<!-- User Menu -->
 		<nav class="flex items-center gap-2">
 			{#if $currentUser}
-				<NotificationsDropdown />
 				<DropdownMenu.Root open={userMenuOpen} onOpenChange={handleUserMenuOpenChange}>
 					<DropdownMenu.Trigger>
 						{#snippet child({ props })}

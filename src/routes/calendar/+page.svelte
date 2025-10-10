@@ -175,7 +175,7 @@
 </script>
 
 <svelte:head>
-	<title>Calendar - Campus</title>
+	<title>Calendar | Campus</title>
 </svelte:head>
 
 <!-- Accessible live region for dynamic updates -->

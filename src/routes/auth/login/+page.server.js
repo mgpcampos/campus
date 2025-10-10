@@ -6,7 +6,12 @@ import { getErrorMessage } from '$lib/utils/errors.js';
 import { withZod } from '$lib/validation';
 
 /** @type {import('./$types').PageServerLoad} */
-export async function load() {
+export async function load({ locals, url }) {
+	if (locals.user) {
+		const returnUrl = url.searchParams.get('returnUrl');
+		throw redirect(302, returnUrl || '/feed');
+	}
+
 	return {
 		form: await superValidate(withZod(loginSchema))
 	};

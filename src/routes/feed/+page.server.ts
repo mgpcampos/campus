@@ -24,7 +24,9 @@ const createDefaultFormState = () =>
 		publishedAt: null as CreatePostInput['publishedAt']
 	});
 
-export const load: PageServerLoad = async () => {
+export const load: PageServerLoad = async ({ parent }) => {
+	const parentData = await parent();
+
 	const form = await superValidate(withZod(createPostSchema), {
 		id: 'create-post',
 		allowFiles: true,
@@ -32,9 +34,10 @@ export const load: PageServerLoad = async () => {
 	});
 
 	return {
+		...parentData,
 		form,
 		meta: {
-			title: 'Campus Feed — Latest updates',
+			title: 'Campus | Feed',
 			description:
 				'See the latest posts, research updates, and questions from across Campus in the collaborative community feed.',
 			ogImage: '/og-default.png'

@@ -44,7 +44,7 @@
 </script>
 
 <svelte:head>
-	<title>Profile - Campus</title>
+	<title>Profile | Campus</title>
 </svelte:head>
 
 <div class="min-h-screen bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">

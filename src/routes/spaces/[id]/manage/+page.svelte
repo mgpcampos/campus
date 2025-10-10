@@ -5,7 +5,7 @@
 </script>
 
 <svelte:head>
-	<title>Manage {space.name} – Campus</title>
+	<title>Manage {space.name} | Campus</title>
 </svelte:head>
 
 <h1 class="mb-4 text-2xl font-bold">Manage Space: {space.name}</h1>

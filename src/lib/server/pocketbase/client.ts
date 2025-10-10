@@ -3,7 +3,7 @@ import { PUBLIC_POCKETBASE_URL } from '$env/static/public';
 import { dev } from '$app/environment';
 import type { RequestEvent } from '@sveltejs/kit';
 
-const DEFAULT_PB_URL = 'http://127.0.0.1:8090';
+const DEFAULT_PB_URL = dev ? 'http://127.0.0.1:8090' : 'https://pb-campus-production.example.com';
 
 export const getPocketBaseUrl = () => PUBLIC_POCKETBASE_URL || DEFAULT_PB_URL;
 

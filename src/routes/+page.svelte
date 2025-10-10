@@ -23,7 +23,7 @@
 </script>
 
 <svelte:head>
-	<title>Campus &mdash; Academic collaboration</title>
+	<title>Campus | Academic Collaboration Hub</title>
 </svelte:head>
 
 <section class="mx-auto flex max-w-5xl flex-col gap-10 py-10 sm:py-16">

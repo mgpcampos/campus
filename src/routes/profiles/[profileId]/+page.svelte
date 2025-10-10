@@ -19,7 +19,7 @@
 </script>
 
 <svelte:head>
-	<title>{profile?.displayName || 'Profile'} - Campus</title>
+	<title>{profile?.displayName || 'Profile'} | Campus</title>
 </svelte:head>
 
 <div class="min-h-screen bg-gray-50">

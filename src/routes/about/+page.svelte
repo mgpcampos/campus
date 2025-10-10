@@ -1,5 +1,5 @@
 <svelte:head>
-	<title>About Campus</title>
+	<title>About | Campus</title>
 </svelte:head>
 
 <section class="mx-auto flex max-w-4xl flex-col gap-8 px-4 py-12">

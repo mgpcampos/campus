@@ -23,7 +23,7 @@
 	);
 	const numberFormatter = new Intl.NumberFormat();
 	const pageTitle = $derived.by<string>(() =>
-		spaceName ? `${groupName} – ${spaceName} – Campus` : `${groupName} – Campus`
+		spaceName ? `${groupName} • ${spaceName} | Campus` : `${groupName} | Campus`
 	);
 	const displayMemberCount = $derived.by<string>(() => {
 		if (memberCount === null) return 'Hidden';

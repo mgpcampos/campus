@@ -25,7 +25,7 @@
 </script>
 
 <svelte:head>
-	<title>{space.name} – Campus</title>
+	<title>{space.name} | Campus</title>
 </svelte:head>
 
 <div class="mb-6 flex items-start gap-6">

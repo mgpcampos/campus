@@ -22,7 +22,7 @@
 </script>
 
 <svelte:head>
-	<title>Messages - Campus</title>
+	<title>Messages | Campus</title>
 </svelte:head>
 
 <div class="mx-auto max-w-5xl space-y-6 py-6 sm:py-10">

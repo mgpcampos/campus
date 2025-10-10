@@ -52,16 +52,78 @@ let userUnsubscribe: (() => void) | null = null;
 let navigationTrackingInitialized = false;
 let removeNavigationListener: (() => void) | null = null;
 
-const eventQueue: EnrichedEvent[] = [];
-let flushTimer: ReturnType<typeof setTimeout> | null = null;
+class AnalyticsQueue {
+	private queue: EnrichedEvent[] = [];
+	private flushTimer: ReturnType<typeof setTimeout> | null = null;
+	private readonly flushInterval: number;
+
+	constructor(intervalMs: number) {
+		this.flushInterval = intervalMs;
+	}
+
+	enqueue(event: AnalyticsEvent) {
+		if (!browser || !analytics.enabled) return;
+		if (!this.shouldSample()) return;
+		const enriched = enrichEvent(event);
+		this.queue.push(enriched);
+		this.scheduleFlush();
+	}
+
+	async flush(immediate = false) {
+		if (this.queue.length === 0) return;
+		if (this.flushTimer) {
+			clearTimeout(this.flushTimer);
+			this.flushTimer = null;
+		}
+
+		const payload = { events: this.queue.splice(0, this.queue.length) };
+
+		try {
+			if (browser && navigator.sendBeacon && (immediate || document.visibilityState === 'hidden')) {
+				const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+				navigator.sendBeacon(analytics.endpoint, blob);
+				return;
+			}
+
+			await fetch(analytics.endpoint, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(payload),
+				keepalive: immediate
+			});
+		} catch (error) {
+			console.warn('[analytics] failed to send events', error);
+		}
+	}
+
+	clear() {
+		if (this.flushTimer) {
+			clearTimeout(this.flushTimer);
+			this.flushTimer = null;
+		}
+		this.queue.length = 0;
+	}
+
+	private shouldSample() {
+		if (!analytics.enabled) return false;
+		if (analytics.sampleRate >= 1) return true;
+		return Math.random() <= analytics.sampleRate;
+	}
+
+	private scheduleFlush() {
+		if (this.flushTimer) return;
+		this.flushTimer = setTimeout(() => {
+			this.flushTimer = null;
+			void this.flush();
+		}, this.flushInterval);
+	}
+}
+
+const analyticsQueue = new AnalyticsQueue(analytics.flushIntervalMs);
 
 const SESSION_STORAGE_KEY = 'campus.analytics.session';
-
-function shouldSample() {
-	if (!analytics.enabled) return false;
-	if (analytics.sampleRate >= 1) return true;
-	return Math.random() <= analytics.sampleRate;
-}
 
 function ensureSessionId() {
 	if (!browser) return 'server';
@@ -106,54 +168,13 @@ function enrichEvent(event: AnalyticsEvent): EnrichedEvent {
 	};
 }
 
-async function flushQueue(immediate = false) {
-	if (eventQueue.length === 0) return;
-	if (flushTimer) {
-		clearTimeout(flushTimer);
-		flushTimer = null;
-	}
-
-	const payload = { events: eventQueue.splice(0, eventQueue.length) };
-
-	try {
-		if (browser && navigator.sendBeacon && (immediate || document.visibilityState === 'hidden')) {
-			const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
-			navigator.sendBeacon(analytics.endpoint, blob);
-			return;
-		}
-
-		await fetch(analytics.endpoint, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify(payload),
-			keepalive: immediate
-		});
-	} catch (error) {
-		console.warn('[analytics] failed to send events', error);
-	}
-}
-
-function scheduleFlush() {
-	if (flushTimer) return;
-	flushTimer = setTimeout(() => {
-		flushTimer = null;
-		void flushQueue();
-	}, analytics.flushIntervalMs);
-}
-
 function enqueue(event: AnalyticsEvent) {
-	if (!browser || !analytics.enabled) return;
-	if (!shouldSample()) return;
-	const enriched = enrichEvent(event);
-	eventQueue.push(enriched);
-	scheduleFlush();
+	analyticsQueue.enqueue(event);
 }
 
 function handleVisibilityChange() {
 	if (document.visibilityState === 'hidden') {
-		void flushQueue(true);
+		void analyticsQueue.flush(true);
 	}
 }
 
@@ -308,16 +329,13 @@ export function initAnalytics() {
 	if (browser) {
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 		window.addEventListener('beforeunload', () => {
-			void flushQueue(true);
+			void analyticsQueue.flush(true);
 		});
 	}
 
 	return () => {
-		if (flushTimer) {
-			clearTimeout(flushTimer);
-			flushTimer = null;
-		}
-		void flushQueue(true);
+		analyticsQueue.clear();
+		void analyticsQueue.flush(true);
 		if (browser) {
 			document.removeEventListener('visibilitychange', handleVisibilityChange);
 		}

@@ -23,16 +23,17 @@
 	const siteOrigin = dev ? undefined : config.app.origin;
 
 	const defaultMeta = {
-		title: 'Campus - Academic Social Network',
-		description: 'A lightweight social network for the education community',
-		ogTitle: 'Campus — Academic collaboration',
+		title: 'Campus | Academic Collaboration Hub',
+		description:
+			'Campus unites research updates, shared resources, and academic event planning in a single collaborative workspace.',
+		ogTitle: 'Campus | Academic Collaboration Hub',
 		ogDescription:
 			'Collaborate across labs, courses, and cohorts with Campus: share updates, resources, and events in one place.',
 		ogType: 'website',
 		ogImage: '/og-default.png',
 		ogUrl: siteOrigin ?? 'http://localhost:4173/',
 		twitterCard: 'summary_large_image',
-		twitterTitle: 'Campus — Academic collaboration',
+		twitterTitle: 'Campus | Academic Collaboration Hub',
 		twitterDescription:
 			'Join Campus to publish research updates, manage course materials, and coordinate events with your academic community.',
 		twitterImage: '/og-default.png'

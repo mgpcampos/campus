@@ -34,7 +34,7 @@
 	});
 	const hasNoResults = $derived.by(() => filteredSpaces.length === 0);
 	const pageTitle = $derived.by(() =>
-		normalizedSearch ? `Spaces matching “${search}” – Campus` : 'Spaces – Campus'
+		normalizedSearch ? `Spaces matching “${search}” | Campus` : 'Spaces | Campus'
 	);
 
 	function formatMemberCount(space: SpaceListItem) {

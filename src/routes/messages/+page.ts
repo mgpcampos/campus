@@ -16,7 +16,7 @@ export const load: PageLoad = async ({ fetch }) => {
 			totalPages: data.totalPages,
 			page: data.page,
 			meta: {
-				title: 'Messages — Campus',
+				title: 'Messages | Campus',
 				description:
 					data.summary ??
 					'Catch up on direct and group conversations with your campus communities in the Messages hub.',
