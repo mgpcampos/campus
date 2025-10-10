@@ -5,6 +5,7 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import ImageAttachment from '$lib/components/media/ImageAttachment.svelte';
+	import VideoAttachment from '$lib/components/media/VideoAttachment.svelte';
 	import { Heart, MessageCircle, MoreHorizontal, Edit, Trash2 } from '@lucide/svelte';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import linkifyIt from 'linkify-it';
@@ -158,6 +159,10 @@
 		if (Array.isArray(post.attachments)) return post.attachments;
 		return [post.attachments];
 	})();
+
+	$: mediaType = post.mediaType || 'text';
+	$: isVideoPost = mediaType === 'video';
+	$: isImagePost = mediaType === 'images' || (!isVideoPost && attachments.length > 0);
 </script>
 
 <Card.Root class="w-full" data-has-media={attachments.length > 0}>
@@ -251,8 +256,20 @@
 			{@html linkedContent}
 		</div>
 
+		<!-- Video attachment -->
+		{#if isVideoPost && attachments.length > 0}
+			<div class="mt-3">
+				<VideoAttachment
+					{post}
+					videoFile={attachments[0]}
+					posterFile={post.videoPoster}
+					altText={post.mediaAltText || ''}
+				/>
+			</div>
+		{/if}
+
 		<!-- Image attachments -->
-		{#if attachments.length > 0}
+		{#if isImagePost && attachments.length > 0}
 			<div
 				class="mt-3 grid gap-2 {attachments.length === 1
 					? 'grid-cols-1'

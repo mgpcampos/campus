@@ -21,7 +21,28 @@
 	tabindex="-1"
 	{...restProps}
 >
-	<div class="container flex h-14 max-w-screen-2xl items-end justify-end px-4 pb-2">
+	<div class="container flex h-14 max-w-screen-2xl items-center justify-between px-4 pb-2">
+		<!-- Main Navigation -->
+		<nav class="flex items-center gap-6">
+			<a href="/" class="text-lg font-semibold">Campus</a>
+			{#if $currentUser}
+				<div class="hidden items-center gap-4 md:flex">
+					<a href="/feed" class="text-sm font-medium transition-colors hover:text-primary">
+						Feed
+					</a>
+					<a href="/materials" class="text-sm font-medium transition-colors hover:text-primary">
+						Materials
+					</a>
+					<a href="/calendar" class="text-sm font-medium transition-colors hover:text-primary">
+						Calendar
+					</a>
+					<a href="/profiles" class="text-sm font-medium transition-colors hover:text-primary">
+						Profiles
+					</a>
+				</div>
+			{/if}
+		</nav>
+
 		<!-- User Menu -->
 		<nav class="flex items-center gap-2">
 			{#if $currentUser}

@@ -1,7 +1,36 @@
 <script lang="ts">
 	import { currentUser } from '$lib/pocketbase.js';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import { CheckCircle2, PlaySquare, Users, BookOpen } from '@lucide/svelte';
+	import * as Card from '$lib/components/ui/card/index.js';
+	import { CheckCircle2, PlaySquare, Users, BookOpen, Calendar, ArrowRight } from '@lucide/svelte';
+
+	interface Material {
+		id: string;
+		title: string;
+		description?: string;
+		format: string;
+		created: string;
+		expand?: {
+			uploader?: {
+				name?: string;
+				username?: string;
+			};
+		};
+	}
+
+	interface Event {
+		id: string;
+		title: string;
+		start: string;
+		end: string;
+	}
+
+	interface PageData {
+		recentMaterials?: Material[];
+		upcomingEvents?: Event[];
+	}
+
+	let { data }: { data: PageData } = $props();
 
 	const highlights = [
 		{
@@ -20,6 +49,14 @@
 				'Plan study sessions and lab meetings on the shared calendar with automatic conflict detection.'
 		}
 	];
+
+	function formatDate(dateString: string) {
+		return new Date(dateString).toLocaleDateString('en-US', {
+			year: 'numeric',
+			month: 'short',
+			day: 'numeric'
+		});
+	}
 </script>
 
 <svelte:head>
@@ -88,4 +125,84 @@
 			</div>
 		{/each}
 	</div>
+
+	<!-- Featured Materials Section -->
+	{#if $currentUser && data.recentMaterials && data.recentMaterials.length > 0}
+		<div class="space-y-4">
+			<div class="flex items-center justify-between">
+				<h2 class="text-2xl font-semibold tracking-tight text-foreground">Recent Materials</h2>
+				<Button href="/materials" variant="ghost">
+					View all
+					<ArrowRight class="ml-2 h-4 w-4" aria-hidden="true" />
+				</Button>
+			</div>
+
+			<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+				{#each data.recentMaterials as material}
+					<Card.Root>
+						<Card.Header>
+							<div class="flex items-start justify-between">
+								<Card.Title class="line-clamp-2 text-base">{material.title}</Card.Title>
+								<BookOpen class="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+							</div>
+							{#if material.expand?.uploader}
+								<Card.Description>
+									by {material.expand.uploader.name || material.expand.uploader.username}
+								</Card.Description>
+							{/if}
+						</Card.Header>
+						<Card.Content>
+							{#if material.description}
+								<p class="line-clamp-2 text-sm text-muted-foreground">{material.description}</p>
+							{/if}
+							<div class="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+								<span class="capitalize">{material.format}</span>
+								<span>{formatDate(material.created)}</span>
+							</div>
+						</Card.Content>
+						<Card.Footer>
+							<Button href="/materials" variant="outline" class="w-full">Browse Materials</Button>
+						</Card.Footer>
+					</Card.Root>
+				{/each}
+			</div>
+		</div>
+	{/if}
+
+	<!-- Upcoming Events Section -->
+	{#if $currentUser && data.upcomingEvents && data.upcomingEvents.length > 0}
+		<div class="space-y-4">
+			<div class="flex items-center justify-between">
+				<h2 class="text-2xl font-semibold tracking-tight text-foreground">Upcoming Events</h2>
+				<Button href="/calendar" variant="ghost">
+					View calendar
+					<ArrowRight class="ml-2 h-4 w-4" aria-hidden="true" />
+				</Button>
+			</div>
+
+			<div class="space-y-3">
+				{#each data.upcomingEvents as event}
+					<Card.Root>
+						<Card.Header class="pb-3">
+							<div class="flex items-start justify-between">
+								<div class="flex-1">
+									<Card.Title class="text-base">{event.title}</Card.Title>
+									<Card.Description class="mt-1">
+										{new Date(event.start).toLocaleDateString('en-US', {
+											weekday: 'short',
+											month: 'short',
+											day: 'numeric',
+											hour: 'numeric',
+											minute: '2-digit'
+										})}
+									</Card.Description>
+								</div>
+								<Calendar class="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+							</div>
+						</Card.Header>
+					</Card.Root>
+				{/each}
+			</div>
+		</div>
+	{/if}
 </section>
