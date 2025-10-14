@@ -1,11 +1,13 @@
 import PocketBase from 'pocketbase';
 import { PUBLIC_POCKETBASE_URL } from '$env/static/public';
+import { env as privateEnv } from '$env/dynamic/private';
 import { dev } from '$app/environment';
 import type { RequestEvent } from '@sveltejs/kit';
 
 const DEFAULT_PB_URL = dev ? 'http://127.0.0.1:8090' : 'https://pb-campus-production.example.com';
 
-export const getPocketBaseUrl = () => PUBLIC_POCKETBASE_URL || DEFAULT_PB_URL;
+export const getPocketBaseUrl = () =>
+	privateEnv.PB_INTERNAL_URL || PUBLIC_POCKETBASE_URL || DEFAULT_PB_URL;
 
 export const getAuthCookieOptions = (pathname?: string, secureOverride?: boolean) => {
 	const securityCritical = pathname?.startsWith('/auth') || pathname?.startsWith('/api/auth');

@@ -1,5 +1,6 @@
 import PocketBase from 'pocketbase';
 import { PUBLIC_POCKETBASE_URL } from '$env/static/public';
+import { env as privateEnv } from '$env/dynamic/private';
 import { dev } from '$app/environment';
 import { rateLimit } from '$lib/utils/rate-limit.js';
 
@@ -18,7 +19,7 @@ function cookieOptions(pathname) {
 
 /** @type {import('@sveltejs/kit').Handle} */
 export async function handle({ event, resolve }) {
-	const baseUrl = PUBLIC_POCKETBASE_URL || 'http://127.0.0.1:8090';
+	const baseUrl = privateEnv.PB_INTERNAL_URL || PUBLIC_POCKETBASE_URL || 'http://127.0.0.1:8090';
 	event.locals.pb = new PocketBase(baseUrl);
 	event.locals.pb.authStore.loadFromCookie(event.request.headers.get('cookie') || '');
 

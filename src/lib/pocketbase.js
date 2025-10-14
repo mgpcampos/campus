@@ -7,7 +7,7 @@ import { browser } from '$app/environment';
 const defaultOrigin =
 	typeof window === 'undefined'
 		? 'http://127.0.0.1:8090'
-		: window.location.origin.replace(/(?::\d+)?$/, ':8090');
+		: new URL('/pb', window.location.origin).toString().replace(/\/$/, '');
 export const pb = new PocketBase(PUBLIC_POCKETBASE_URL || defaultOrigin);
 
 // Writable store tracking current authenticated user model

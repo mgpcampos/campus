@@ -15,10 +15,18 @@ const analyticsSampleRate = (() => {
 	return Math.min(1, Math.max(0, parsed));
 })();
 
+const inferredPocketBaseUrl = (() => {
+	if (publicEnv.PUBLIC_POCKETBASE_URL) return publicEnv.PUBLIC_POCKETBASE_URL;
+	if (typeof window !== 'undefined') {
+		return new URL('/pb', window.location.origin).toString().replace(/\/$/, '');
+	}
+	return 'http://127.0.0.1:8090';
+})();
+
 export const config = {
 	// PocketBase configuration
 	pocketbase: {
-		url: publicEnv.PUBLIC_POCKETBASE_URL || 'http://127.0.0.1:8090'
+		url: inferredPocketBaseUrl
 	},
 
 	// App configuration

@@ -1,4 +1,4 @@
-name: CI/CD Deploy (Bare Metal)
+name: Deployment
 
 on:
   push:
@@ -10,87 +10,84 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      PUBLIC_POCKETBASE_URL: ${{ vars.PUBLIC_POCKETBASE_URL }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 'latest'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+
+      - name: Prune dev dependencies
+        run: npm prune --omit=dev
+
+      - name: Create release bundle
+        run: |
+          RELEASE_DIR=release
+          rm -rf "$RELEASE_DIR" campus-release.tar.gz
+          mkdir "$RELEASE_DIR"
+          rsync -a --delete \
+            --exclude '.git' \
+            --exclude 'release' \
+            --exclude 'node_modules' \
+            --exclude '.svelte-kit' \
+            --exclude 'build' \
+            --exclude 'tmp_pb' \
+            --exclude 'pb_data' \
+            --exclude 'pb_migrations_backup' \
+            --exclude 'test-results' \
+            --exclude 'tests' \
+            --exclude 'e2e' \
+            --exclude 'playwright-report' \
+            ./ "$RELEASE_DIR"/
+          cp -a build "$RELEASE_DIR"/
+          cp -a node_modules "$RELEASE_DIR"/
+          tar -czf campus-release.tar.gz --mode='u+rwX,go+rX,go-w' -C "$RELEASE_DIR" .
 
       - name: Install SSH key
-        uses: webfactory/ssh-agent@v0.9.0
+        uses: webfactory/ssh-agent@v0.9.1
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Upload project to server (rsync)
+      - name: Upload release bundle
         run: |
-          attempt=0
-          # Retry rsync to smooth over transient SSH resets caused by KEX drops on the host
-          until rsync -az --delete --exclude ".git" --exclude "node_modules" \
-            -e "ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -o ServerAliveCountMax=10 -o ControlMaster=auto -o ControlPersist=600 -o ControlPath=~/.ssh/campus-%r@%h:%p" ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/campus/source/; do
-            attempt=$((attempt + 1))
-            if [ "$attempt" -ge 5 ]; then
-              echo "rsync failed after ${attempt} attempts" >&2
-              exit 1
-            fi
-            sleep $((attempt * 5))
-          done
+          rsync -az \
+            -e "ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -o ServerAliveCountMax=10" \
+            campus-release.tar.gz \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/campus/source/campus-release.tar.gz
 
-      - name: Prepare environment and deploy
-        env:
-          PUBLIC_POCKETBASE_URL: ${{ vars.PUBLIC_POCKETBASE_URL }}
+      - name: Activate release
         run: |
-          attempt=0
-          until ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -o ServerAliveCountMax=10 -o ControlMaster=auto -o ControlPersist=600 -o ControlPath=~/.ssh/campus-%r@%h:%p ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
+          ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -o ServerAliveCountMax=10 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
             set -euo pipefail
-            sudo mkdir -p /opt/campus/{releases,source,pb_data,pb_public,pb_hooks,bin}
-            sudo chown -R \$USER:\$USER /opt/campus
-
-            # Install PocketBase binary if missing
-            if [ ! -x /opt/campus/bin/pocketbase ]; then
-              PB_VER=0.24.5
-              curl -L -o /tmp/pb.zip https://github.com/pocketbase/pocketbase/releases/download/v\${PB_VER}/pocketbase_\${PB_VER}_linux_amd64.zip
-              unzip -o /tmp/pb.zip -d /opt/campus/bin
-              rm -f /tmp/pb.zip
-              chmod +x /opt/campus/bin/pocketbase
-            fi
-
-            cd /opt/campus/source
-            # Export build-time env for SvelteKit (embedded into client)
-            export PUBLIC_POCKETBASE_URL='${PUBLIC_POCKETBASE_URL}'
-            bash deploy/deploy.sh
-          "; do
-            attempt=$((attempt + 1))
-            if [ "$attempt" -ge 5 ]; then
-              echo "ssh remote deploy failed after ${attempt} attempts" >&2
+            APP_DIR=/opt/campus
+            RELEASES=\$APP_DIR/releases
+            BUNDLE=\$APP_DIR/source/campus-release.tar.gz
+            if [ ! -f \"\$BUNDLE\" ]; then
+              echo 'Bundle not found on remote host' >&2
               exit 1
             fi
-            sleep $((attempt * 5))
-          done
-
-      - name: Install/Reload services and Caddy
-        run: |
-          attempt=0
-          until ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -o ServerAliveCountMax=10 -o ControlMaster=auto -o ControlPersist=600 -o ControlPath=~/.ssh/campus-%r@%h:%p ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} '
-            sudo mkdir -p /etc/systemd/system
-            sudo cp /opt/campus/source/deploy/campus-app.service /etc/systemd/system/
-            sudo cp /opt/campus/source/deploy/pocketbase.service /etc/systemd/system/
-            sudo systemctl daemon-reload
-            sudo systemctl enable pocketbase.service campus-app.service
-            sudo systemctl restart pocketbase.service campus-app.service
-
-            # Install Caddy if missing
-            if ! command -v caddy >/dev/null 2>&1; then
-              sudo apt update && sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https
-              curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo tee /etc/apt/trusted.gpg.d/caddy-stable.asc
-              curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
-              sudo apt update && sudo apt install -y caddy
-            fi
-            echo "Using Caddyfile from deploy/"
-            sudo cp /opt/campus/source/deploy/Caddyfile /etc/caddy/Caddyfile
-            sudo systemctl reload caddy || sudo systemctl restart caddy
-          '; do
-            attempt=$((attempt + 1))
-            if [ "$attempt" -ge 5 ]; then
-              echo "ssh service reload failed after ${attempt} attempts" >&2
-              exit 1
-            fi
-            sleep $((attempt * 5))
-          done
+            TS=\$(date +%Y%m%d%H%M%S)
+            RELEASE=\$RELEASES/\$TS
+            mkdir -p \"\$RELEASES\"
+            mkdir -p \"\$RELEASE\"
+            tar -xzf \"\$BUNDLE\" -C \"\$RELEASE\"
+            rm -f \"\$BUNDLE\"
+            ln -sfn \"\$RELEASE\" \"\$APP_DIR/current\"
+            sudo systemctl daemon-reload || true
+            sudo systemctl restart pocketbase.service || true
+            sudo systemctl restart campus-app.service
+            cd \"\$RELEASES\"
+            ls -1tr | head -n -5 | xargs -r rm -rf
+            echo \"Activated release \$TS\"
+          "
