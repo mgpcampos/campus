@@ -1,6 +1,13 @@
 /// <reference lib="webworker" />
 
-import { ArrayBufferTarget, Muxer } from 'mp4-muxer';
+import {
+	BufferTarget,
+	EncodedAudioPacketSource,
+	EncodedPacket,
+	EncodedVideoPacketSource,
+	Mp4OutputFormat,
+	Output
+} from 'mediabunny';
 import type {
 	TranscodeAudioDataMessage,
 	TranscodeConfigureMessage,
@@ -10,8 +17,10 @@ import type {
 } from './transcode.types';
 
 type JobContext = {
-	readonly muxer: Muxer<ArrayBufferTarget>;
-	readonly target: ArrayBufferTarget;
+	readonly output: Output;
+	readonly target: BufferTarget;
+	readonly videoSource: EncodedVideoPacketSource;
+	readonly audioSource?: EncodedAudioPacketSource;
 	readonly videoEncoder: VideoEncoder;
 	readonly audioEncoder?: AudioEncoder;
 	readonly expectFrames?: number;
@@ -79,29 +88,34 @@ async function handleConfigure(message: TranscodeConfigureMessage) {
 		return;
 	}
 
-	const target = new ArrayBufferTarget();
-	const muxer = new Muxer<ArrayBufferTarget>({
-		target,
-		video: {
-			codec: 'avc',
-			width,
-			height,
-			frameRate: fps
-		},
-		audio: audio
-			? {
-					codec: 'aac',
-					numberOfChannels: audio.channels,
-					sampleRate: audio.sampleRate
-				}
-			: undefined,
-		firstTimestampBehavior: 'offset',
-		fastStart: 'in-memory'
+	const target = new BufferTarget();
+	const output = new Output({
+		format: new Mp4OutputFormat({
+			fastStart: 'in-memory'
+		}),
+		target
 	});
+
+	const videoSource = new EncodedVideoPacketSource('avc');
+	output.addVideoTrack(videoSource, {
+		frameRate: fps
+	});
+
+	let audioSource: EncodedAudioPacketSource | undefined;
+	if (audio) {
+		audioSource = new EncodedAudioPacketSource('aac');
+		output.addAudioTrack(audioSource);
+	}
 
 	const videoEncoder = new VideoEncoderCtor({
 		output(chunk: EncodedVideoChunk, metadata?: EncodedVideoChunkMetadata) {
-			muxer.addVideoChunk(chunk, metadata);
+			videoSource.add(EncodedPacket.fromEncodedChunk(chunk), metadata).catch((error) => {
+				post({
+					type: 'error',
+					jobId: message.jobId,
+					error: error instanceof Error ? error.message : String(error)
+				});
+			});
 		},
 		error(error: unknown) {
 			post({
@@ -121,7 +135,7 @@ async function handleConfigure(message: TranscodeConfigureMessage) {
 		if (!AudioEncoderCtor) {
 			post({ type: 'unsupported', jobId: message.jobId, reason: 'codec' });
 			videoEncoder.close();
-			muxer.finalize?.();
+			await output.finalize().catch(() => undefined);
 			return;
 		}
 
@@ -137,19 +151,27 @@ async function handleConfigure(message: TranscodeConfigureMessage) {
 			if (!support.supported) {
 				post({ type: 'unsupported', jobId: message.jobId, reason: 'codec' });
 				videoEncoder.close();
-				muxer.finalize?.();
+				await output.finalize().catch(() => undefined);
 				return;
 			}
 		} catch (error) {
 			post({ type: 'unsupported', jobId: message.jobId, reason: 'codec' });
 			videoEncoder.close();
-			muxer.finalize?.();
+			await output.finalize().catch(() => undefined);
 			return;
 		}
 
 		audioEncoder = new AudioEncoderCtor({
 			output(chunk: EncodedAudioChunk, metadata?: EncodedAudioChunkMetadata) {
-				muxer.addAudioChunk(chunk, metadata);
+				if (audioSource) {
+					audioSource.add(EncodedPacket.fromEncodedChunk(chunk), metadata).catch((error) => {
+						post({
+							type: 'error',
+							jobId: message.jobId,
+							error: error instanceof Error ? error.message : String(error)
+						});
+					});
+				}
 			},
 			error(error: unknown) {
 				post({
@@ -165,9 +187,14 @@ async function handleConfigure(message: TranscodeConfigureMessage) {
 		}
 	}
 
+	// Start the output after all tracks are configured
+	await output.start();
+
 	activeJobs.set(message.jobId, {
-		muxer,
+		output,
 		target,
+		videoSource,
+		audioSource,
 		videoEncoder,
 		audioEncoder,
 		expectFrames,
@@ -214,7 +241,7 @@ async function finalizeJob(jobId: string) {
 		if (job.audioEncoder) {
 			await job.audioEncoder.flush();
 		}
-		job.muxer.finalize();
+		await job.output.finalize();
 		const buffer = job.target.buffer;
 		if (buffer) {
 			post({ type: 'complete', jobId, buffer }, [buffer]);
@@ -222,7 +249,7 @@ async function finalizeJob(jobId: string) {
 			post({
 				type: 'error',
 				jobId,
-				error: 'No buffer produced by muxer'
+				error: 'No buffer produced by output'
 			});
 		}
 	} catch (error) {

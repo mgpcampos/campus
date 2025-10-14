@@ -1,0 +1,71 @@
+name: CI/CD Deploy (Bare Metal)
+
+on:
+  push:
+    branches: ['main']
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Upload project to server (rsync)
+        run: |
+          rsync -az --delete --exclude ".git" --exclude "node_modules" \
+            -e "ssh -o StrictHostKeyChecking=no" ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/campus/source/
+
+      - name: Prepare environment and deploy
+        env:
+          PUBLIC_POCKETBASE_URL: ${{ vars.PUBLIC_POCKETBASE_URL }}
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
+            set -euo pipefail
+            sudo mkdir -p /opt/campus/{releases,source,pb_data,pb_public,pb_hooks,bin}
+            sudo chown -R \$USER:\$USER /opt/campus
+
+            # Install PocketBase binary if missing
+            if [ ! -x /opt/campus/bin/pocketbase ]; then
+              PB_VER=0.24.5
+              curl -L -o /tmp/pb.zip https://github.com/pocketbase/pocketbase/releases/download/v\${PB_VER}/pocketbase_\${PB_VER}_linux_amd64.zip
+              unzip -o /tmp/pb.zip -d /opt/campus/bin
+              rm -f /tmp/pb.zip
+              chmod +x /opt/campus/bin/pocketbase
+            fi
+
+            cd /opt/campus/source
+            # Export build-time env for SvelteKit (embedded into client)
+            export PUBLIC_POCKETBASE_URL='${PUBLIC_POCKETBASE_URL}'
+            bash deploy/baremetal/deploy.sh
+          "
+
+      - name: Install/Reload services and Caddy
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} '
+            sudo mkdir -p /etc/systemd/system
+            sudo cp /opt/campus/source/deploy/baremetal/campus-app.service /etc/systemd/system/
+            sudo cp /opt/campus/source/deploy/baremetal/pocketbase.service /etc/systemd/system/
+            sudo systemctl daemon-reload
+            sudo systemctl enable pocketbase.service campus-app.service
+            sudo systemctl restart pocketbase.service campus-app.service
+
+            # Install Caddy if missing
+            if ! command -v caddy >/dev/null 2>&1; then
+              sudo apt update && sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https
+              curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo tee /etc/apt/trusted.gpg.d/caddy-stable.asc
+              curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
+              sudo apt update && sudo apt install -y caddy
+            fi
+            echo "Using Caddyfile from deploy/"
+            sudo cp /opt/campus/source/deploy/Caddyfile /etc/caddy/Caddyfile
+            sudo systemctl reload caddy || sudo systemctl restart caddy
+          '

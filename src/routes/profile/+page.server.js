@@ -57,17 +57,20 @@ export const actions = {
 		}
 
 		try {
-			// Update user profile
+			// Update user profile but preserve immutable fields
 			const user = locals.pb.authStore.model;
 			if (!user) {
 				throw redirect(302, '/auth/login?returnUrl=/profile');
 			}
 			const userId = user.id;
+			const current = await locals.pb.collection('users').getOne(userId);
 			await locals.pb.collection('users').update(userId, {
-				name: form.data.name,
-				username: form.data.username,
+				name: current.name,
+				username: current.username,
 				bio: sanitizeContent(form.data.bio || '')
 			});
+			form.data.name = current.name || '';
+			form.data.username = current.username || '';
 
 			return message(form, {
 				type: 'success',

@@ -3,15 +3,23 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import { User, LogOut, Settings, Shield } from '@lucide/svelte';
+	import SettingsModal from '$lib/components/settings/SettingsModal.svelte';
+	import NotificationsDropdown from '$lib/components/notifications/NotificationsDropdown.svelte';
 	import { cn } from '$lib/utils.js';
 
 	const logoutFormId = 'user-menu-logout-form';
 
 	let { class: className = '', id, ...restProps } = $props();
 	let userMenuOpen = $state(false);
+	let settingsOpen = $state(false);
 
 	function handleUserMenuOpenChange(value: boolean) {
 		userMenuOpen = value;
+	}
+
+	function openSettings() {
+		settingsOpen = true;
+		userMenuOpen = false;
 	}
 </script>
 
@@ -23,50 +31,20 @@
 >
 	<div class="flex h-14 items-center justify-between gap-4 px-4">
 		<!-- Logo/Brand -->
-		<div class="flex items-center gap-6 min-w-0">
-			<a href="/" class="flex items-center space-x-2">
-				<div class="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
-					<span class="text-primary-foreground font-bold text-lg">C</span>
-				</div>
-				<span class="hidden lg:block font-bold text-xl text-foreground">Campus</span>
-			</a>
-
-			{#if $currentUser}
-				<nav class="hidden items-center gap-4 md:flex" aria-label="Primary">
-					<a href="/feed" class="text-sm font-medium transition-colors hover:text-primary">
-						Feed
-					</a>
-					<a href="/materials" class="text-sm font-medium transition-colors hover:text-primary">
-						Materials
-					</a>
-					<a href="/calendar" class="text-sm font-medium transition-colors hover:text-primary">
-						Calendar
-					</a>
-					<a href="/profiles" class="text-sm font-medium transition-colors hover:text-primary">
-						Profiles
-					</a>
-				</nav>
-			{/if}
-		</div>
-
-		<!-- Search Bar (Desktop) -->
-		<div class="hidden md:flex flex-1 max-w-md mx-4">
-			<div class="relative w-full">
-				<input
-					type="search"
-					placeholder="Search Campus..."
-					class="w-full h-9 px-4 pr-10 rounded-full bg-muted/50 border border-border/40 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-				/>
-				<div class="absolute inset-y-0 right-0 flex items-center pr-3">
-					<svg class="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-					</svg>
-				</div>
+		<a href="/" class="flex items-center space-x-2">
+			<div class="flex h-8 w-8 items-center justify-center rounded-full bg-primary">
+				<span class="text-lg font-bold text-primary-foreground">C</span>
 			</div>
-		</div>
+			<span class="text-xl font-bold text-foreground">Campus</span>
+		</a>
 
-		<!-- User Menu -->
-		<nav class="flex items-center gap-2">
+		<!-- Actions -->
+		<nav class="flex items-center gap-3">
+			{#if $currentUser}
+				<NotificationsDropdown />
+			{/if}
+
+			<!-- User Menu -->
 			{#if $currentUser}
 				<DropdownMenu.Root open={userMenuOpen} onOpenChange={handleUserMenuOpenChange}>
 					<DropdownMenu.Trigger>
@@ -107,7 +85,7 @@
 								<User class="mr-2 h-4 w-4" aria-hidden="true" />
 								<a href="/profile" class="flex-1">Profile</a>
 							</DropdownMenu.Item>
-							<DropdownMenu.Item>
+							<DropdownMenu.Item onSelect={openSettings}>
 								<Settings class="mr-2 h-4 w-4" aria-hidden="true" />
 								<span>Settings</span>
 							</DropdownMenu.Item>
@@ -152,3 +130,7 @@
 		</nav>
 	</div>
 </header>
+
+{#if $currentUser}
+	<SettingsModal bind:open={settingsOpen} />
+{/if}

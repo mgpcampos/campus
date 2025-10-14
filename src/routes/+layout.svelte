@@ -206,36 +206,16 @@
 	{/if}
 
 	<!-- Mastodon-style Multi-Column Layout -->
-	<div class="flex min-h-screen">
+	<div class="flex min-h-[calc(100vh-3.5rem)]">
 		<!-- Left Sidebar (Navigation) -->
 		{#if $currentUser}
-			<Sidebar class="w-16 lg:w-64 flex-shrink-0 border-r border-border/40 bg-background/95" />
+			<Sidebar class="flex-shrink-0 border-r border-border/40 bg-background/95" />
 		{/if}
 
 		<!-- Main Content Area -->
-		<div class="flex-1 flex">
-			<!-- Main Timeline Column -->
-			<main id="main-content" class="flex-1 max-w-2xl mx-auto border-r border-border/40" tabindex="-1">
-				{@render children?.()}
-			</main>
-
-			<!-- Right Sidebar (Trends, Suggestions, etc.) -->
-			<aside class="hidden lg:block w-80 flex-shrink-0 bg-background/95">
-				<div class="sticky top-14 h-[calc(100vh-3.5rem)] overflow-y-auto p-4">
-					<!-- Placeholder for right sidebar content -->
-					<div class="space-y-6">
-						<div class="bg-card/50 rounded-lg p-4">
-							<h3 class="font-semibold text-foreground mb-2">Trending</h3>
-							<p class="text-sm text-muted-foreground">Trending topics will appear here</p>
-						</div>
-						<div class="bg-card/50 rounded-lg p-4">
-							<h3 class="font-semibold text-foreground mb-2">Suggestions</h3>
-							<p class="text-sm text-muted-foreground">User suggestions will appear here</p>
-						</div>
-					</div>
-				</div>
-			</aside>
-		</div>
+		<main id="main-content" class="mx-auto w-full max-w-2xl flex-1" tabindex="-1">
+			{@render children?.()}
+		</main>
 	</div>
 </div>
 

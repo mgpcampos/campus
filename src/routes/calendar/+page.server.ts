@@ -1,10 +1,10 @@
 import type { Actions, PageServerLoad } from './$types';
 import { error, fail } from '@sveltejs/kit';
-import { superValidate } from 'sveltekit-superforms/server';
+import { superValidate, setError, setMessage } from 'sveltekit-superforms/server';
 import { withZod } from '$lib/validation';
 import { z } from 'zod';
 import { hasConflict, validateEventData } from '$lib/server/events/conflicts';
-import { toUTC } from '$lib/utils/timezone';
+import { toUTC, validateTimeRange } from '$lib/utils/timezone';
 import { normalizeError } from '$lib/utils/errors.js';
 import type { EventRecord } from '../../types/events';
 
@@ -100,6 +100,14 @@ export const actions: Actions = {
 			}
 
 			const data = createForm.data as EventCreateData;
+
+			if (!validateTimeRange(data.start, data.end)) {
+				const messageText = 'Event start time must be before end time';
+				setError(createForm, 'start', messageText);
+				setError(createForm, 'end', messageText);
+				setMessage(createForm, { type: 'error', text: messageText });
+				return fail(400, { createForm, message: messageText });
+			}
 
 			// Validate event data
 			validateEventData({

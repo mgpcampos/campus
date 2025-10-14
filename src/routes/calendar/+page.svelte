@@ -2,7 +2,6 @@
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import { formatLocalDate, formatDateRange } from '$lib/utils/timezone';
 	import type { EventRecord, EventLocation, EventWithParticipants } from '../../types/events';
 	import type { PageData } from './$types';
 
@@ -16,7 +15,41 @@
 	let modalElement: HTMLElement | null = null;
 	let previousFocus: HTMLElement | null = null;
 	let liveRegionMessage = '';
-	let userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+	const headingFormatter = new Intl.DateTimeFormat(undefined, {
+		weekday: 'long',
+		month: 'long',
+		day: 'numeric'
+	});
+
+	const dateFormatter = new Intl.DateTimeFormat(undefined, {
+		month: 'short',
+		day: 'numeric',
+		year: 'numeric'
+	});
+
+	const timeFormatter = new Intl.DateTimeFormat(undefined, {
+		hour: 'numeric',
+		minute: '2-digit'
+	});
+
+	function formatDateHeading(date: string): string {
+		return headingFormatter.format(new Date(date));
+	}
+
+	function formatEventRange(start: string, end: string): string {
+		const startDate = new Date(start);
+		const endDate = new Date(end);
+		const sameDay = startDate.toDateString() === endDate.toDateString();
+		const startDateText = dateFormatter.format(startDate);
+		const startTimeText = timeFormatter.format(startDate);
+		const endDateText = dateFormatter.format(endDate);
+		const endTimeText = timeFormatter.format(endDate);
+
+		if (sameDay) {
+			return `${startDateText} ${startTimeText} – ${endTimeText}`;
+		}
+		return `${startDateText} ${startTimeText} – ${endDateText} ${endTimeText}`;
+	}
 
 	// Parse location from event
 	function parseLocation(event: EventRecord): EventLocation | null {
@@ -195,12 +228,6 @@
 		</button>
 	</div>
 
-	<!-- Timezone indicator -->
-	<div class="mb-4 text-sm text-gray-600">
-		<span class="font-medium">Timezone:</span>
-		{userTimezone} (all times shown in your local timezone)
-	</div>
-
 	{#if data.events.length === 0}
 		<div class="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
 			<p class="text-gray-600">No events scheduled. Create your first event to get started!</p>
@@ -210,7 +237,7 @@
 			{#each groupedEvents as [date, events], groupIndex}
 				<section aria-labelledby="date-heading-{groupIndex}">
 					<h2 id="date-heading-{groupIndex}" class="mb-3 text-xl font-semibold text-gray-900">
-						{formatLocalDate(date, { weekday: 'long', month: 'long', day: 'numeric' })}
+						{formatDateHeading(date)}
 					</h2>
 					<div class="space-y-3">
 						{#each events as event}
@@ -224,7 +251,7 @@
 											{event.title}
 										</h3>
 										<p class="text-sm text-gray-600">
-											{formatDateRange(event.start, event.end)}
+											{formatEventRange(event.start, event.end)}
 										</p>
 										{#if event.description}
 											<p class="mt-2 text-gray-700">{event.description}</p>
@@ -353,11 +380,6 @@
 		>
 			<h2 id="modal-title" class="mb-4 text-2xl font-bold">Create Event</h2>
 
-			<!-- Timezone notice -->
-			<p class="mb-4 text-sm text-gray-600">
-				<span class="font-medium">Note:</span> Times will be saved in {userTimezone}.
-			</p>
-
 			{#if showConflictWarning}
 				<div
 					class="mb-4 rounded-lg border border-red-300 bg-red-50 p-4"
@@ -374,7 +396,7 @@
 					</p>
 					<ul class="mt-2 list-inside list-disc text-sm text-red-700">
 						{#each conflicts as conflict}
-							<li>{conflict.title} ({formatDateRange(conflict.start, conflict.end)})</li>
+							<li>{conflict.title} ({formatEventRange(conflict.start, conflict.end)})</li>
 						{/each}
 					</ul>
 					<p class="mt-2 text-sm text-red-700">Please choose a different time.</p>
@@ -413,7 +435,6 @@
 							id="start"
 							name="start"
 							required
-							aria-describedby="timezone-hint"
 							class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
 						/>
 					</div>
@@ -425,14 +446,10 @@
 							id="end"
 							name="end"
 							required
-							aria-describedby="timezone-hint"
 							class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
 						/>
 					</div>
 				</div>
-				<p id="timezone-hint" class="text-xs text-gray-500">
-					Times are in your local timezone ({userTimezone})
-				</p>
 
 				<div class="grid grid-cols-2 gap-4">
 					<div>

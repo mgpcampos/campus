@@ -164,7 +164,10 @@
 	$: isImagePost = mediaType === 'images' || (!isVideoPost && attachments.length > 0);
 </script>
 
-<article class="border-b border-border/40 bg-background hover:bg-muted/30 transition-colors" data-has-media={attachments.length > 0}>
+<article
+	class="border-b border-border/40 bg-background transition-colors hover:bg-muted/30"
+	data-has-media={attachments.length > 0}
+>
 	<div class="p-4">
 		<div class="flex space-x-3">
 			<!-- Avatar -->
@@ -180,7 +183,7 @@
 							class="h-10 w-10 rounded-full object-cover"
 						/>
 					{:else}
-						<div class="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+						<div class="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
 							<span class="text-sm font-medium text-muted-foreground">
 								{author?.name?.charAt(0)?.toUpperCase() || '?'}
 							</span>
@@ -190,25 +193,25 @@
 			</div>
 
 			<!-- Content -->
-			<div class="flex-1 min-w-0">
+			<div class="min-w-0 flex-1">
 				<!-- Header -->
-				<div class="flex items-center justify-between mb-1">
+				<div class="mb-1 flex items-center justify-between">
 					<div class="flex items-center space-x-1">
 						<a
 							href={author ? `/profile/${author.username}` : '#'}
-							class="font-semibold text-foreground hover:underline focus:outline-none focus:ring-2 focus:ring-primary/50 rounded"
+							class="rounded font-semibold text-foreground hover:underline focus:ring-2 focus:ring-primary/50 focus:outline-none"
 						>
 							{author?.name || 'Unknown User'}
 						</a>
 						<span class="text-muted-foreground">·</span>
 						<a
 							href={author ? `/profile/${author.username}` : '#'}
-							class="text-muted-foreground hover:underline focus:outline-none focus:ring-2 focus:ring-primary/50 rounded"
+							class="rounded text-muted-foreground hover:underline focus:ring-2 focus:ring-primary/50 focus:outline-none"
 						>
 							@{author?.username || 'unknown'}
 						</a>
 						<span class="text-muted-foreground">·</span>
-						<time class="text-muted-foreground text-sm" datetime={post.created}>
+						<time class="text-sm text-muted-foreground" datetime={post.created}>
 							{formattedDate}
 						</time>
 					</div>
@@ -216,7 +219,11 @@
 					{#if (isOwner || canModerate) && showActions}
 						<DropdownMenu.Root>
 							<DropdownMenu.Trigger>
-								<Button variant="ghost" size="sm" class="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+								<Button
+									variant="ghost"
+									size="sm"
+									class="h-6 w-6 p-0 opacity-0 transition-opacity group-hover:opacity-100"
+								>
 									<MoreHorizontal size={14} />
 								</Button>
 							</DropdownMenu.Trigger>
@@ -274,7 +281,7 @@
 					</div>
 				{:else if isImagePost && attachments.length > 0}
 					<div
-						class="mt-3 grid gap-2 rounded-lg overflow-hidden {attachments.length === 1
+						class="mt-3 grid gap-2 overflow-hidden rounded-lg {attachments.length === 1
 							? 'grid-cols-1'
 							: attachments.length === 2
 								? 'grid-cols-2'
@@ -296,13 +303,15 @@
 
 				<!-- Actions -->
 				{#if showActions}
-					<div class="mt-3 flex items-center justify-between max-w-md">
+					<div class="mt-3 flex max-w-md items-center justify-between">
 						<Button
 							variant="ghost"
 							size="sm"
 							onclick={handleLike}
 							disabled={!canInteract || likePending}
-							class="flex items-center space-x-1 text-muted-foreground hover:text-red-500 transition-colors {isLiked ? 'text-red-500' : ''}"
+							class="flex items-center space-x-1 text-muted-foreground transition-colors hover:text-red-500 {isLiked
+								? 'text-red-500'
+								: ''}"
 						>
 							<Heart size={16} class={isLiked ? 'fill-current' : ''} />
 							<span class="text-sm">{likeCount}</span>
@@ -312,7 +321,7 @@
 							variant="ghost"
 							size="sm"
 							onclick={handleComment}
-							class="flex items-center space-x-1 text-muted-foreground hover:text-blue-500 transition-colors"
+							class="flex items-center space-x-1 text-muted-foreground transition-colors hover:text-blue-500"
 						>
 							<MessageCircle size={16} />
 							<span class="text-sm">{commentCount}</span>
@@ -321,10 +330,15 @@
 						<Button
 							variant="ghost"
 							size="sm"
-							class="flex items-center space-x-1 text-muted-foreground hover:text-green-500 transition-colors"
+							class="flex items-center space-x-1 text-muted-foreground transition-colors hover:text-green-500"
 						>
 							<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+								/>
 							</svg>
 							<span class="text-sm">Share</span>
 						</Button>

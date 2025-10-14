@@ -1,11 +1,7 @@
 node_modules
 
 # Editor-specific
-.github
 .idea
-.kiro
-.specify
-.speckit
 .vscode
 
 # Output
@@ -44,8 +40,6 @@ pb_migrations_backup
 pocketbase-types.ts
 tmp_pb
 
-# AI-related
-AGENTS.md
+# Developer-specific
 docs
 /scripts
-/specs

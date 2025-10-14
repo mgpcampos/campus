@@ -71,12 +71,15 @@
 							<label for="name" class="block text-sm font-medium text-gray-700"> Full Name </label>
 							<input
 								id="name"
-								name="name"
 								type="text"
 								required
 								bind:value={$form.name}
-								class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 focus:outline-none sm:text-sm"
+								disabled
+								placeholder={$form.name || ''}
+								class="mt-1 block w-full rounded-md border border-gray-300 bg-gray-100 px-3 py-2 text-gray-500 shadow-sm focus:outline-none sm:text-sm"
+								readonly
 							/>
+							<input type="hidden" name="name" value={$form.name || ''} />
 							{#if $errors.name}
 								<p class="mt-1 text-sm text-red-600">{$errors.name}</p>
 							{/if}
@@ -88,12 +91,15 @@
 							</label>
 							<input
 								id="username"
-								name="username"
 								type="text"
 								required
 								bind:value={$form.username}
-								class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 focus:outline-none sm:text-sm"
+								disabled
+								placeholder={$form.username || ''}
+								class="mt-1 block w-full rounded-md border border-gray-300 bg-gray-100 px-3 py-2 text-gray-500 shadow-sm focus:outline-none sm:text-sm"
+								readonly
 							/>
+							<input type="hidden" name="username" value={$form.username || ''} />
 							{#if $errors.username}
 								<p class="mt-1 text-sm text-red-600">{$errors.username}</p>
 							{/if}

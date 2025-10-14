@@ -1,0 +1,19 @@
+[Unit]
+Description=Campus SvelteKit App (adapter-node)
+After=network.target pocketbase.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/campus/current
+Environment=NODE_ENV=production
+Environment=PORT=3000
+# Server-side PB URL (internal)
+Environment=PB_INTERNAL_URL=http://127.0.0.1:8090
+ExecStart=/usr/bin/node build/index.js
+Restart=always
+RestartSec=5
+# Uncomment and adjust to run as a non-root user
+#User=www-data
+
+[Install]
+WantedBy=multi-user.target

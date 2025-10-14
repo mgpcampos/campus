@@ -63,6 +63,43 @@
 	const generalError = writable<string | null>(null);
 	const videoDurationDisplay = writable<number | null>(null);
 
+	const { form, errors, enhance, submitting, message } = superForm(formData, {
+		...createClientFormOptions(createPostSchema),
+		applyAction: true,
+		resetForm: false,
+		delayMs: 120,
+		onSubmit: () => {
+			$uploadError = null;
+			$generalError = null;
+		},
+		onResult: ({ result }) => {
+			if (result.type === 'success') {
+				const actionForm = /** @type {PostFormData | undefined} */ (result.data?.form);
+				const actionMessage = actionForm?.message;
+				if (actionMessage?.type === 'success') {
+					toast.success(actionMessage.text);
+					if (actionMessage.post) {
+						dispatch('postCreated', actionMessage.post);
+					}
+					$form.content = '';
+					clearMediaState();
+				} else if (actionMessage?.type === 'error') {
+					$uploadError = actionMessage.text;
+					toast.error(actionMessage.text);
+				}
+			} else if (result.type === 'failure') {
+				const failureMessage =
+					(typeof result.data?.error === 'string' && result.data.error) ||
+					(result.data?.form?.message && result.data.form.message.text) ||
+					undefined;
+				if (failureMessage) {
+					$generalError = failureMessage;
+					toast.error(failureMessage);
+				}
+			}
+		}
+	});
+
 	const errorIds = {
 		content: 'post-content-error',
 		mediaAltText: 'post-media-alt-text-error'
@@ -116,43 +153,6 @@
 	let imageInput = $state<HTMLInputElement | null>(null);
 	let videoInput = $state<HTMLInputElement | null>(null);
 	let posterInput = $state<HTMLInputElement | null>(null);
-
-	const { form, errors, enhance, submitting, message } = superForm(formData, {
-		...createClientFormOptions(createPostSchema),
-		applyAction: true,
-		resetForm: false,
-		delayMs: 120,
-		onSubmit: () => {
-			$uploadError = null;
-			$generalError = null;
-		},
-		onResult: ({ result }) => {
-			if (result.type === 'success') {
-				const actionForm = /** @type {PostFormData | undefined} */ (result.data?.form);
-				const actionMessage = actionForm?.message;
-				if (actionMessage?.type === 'success') {
-					toast.success(actionMessage.text);
-					if (actionMessage.post) {
-						dispatch('postCreated', actionMessage.post);
-					}
-					$form.content = '';
-					clearMediaState();
-				} else if (actionMessage?.type === 'error') {
-					$uploadError = actionMessage.text;
-					toast.error(actionMessage.text);
-				}
-			} else if (result.type === 'failure') {
-				const failureMessage =
-					(typeof result.data?.error === 'string' && result.data.error) ||
-					(result.data?.form?.message && result.data.form.message.text) ||
-					undefined;
-				if (failureMessage) {
-					$generalError = failureMessage;
-					toast.error(failureMessage);
-				}
-			}
-		}
-	});
 
 	const altLength = $derived.by(() => ($form.mediaAltText ?? '').length);
 	$effect(() => {

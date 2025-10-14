@@ -47,26 +47,10 @@
 </script>
 
 <div class="min-h-screen bg-background">
-	<!-- Timeline Header -->
-	<div class="sticky top-14 z-10 bg-background/95 backdrop-blur border-b border-border/40">
-		<div class="flex items-center justify-between px-4 py-3">
-			<div class="flex items-center space-x-4">
-				<h1 class="text-xl font-bold text-foreground">Home</h1>
-			</div>
-			<div class="flex items-center space-x-2">
-				<Button variant="ghost" size="sm" class="h-8 w-8 p-0">
-					<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-					</svg>
-				</Button>
-			</div>
-		</div>
-	</div>
-
 	<!-- Compose Section -->
 	{#if $currentUser}
 		<div class="border-b border-border/40 bg-card/50">
-			<div class="p-4">
+			<div class="mx-auto max-w-2xl px-4 py-4">
 				<div class="flex space-x-3">
 					<!-- User Avatar -->
 					<div class="flex-shrink-0">
@@ -77,14 +61,14 @@
 								class="h-10 w-10 rounded-full object-cover"
 							/>
 						{:else}
-							<div class="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+							<div class="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
 								<span class="text-sm font-medium text-muted-foreground">
 									{$currentUser.name?.charAt(0)?.toUpperCase() || '?'}
 								</span>
 							</div>
 						{/if}
 					</div>
-					
+
 					<!-- Compose Form -->
 					<div class="flex-1">
 						<PostForm formData={data.form} on:postCreated={handlePostCreated} />
@@ -95,8 +79,8 @@
 	{:else}
 		<div class="border-b border-border/40 bg-card/50">
 			<div class="p-4 text-center">
-				<p class="text-foreground mb-3">Sign in to share updates with your peers.</p>
-				<div class="flex gap-3 justify-center">
+				<p class="mb-3 text-foreground">Sign in to share updates with your peers.</p>
+				<div class="flex justify-center gap-3">
 					<Button href="/auth/login" size="sm">Sign In</Button>
 					<Button href="/auth/register" variant="outline" size="sm">Create Account</Button>
 				</div>
@@ -106,7 +90,7 @@
 
 	<!-- Feed Controls -->
 	<div class="border-b border-border/40 bg-card/50">
-		<div class="p-4">
+		<div class="mx-auto max-w-2xl px-4 py-4">
 			<div class="flex items-center justify-between">
 				<!-- Sort Tabs -->
 				<div
@@ -173,8 +157,18 @@
 							oninput={handleSearchInput}
 						/>
 						<div class="absolute inset-y-0 right-0 flex items-center pr-2">
-							<svg class="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+							<svg
+								class="h-4 w-4 text-muted-foreground"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+								/>
 							</svg>
 						</div>
 					</div>

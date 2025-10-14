@@ -1,0 +1,9 @@
+:80 {
+  encode zstd gzip
+
+  handle_path /pb/* {
+    reverse_proxy 127.0.0.1:8090
+  }
+
+  reverse_proxy 127.0.0.1:3000
+}
