@@ -21,14 +21,24 @@ jobs:
 
       - name: Upload project to server (rsync)
         run: |
-          rsync -az --delete --exclude ".git" --exclude "node_modules" \
-            -e "ssh -o StrictHostKeyChecking=no" ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/campus/source/
+          attempt=0
+          # Retry rsync to smooth over transient SSH resets caused by KEX drops on the host
+          until rsync -az --delete --exclude ".git" --exclude "node_modules" \
+            -e "ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -o ServerAliveCountMax=10 -o ControlMaster=auto -o ControlPersist=600 -o ControlPath=~/.ssh/campus-%r@%h:%p" ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/campus/source/; do
+            attempt=$((attempt + 1))
+            if [ "$attempt" -ge 5 ]; then
+              echo "rsync failed after ${attempt} attempts" >&2
+              exit 1
+            fi
+            sleep $((attempt * 5))
+          done
 
       - name: Prepare environment and deploy
         env:
           PUBLIC_POCKETBASE_URL: ${{ vars.PUBLIC_POCKETBASE_URL }}
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
+          attempt=0
+          until ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -o ServerAliveCountMax=10 -o ControlMaster=auto -o ControlPersist=600 -o ControlPath=~/.ssh/campus-%r@%h:%p ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
             set -euo pipefail
             sudo mkdir -p /opt/campus/{releases,source,pb_data,pb_public,pb_hooks,bin}
             sudo chown -R \$USER:\$USER /opt/campus
@@ -45,15 +55,23 @@ jobs:
             cd /opt/campus/source
             # Export build-time env for SvelteKit (embedded into client)
             export PUBLIC_POCKETBASE_URL='${PUBLIC_POCKETBASE_URL}'
-            bash deploy/baremetal/deploy.sh
-          "
+            bash deploy/deploy.sh
+          "; do
+            attempt=$((attempt + 1))
+            if [ "$attempt" -ge 5 ]; then
+              echo "ssh remote deploy failed after ${attempt} attempts" >&2
+              exit 1
+            fi
+            sleep $((attempt * 5))
+          done
 
       - name: Install/Reload services and Caddy
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} '
+          attempt=0
+          until ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -o ServerAliveCountMax=10 -o ControlMaster=auto -o ControlPersist=600 -o ControlPath=~/.ssh/campus-%r@%h:%p ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} '
             sudo mkdir -p /etc/systemd/system
-            sudo cp /opt/campus/source/deploy/baremetal/campus-app.service /etc/systemd/system/
-            sudo cp /opt/campus/source/deploy/baremetal/pocketbase.service /etc/systemd/system/
+            sudo cp /opt/campus/source/deploy/campus-app.service /etc/systemd/system/
+            sudo cp /opt/campus/source/deploy/pocketbase.service /etc/systemd/system/
             sudo systemctl daemon-reload
             sudo systemctl enable pocketbase.service campus-app.service
             sudo systemctl restart pocketbase.service campus-app.service
@@ -68,4 +86,11 @@ jobs:
             echo "Using Caddyfile from deploy/"
             sudo cp /opt/campus/source/deploy/Caddyfile /etc/caddy/Caddyfile
             sudo systemctl reload caddy || sudo systemctl restart caddy
-          '
+          '; do
+            attempt=$((attempt + 1))
+            if [ "$attempt" -ge 5 ]; then
+              echo "ssh service reload failed after ${attempt} attempts" >&2
+              exit 1
+            fi
+            sleep $((attempt * 5))
+          done
