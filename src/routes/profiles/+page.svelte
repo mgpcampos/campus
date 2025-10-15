@@ -1,10 +1,12 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import * as Card from '$lib/components/ui/card/index.js';
+	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Search, UserCircle, BookOpen } from '@lucide/svelte';
+	import { pb } from '$lib/pocketbase.js';
 
 	interface Profile {
 		id: string;
@@ -29,6 +31,15 @@
 	let searchQuery = $state('');
 	let selectedRole = $state('all');
 	let selectedDepartment = $state('all');
+	let createDialogOpen = $state(false);
+	let creating = $state(false);
+	let error = $state('');
+
+	// Form fields
+	let displayName = $state('');
+	let role = $state('student');
+	let department = $state('');
+	let biography = $state('');
 
 	const filteredProfiles = $derived.by(() => {
 		let filtered: Profile[] = data.profiles;
@@ -69,6 +80,33 @@
 	function handleProfileClick(profileId: string) {
 		goto(`/profiles/${profileId}`);
 	}
+
+	async function handleCreate() {
+		if (creating) return;
+		creating = true;
+		error = '';
+
+		try {
+			await pb.collection('profiles').create({
+				user: pb.authStore.model?.id,
+				displayName,
+				role,
+				department,
+				biography
+			});
+
+			createDialogOpen = false;
+			displayName = '';
+			role = 'student';
+			department = '';
+			biography = '';
+			await invalidateAll();
+		} catch (err: any) {
+			error = err.message || 'Failed to create profile';
+		} finally {
+			creating = false;
+		}
+	}
 </script>
 
 <svelte:head>
@@ -76,12 +114,18 @@
 </svelte:head>
 
 <div class="mx-auto max-w-7xl space-y-6 py-6 sm:py-10">
-	<header>
-		<h1 class="text-3xl font-semibold tracking-tight text-foreground">Academic Profiles</h1>
-		<p class="mt-2 text-base text-muted-foreground">
-			Browse faculty, researchers, and students with their scientific production records
-		</p>
-	</header>
+	<div class="flex items-start justify-between">
+		<header>
+			<h1 class="text-3xl font-semibold tracking-tight text-foreground">Academic Profiles</h1>
+			<p class="mt-2 text-base text-muted-foreground">
+				Browse faculty, researchers, and students with their scientific production records
+			</p>
+		</header>
+		<Button onclick={() => (createDialogOpen = true)}>
+			<UserCircle class="mr-2 h-4 w-4" />
+			Create Profile
+		</Button>
+	</div>
 
 	<!-- Search and Filters -->
 	<Card.Root>
@@ -208,4 +252,71 @@
 			{/each}
 		</div>
 	{/if}
+
+	<!-- Create Profile Dialog -->
+	<Dialog.Root bind:open={createDialogOpen}>
+		<Dialog.Content>
+			<Dialog.Header>
+				<Dialog.Title>Create Academic Profile</Dialog.Title>
+				<Dialog.Description>
+					Create your academic profile to showcase your research and publications
+				</Dialog.Description>
+			</Dialog.Header>
+
+			<div class="space-y-4">
+				{#if error}
+					<div class="rounded bg-destructive/10 p-3 text-sm text-destructive">
+						{error}
+					</div>
+				{/if}
+
+				<div>
+					<Label for="displayName">Display Name *</Label>
+					<Input id="displayName" bind:value={displayName} placeholder="Your full name" required />
+				</div>
+
+				<div>
+					<Label for="role">Role *</Label>
+					<select
+						id="role"
+						bind:value={role}
+						class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+					>
+						<option value="student">Student</option>
+						<option value="professor">Professor</option>
+						<option value="researcher">Researcher</option>
+						<option value="staff">Staff</option>
+					</select>
+				</div>
+
+				<div>
+					<Label for="department">Department *</Label>
+					<Input
+						id="department"
+						bind:value={department}
+						placeholder="e.g., Computer Science"
+						required
+					/>
+				</div>
+
+				<div>
+					<Label for="biography">Biography</Label>
+					<textarea
+						id="biography"
+						bind:value={biography}
+						placeholder="Brief professional biography..."
+						class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+						rows="3"
+					></textarea>
+				</div>
+			</div>
+
+			<Dialog.Footer>
+				<Button variant="outline" onclick={() => (createDialogOpen = false)}>Cancel</Button>
+				<Button onclick={handleCreate} disabled={creating || !displayName || !department}>
+					{creating ? 'Creating...' : 'Create Profile'}
+				</Button>
+			</Dialog.Footer>
+		</Dialog.Content>
+	</Dialog.Root>
 </div>

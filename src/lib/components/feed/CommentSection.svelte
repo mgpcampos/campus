@@ -267,7 +267,9 @@
 											{comment.expand?.author?.name || 'Unknown User'}
 										</h4>
 										<p class="text-xs text-gray-500">
-											@{comment.expand?.author?.username || 'unknown'} ·
+											@{comment.expand?.author?.username ||
+												comment.expand?.author?.email?.split('@')[0] ||
+												'unknown'} ·
 											{formatCommentDate(comment.created)}
 										</p>
 									</div>

@@ -59,10 +59,12 @@ export interface ConflictInfo {
 export interface EventCreateInput {
 	title: string;
 	description?: string;
-	scopeType: ScopeType;
+	date: Date | string;
+	// Optional fields with defaults set on server
+	scopeType?: ScopeType;
 	scopeId?: string;
-	start: Date | string;
-	end: Date | string;
+	start?: Date | string;
+	end?: Date | string;
 	location?: EventLocation;
 	reminderLeadMinutes?: number;
 }

@@ -67,32 +67,51 @@ export async function POST({ request, locals }) {
 	try {
 		const body = await request.json();
 
+		// Support both old API (with start/end) and new simplified form (with date)
+		let start: string | Date;
+		let end: string | Date;
+
+		if (body.date) {
+			// New simplified form - date field provided
+			const eventDate = new Date(body.date);
+			start = eventDate;
+			end = new Date(eventDate.getTime() + 60 * 60 * 1000); // Add 1 hour
+		} else if (body.start && body.end) {
+			// Old API form - start and end provided
+			start = body.start;
+			end = body.end;
+		} else {
+			return json({ error: 'Either date or both start and end must be provided' }, { status: 400 });
+		}
+
 		const eventData: EventCreateInput = {
 			title: body.title,
 			description: body.description,
-			scopeType: body.scopeType,
+			date: body.date,
+			scopeType: body.scopeType || 'global',
 			scopeId: body.scopeId,
-			start: body.start,
-			end: body.end,
+			start,
+			end,
 			location: body.location,
 			reminderLeadMinutes: body.reminderLeadMinutes
 		};
 
-		// Validate event data
+		// Validate event data with defaults
+		const scopeType = eventData.scopeType || 'global';
 		validateEventData({
 			title: eventData.title,
-			start: eventData.start,
-			end: eventData.end,
-			scopeType: eventData.scopeType,
+			start: start,
+			end: end,
+			scopeType: scopeType,
 			scopeId: eventData.scopeId
 		});
 
 		// Check for conflicts
 		const conflictCheck = await hasConflict(locals.pb, {
-			scopeType: eventData.scopeType,
+			scopeType: scopeType,
 			scopeId: eventData.scopeId,
-			start: eventData.start,
-			end: eventData.end
+			start: start,
+			end: end
 		});
 
 		if (conflictCheck.hasConflict) {
@@ -109,12 +128,12 @@ export async function POST({ request, locals }) {
 		const event = await locals.pb.collection('events').create({
 			title: eventData.title,
 			description: eventData.description,
-			scopeType: eventData.scopeType,
+			scopeType: scopeType,
 			scopeId: eventData.scopeId || '',
-			start: toUTC(eventData.start),
-			end: toUTC(eventData.end),
+			start: toUTC(start),
+			end: toUTC(end),
 			location: eventData.location ? JSON.stringify(eventData.location) : undefined,
-			reminderLeadMinutes: eventData.reminderLeadMinutes,
+			reminderLeadMinutes: eventData.reminderLeadMinutes || 30,
 			createdBy: locals.user!.id
 		});
 

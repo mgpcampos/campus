@@ -16,8 +16,8 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		const queryParams = Object.fromEntries(url.searchParams);
 		const searchForm = await superValidate(queryParams, withZod(materialSearchSchema));
 
-		// Build PocketBase filter
-		const filters: string[] = [];
+		// Build PocketBase filter - only show current user's materials
+		const filters: string[] = [`uploader = "${locals.user!.id}"`];
 
 		// Text search across searchTerms field
 		if (searchForm.data.q) {
@@ -25,30 +25,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			filters.push(`searchTerms ~ "${searchTerm}"`);
 		}
 
-		// Filter by tags
-		if (searchForm.data.tags && searchForm.data.tags.length > 0) {
-			const tagFilters = searchForm.data.tags.map(
-				(tag: string) => `tags ~ "${tag.toLowerCase().replace(/"/g, '\\"')}"`
-			);
-			filters.push(`(${tagFilters.join(' || ')})`);
-		}
-
-		// Filter by format
-		if (searchForm.data.format) {
-			filters.push(`format = "${searchForm.data.format}"`);
-		}
-
-		// Filter by visibility
-		if (searchForm.data.visibility) {
-			filters.push(`visibility = "${searchForm.data.visibility}"`);
-		}
-
-		// Filter by course code
-		if (searchForm.data.courseCode) {
-			filters.push(`courseCode = "${searchForm.data.courseCode}"`);
-		}
-
-		const filterString = filters.length > 0 ? filters.join(' && ') : '';
+		const filterString = filters.join(' && ');
 
 		// Fetch materials with expanded uploader info
 		const results = await locals.pb
@@ -63,8 +40,10 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 				}
 			);
 
-		// Initialize upload form
-		const uploadForm = await superValidate(withZod(materialCreateSchema));
+		// Initialize upload form with file support
+		const uploadForm = await superValidate(withZod(materialCreateSchema), {
+			allowFiles: true
+		});
 
 		return {
 			materials: results.items,
@@ -88,70 +67,41 @@ export const actions: Actions = {
 			return fail(401, { message: 'Authentication required' });
 		}
 
+		const uploadForm = await superValidate(request, withZod(materialCreateSchema), {
+			allowFiles: true
+		});
+
+		if (!uploadForm.valid) {
+			return fail(400, { uploadForm });
+		}
+
 		try {
-			const uploadForm = await superValidate(request, withZod(materialCreateSchema));
-
-			if (!uploadForm.valid) {
-				return fail(400, { uploadForm });
-			}
-
-			// Prepare form data for PocketBase
+			// Simple: just prepare form data with title, description, and file
 			const formData = new FormData();
 			formData.append('uploader', locals.user!.id);
 			formData.append('title', uploadForm.data.title as string);
-			formData.append('format', uploadForm.data.format as string);
-			formData.append('visibility', uploadForm.data.visibility as string);
+			formData.append('format', 'document'); // Default format
+			formData.append('visibility', 'public'); // Default visibility
 
 			if (uploadForm.data.description) {
 				formData.append('description', uploadForm.data.description as string);
 			}
 
-			if (uploadForm.data.courseCode) {
-				formData.append('courseCode', uploadForm.data.courseCode as string);
-			}
-
-			if (uploadForm.data.tags && uploadForm.data.tags.length > 0) {
-				uploadForm.data.tags.forEach((tag: string) => {
-					formData.append('tags', tag);
-				});
-			}
-
-			if (uploadForm.data.keywords) {
-				formData.append('keywords', uploadForm.data.keywords as string);
-			}
-
-			// Handle file or link
 			if (uploadForm.data.file) {
 				formData.append('file', uploadForm.data.file as File);
 			}
 
-			if (uploadForm.data.linkUrl) {
-				formData.append('linkUrl', uploadForm.data.linkUrl as string);
-			}
-
 			// Create material record
-			const material = await locals.pb.collection('materials').create(formData);
+			await locals.pb.collection('materials').create(formData);
 
-			// Log analytics event
-			try {
-				await locals.pb.collection('analytics_events').create({
-					eventType: 'material_upload',
-					userId: locals.user!.id,
-					metadata: {
-						materialId: material.id,
-						format: uploadForm.data.format,
-						visibility: uploadForm.data.visibility
-					}
-				});
-			} catch (analyticsErr) {
-				console.error('Failed to log material upload analytics:', analyticsErr);
-			}
-
-			return { uploadForm, success: true };
+			// Success - return message for superforms to handle
+			return { uploadForm };
 		} catch (err) {
 			const normalized = normalizeError(err, { context: 'upload material' });
 			console.error('Error uploading material:', normalized);
+
 			return fail(500, {
+				uploadForm,
 				message: normalized.userMessage || 'Failed to upload material'
 			});
 		}

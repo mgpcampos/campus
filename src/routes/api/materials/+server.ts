@@ -85,10 +85,6 @@ export async function POST({ request, locals }) {
 	try {
 		const formData = await request.formData();
 
-		// Extract tags array
-		const tagsRaw = formData.get('tags');
-		const tags = tagsRaw ? JSON.parse(tagsRaw.toString()) : [];
-
 		// Extract file
 		const fileEntry = formData.get('file');
 		const file = fileEntry instanceof File && fileEntry.size > 0 ? fileEntry : undefined;
@@ -96,46 +92,20 @@ export async function POST({ request, locals }) {
 		const materialData = {
 			title: formData.get('title'),
 			description: formData.get('description') || undefined,
-			courseCode: formData.get('courseCode') || undefined,
-			tags,
-			format: formData.get('format'),
-			file,
-			linkUrl: formData.get('linkUrl') || undefined,
-			visibility: formData.get('visibility')
+			file
 		};
 
 		const validatedData = materialCreateSchema.parse(materialData);
 
-		// Create material record in PocketBase
+		// Create material record in PocketBase with simple defaults
 		const newMaterial = await locals.pb.collection('materials').create({
 			uploader: locals.pb.authStore.record?.id,
 			title: validatedData.title,
 			description: validatedData.description,
-			courseCode: validatedData.courseCode,
-			tags: validatedData.tags || [],
-			format: validatedData.format,
 			file: validatedData.file,
-			linkUrl: validatedData.linkUrl,
-			visibility: validatedData.visibility
+			format: 'document',
+			visibility: 'public'
 		});
-
-		// Log material creation to analytics
-		try {
-			await locals.pb.collection('analytics_events').create({
-				type: 'event',
-				name: 'material_upload',
-				sessionId: locals.sessionId || 'unknown',
-				user: locals.pb.authStore.record?.id,
-				metadata: {
-					materialId: newMaterial.id,
-					format: validatedData.format,
-					visibility: validatedData.visibility
-				}
-			});
-		} catch (analyticsError) {
-			// Log but don't fail the request
-			console.error('Failed to log material upload analytics:', analyticsError);
-		}
 
 		return json(newMaterial, { status: 201 });
 	} catch (err) {

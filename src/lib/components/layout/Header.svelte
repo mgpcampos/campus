@@ -75,7 +75,7 @@
 							<div class="flex flex-col space-y-1">
 								<p class="text-sm leading-none font-medium">{$currentUser.name}</p>
 								<p class="text-xs leading-none text-muted-foreground">
-									@{$currentUser.username}
+									@{$currentUser.username || $currentUser.email?.split('@')[0] || 'user'}
 								</p>
 							</div>
 						</DropdownMenu.Label>

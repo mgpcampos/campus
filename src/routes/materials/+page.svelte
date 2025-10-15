@@ -24,10 +24,11 @@
 
 	// Upload form
 	const uploadFormObj = superForm(data.uploadForm, {
-		validators: withZodClient(materialCreateSchema),
-		dataType: 'json',
-		onResult({ result }) {
-			if (result.type === 'success') {
+		validators: false,
+		dataType: 'form',
+		resetForm: true,
+		onUpdated({ form }) {
+			if (form.valid) {
 				uploadOpen = false;
 				window.location.reload();
 			}
@@ -36,7 +37,6 @@
 	const { form: uploadForm, enhance: uploadEnhance, errors, delayed } = uploadFormObj;
 
 	let uploadOpen = $state(false);
-	let filterOpen = $state(false);
 
 	function formatDate(dateString: string) {
 		return new Date(dateString).toLocaleDateString('en-US', {
@@ -59,8 +59,8 @@
 <div class="container mx-auto px-4 py-8">
 	<div class="mb-6 flex items-center justify-between">
 		<div>
-			<h1 class="text-3xl font-bold">Materials Repository</h1>
-			<p class="text-muted-foreground">Search and share educational resources</p>
+			<h1 class="text-3xl font-bold">My Materials</h1>
+			<p class="text-muted-foreground">Your uploaded educational resources</p>
 		</div>
 
 		<Dialog.Root bind:open={uploadOpen}>
@@ -82,7 +82,6 @@
 								name="title"
 								bind:value={$uploadForm.title}
 								placeholder="e.g., Data Structures Study Guide"
-								aria-invalid={$errors.title ? 'true' : undefined}
 							/>
 							{#if $errors.title}
 								<p class="text-sm text-destructive">{$errors.title}</p>
@@ -91,107 +90,22 @@
 
 						<div>
 							<Label for="description">Description</Label>
-							<Input
+							<textarea
 								id="description"
 								name="description"
 								bind:value={$uploadForm.description}
 								placeholder="Brief description of the material"
-							/>
+								class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+								rows="3"
+							></textarea>
 						</div>
 
 						<div>
-							<Label for="format">Format *</Label>
-							<select
-								id="format"
-								name="format"
-								bind:value={$uploadForm.format}
-								class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2"
-							>
-								<option value="">Select format</option>
-								<option value="document">Document (PDF, DOCX)</option>
-								<option value="slide">Presentation Slides</option>
-								<option value="dataset">Dataset</option>
-								<option value="video">Video</option>
-								<option value="link">External Link</option>
-							</select>
-							{#if $errors.format}
-								<p class="text-sm text-destructive">{$errors.format}</p>
+							<Label for="file">File *</Label>
+							<Input id="file" name="file" type="file" accept="*/*" />
+							{#if $errors.file}
+								<p class="text-sm text-destructive">{$errors.file}</p>
 							{/if}
-						</div>
-
-						{#if $uploadForm.format && $uploadForm.format !== 'link'}
-							<div>
-								<Label for="file">File *</Label>
-								<Input
-									id="file"
-									name="file"
-									type="file"
-									accept={$uploadForm.format === 'video' ? 'video/*' : undefined}
-								/>
-								{#if $errors.file}
-									<p class="text-sm text-destructive">{$errors.file}</p>
-								{/if}
-							</div>
-						{/if}
-
-						{#if $uploadForm.format === 'link'}
-							<div>
-								<Label for="linkUrl">URL *</Label>
-								<Input
-									id="linkUrl"
-									name="linkUrl"
-									bind:value={$uploadForm.linkUrl}
-									placeholder="https://example.com"
-								/>
-								{#if $errors.linkUrl}
-									<p class="text-sm text-destructive">{$errors.linkUrl}</p>
-								{/if}
-							</div>
-						{/if}
-
-						<div>
-							<Label for="visibility">Visibility *</Label>
-							<select
-								id="visibility"
-								name="visibility"
-								bind:value={$uploadForm.visibility}
-								class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2"
-							>
-								<option value="">Select visibility</option>
-								<option value="public">Public</option>
-								<option value="institution">Institution Only</option>
-								<option value="course">Course Only</option>
-								<option value="group">Group Only</option>
-							</select>
-							{#if $errors.visibility}
-								<p class="text-sm text-destructive">{$errors.visibility}</p>
-							{/if}
-						</div>
-
-						<div>
-							<Label for="courseCode">Course Code</Label>
-							<Input
-								id="courseCode"
-								name="courseCode"
-								bind:value={$uploadForm.courseCode}
-								placeholder="e.g., CS101"
-							/>
-						</div>
-
-						<div>
-							<Label for="tags">Tags (comma-separated)</Label>
-							<Input id="tags" name="tags" placeholder="e.g., algorithms, midterm, python" />
-							<p class="text-xs text-muted-foreground">Separate multiple tags with commas</p>
-						</div>
-
-						<div>
-							<Label for="keywords">Search Keywords</Label>
-							<Input
-								id="keywords"
-								name="keywords"
-								bind:value={$uploadForm.keywords}
-								placeholder="Additional keywords for search"
-							/>
 						</div>
 					</div>
 
@@ -215,75 +129,13 @@
 				<Input
 					name="q"
 					bind:value={$searchForm.q}
-					placeholder="Search materials..."
+					placeholder="Search your materials..."
 					class="pl-9"
 					aria-label="Search materials by keyword"
 				/>
 			</div>
-			<Button
-				type="button"
-				variant="outline"
-				onclick={() => (filterOpen = !filterOpen)}
-				aria-expanded={filterOpen}
-				aria-label="Toggle advanced filters"
-				aria-controls="advanced-filters"
-			>
-				<Filter class="h-4 w-4" aria-hidden="true" />
-			</Button>
 			<Button type="submit">Search</Button>
 		</div>
-
-		{#if filterOpen}
-			<div
-				id="advanced-filters"
-				class="mt-4 grid gap-4 rounded-lg border p-4 md:grid-cols-3"
-				role="region"
-				aria-label="Advanced search filters"
-			>
-				<div>
-					<Label for="format-filter">Format</Label>
-					<select
-						id="format-filter"
-						name="format"
-						bind:value={$searchForm.format}
-						class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2"
-					>
-						<option value="">All Formats</option>
-						<option value="document">Document</option>
-						<option value="slide">Slides</option>
-						<option value="dataset">Dataset</option>
-						<option value="video">Video</option>
-						<option value="link">Link</option>
-					</select>
-				</div>
-
-				<div>
-					<Label for="visibility-filter">Visibility</Label>
-					<select
-						id="visibility-filter"
-						name="visibility"
-						bind:value={$searchForm.visibility}
-						class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2"
-					>
-						<option value="">All</option>
-						<option value="public">Public</option>
-						<option value="institution">Institution</option>
-						<option value="course">Course</option>
-						<option value="group">Group</option>
-					</select>
-				</div>
-
-				<div>
-					<Label for="courseCode-filter">Course Code</Label>
-					<Input
-						id="courseCode-filter"
-						name="courseCode"
-						bind:value={$searchForm.courseCode}
-						placeholder="e.g., CS101"
-					/>
-				</div>
-			</div>
-		{/if}
 	</form>
 
 	<div class="mb-4 text-sm text-muted-foreground" role="status" aria-live="polite">

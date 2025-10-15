@@ -2,14 +2,12 @@
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import type { EventRecord, EventLocation, EventWithParticipants } from '../../types/events';
+	import type { EventRecord } from '../../types/events';
 	import type { PageData } from './$types';
 
 	export let data: PageData;
 
 	let showCreateModal = false;
-	let showConflictWarning = false;
-	let conflicts: EventRecord[] = [];
 	let selectedEvent: EventRecord | null = null;
 	let isSubmitting = false;
 	let modalElement: HTMLElement | null = null;
@@ -51,54 +49,16 @@
 		return `${startDateText} ${startTimeText} – ${endDateText} ${endTimeText}`;
 	}
 
-	// Parse location from event
-	function parseLocation(event: EventRecord): EventLocation | null {
-		if (!event.location) return null;
-		try {
-			return typeof event.location === 'string' ? JSON.parse(event.location) : event.location;
-		} catch {
-			return null;
-		}
-	}
-
-	// Format location for display
-	function formatLocation(event: EventRecord): string {
-		const loc = parseLocation(event);
-		if (!loc) return 'No location';
-		return loc.type === 'physical' ? loc.value : `Virtual: ${loc.value}`;
-	}
-
 	// Check if user is event creator
 	function isCreator(event: EventRecord): boolean {
 		return event.createdBy === data.user?.id;
 	}
 
-	// Get user's RSVP status for an event
-	function getUserRSVP(event: EventRecord | EventWithParticipants): string | null {
-		const expandedEvent = event as EventWithParticipants;
-		if (!expandedEvent.expand?.event_participants_via_event) return null;
-		const participants = Array.isArray(expandedEvent.expand.event_participants_via_event)
-			? expandedEvent.expand.event_participants_via_event
-			: [expandedEvent.expand.event_participants_via_event];
-
-		const userParticipant = participants.find((p: any) => p.user === data.user?.id);
-		return userParticipant?.status || null;
-	}
-
-	// Handle form submission with conflict detection
+	// Handle form submission
 	function handleCreateSubmit() {
 		return async ({ result }: any) => {
-			if (result.type === 'failure' && result.data?.conflicts) {
-				conflicts = result.data.conflicts;
-				showConflictWarning = true;
-				liveRegionMessage = `Conflict detected with ${result.data.conflicts.length} existing event${result.data.conflicts.length > 1 ? 's' : ''}. Please choose a different time.`;
-				isSubmitting = false;
-				return;
-			}
-
 			if (result.type === 'success') {
 				showCreateModal = false;
-				showConflictWarning = false;
 				liveRegionMessage = 'Event created successfully';
 				await invalidateAll();
 				// Restore focus to create button
@@ -106,16 +66,6 @@
 					previousFocus.focus();
 					previousFocus = null;
 				}
-			}
-			isSubmitting = false;
-		};
-	}
-
-	function handleRSVPSubmit(eventTitle: string) {
-		return async ({ result }: any) => {
-			if (result.type === 'success') {
-				liveRegionMessage = `RSVP updated for ${eventTitle}`;
-				await invalidateAll();
 			}
 			isSubmitting = false;
 		};
@@ -146,7 +96,6 @@
 	// Close modal with focus restoration
 	function closeCreateModal() {
 		showCreateModal = false;
-		showConflictWarning = false;
 		if (previousFocus) {
 			previousFocus.focus();
 			previousFocus = null;
@@ -256,45 +205,9 @@
 										{#if event.description}
 											<p class="mt-2 text-gray-700">{event.description}</p>
 										{/if}
-										<div class="mt-2 flex items-center gap-4 text-sm text-gray-600">
-											<span
-												><span aria-hidden="true">📍</span>
-												<span class="sr-only">Location:</span>
-												{formatLocation(event)}</span
-											>
-											<span
-												><span aria-hidden="true">🔔</span>
-												<span class="sr-only">Reminder:</span>
-												{event.reminderLeadMinutes || 0} min before</span
-											>
-											<span class="capitalize">
-												<span class="sr-only">Scope:</span>
-												{event.scopeType}
-												{#if event.scopeId}
-													- {event.scopeId}{/if}
-											</span>
-										</div>
 									</div>
 
 									<div class="ml-4 flex flex-col gap-2">
-										{#if isCreator(event)}
-											<span
-												class="rounded bg-blue-100 px-2 py-1 text-xs text-blue-800"
-												role="status"
-											>
-												Creator
-											</span>
-										{/if}
-
-										<a
-											href="/api/events/{event.id}/ics"
-											download
-											class="rounded border border-gray-300 px-3 py-1 text-sm text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-											aria-label="Download ICS file for {event.title}"
-										>
-											<span aria-hidden="true">📅</span> Export
-										</a>
-
 										{#if isCreator(event)}
 											<form
 												method="POST"
@@ -305,7 +218,7 @@
 												<button
 													type="submit"
 													disabled={isSubmitting}
-													class="w-full rounded border border-red-300 px-3 py-1 text-sm text-red-700 hover:bg-red-50 focus:ring-2 focus:ring-red-500 focus:outline-none disabled:opacity-50"
+													class="rounded border border-red-300 px-3 py-1 text-sm text-red-700 hover:bg-red-50 focus:ring-2 focus:ring-red-500 focus:outline-none disabled:opacity-50"
 													aria-label="Delete {event.title}"
 												>
 													Delete
@@ -313,47 +226,6 @@
 											</form>
 										{/if}
 									</div>
-								</div>
-
-								<!-- RSVP Section -->
-								<div class="mt-4 border-t border-gray-200 pt-4">
-									<form
-										method="POST"
-										action="?/rsvp"
-										use:enhance={() => handleRSVPSubmit(event.title)}
-									>
-										<input type="hidden" name="eventId" value={event.id} />
-										<fieldset>
-											<legend class="text-sm text-gray-700">Your RSVP:</legend>
-											<div
-												class="mt-1 flex gap-2"
-												role="radiogroup"
-												aria-label="RSVP status for {event.title}"
-											>
-												{#each ['going', 'maybe', 'declined'] as status}
-													<button
-														type="submit"
-														name="status"
-														value={status}
-														disabled={isSubmitting}
-														class="rounded px-3 py-1 text-sm capitalize disabled:opacity-50 {getUserRSVP(
-															event
-														) === status
-															? 'bg-blue-600 text-white'
-															: 'border border-gray-300 text-gray-700 hover:bg-gray-50'}"
-														role="radio"
-														aria-checked={getUserRSVP(event) === status}
-													>
-														{status === 'going'
-															? '✓ Going'
-															: status === 'maybe'
-																? '? Maybe'
-																: '✗ Declined'}
-													</button>
-												{/each}
-											</div>
-										</fieldset>
-									</form>
 								</div>
 							</article>
 						{/each}
@@ -380,29 +252,6 @@
 		>
 			<h2 id="modal-title" class="mb-4 text-2xl font-bold">Create Event</h2>
 
-			{#if showConflictWarning}
-				<div
-					class="mb-4 rounded-lg border border-red-300 bg-red-50 p-4"
-					role="alert"
-					aria-live="assertive"
-				>
-					<p class="font-semibold text-red-800">
-						<span aria-hidden="true">⚠️</span> Event Conflict Detected
-					</p>
-					<p class="text-sm text-red-700">
-						This event overlaps with {conflicts.length} existing event{conflicts.length > 1
-							? 's'
-							: ''}:
-					</p>
-					<ul class="mt-2 list-inside list-disc text-sm text-red-700">
-						{#each conflicts as conflict}
-							<li>{conflict.title} ({formatEventRange(conflict.start, conflict.end)})</li>
-						{/each}
-					</ul>
-					<p class="mt-2 text-sm text-red-700">Please choose a different time.</p>
-				</div>
-			{/if}
-
 			<form method="POST" action="?/createEvent" use:enhance={handleCreateSubmit} class="space-y-4">
 				<div>
 					<label for="title" class="block text-sm font-medium text-gray-700">Title *</label>
@@ -427,97 +276,13 @@
 					></textarea>
 				</div>
 
-				<div class="grid grid-cols-2 gap-4">
-					<div>
-						<label for="start" class="block text-sm font-medium text-gray-700">Start *</label>
-						<input
-							type="datetime-local"
-							id="start"
-							name="start"
-							required
-							class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-						/>
-					</div>
-
-					<div>
-						<label for="end" class="block text-sm font-medium text-gray-700">End *</label>
-						<input
-							type="datetime-local"
-							id="end"
-							name="end"
-							required
-							class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-						/>
-					</div>
-				</div>
-
-				<div class="grid grid-cols-2 gap-4">
-					<div>
-						<label for="scopeType" class="block text-sm font-medium text-gray-700">Scope *</label>
-						<select
-							id="scopeType"
-							name="scopeType"
-							required
-							class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-						>
-							<option value="global">Global</option>
-							<option value="space">Space</option>
-							<option value="group">Group</option>
-							<option value="course">Course</option>
-						</select>
-					</div>
-
-					<div>
-						<label for="scopeId" class="block text-sm font-medium text-gray-700">Scope ID</label>
-						<input
-							type="text"
-							id="scopeId"
-							name="scopeId"
-							class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-						/>
-					</div>
-				</div>
-
-				<div class="grid grid-cols-2 gap-4">
-					<div>
-						<label for="locationType" class="block text-sm font-medium text-gray-700"
-							>Location Type</label
-						>
-						<select
-							id="locationType"
-							name="locationType"
-							class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-						>
-							<option value="">None</option>
-							<option value="physical">Physical</option>
-							<option value="virtual">Virtual</option>
-						</select>
-					</div>
-
-					<div>
-						<label for="locationValue" class="block text-sm font-medium text-gray-700"
-							>Location</label
-						>
-						<input
-							type="text"
-							id="locationValue"
-							name="locationValue"
-							placeholder="Room 101 or https://meet.example.com"
-							class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-						/>
-					</div>
-				</div>
-
 				<div>
-					<label for="reminderLeadMinutes" class="block text-sm font-medium text-gray-700"
-						>Reminder (minutes before)</label
-					>
+					<label for="date" class="block text-sm font-medium text-gray-700">Date & Time *</label>
 					<input
-						type="number"
-						id="reminderLeadMinutes"
-						name="reminderLeadMinutes"
-						min="0"
-						value="30"
+						type="datetime-local"
+						id="date"
+						name="date"
+						required
 						class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
 					/>
 				</div>

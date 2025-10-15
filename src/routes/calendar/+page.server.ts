@@ -8,17 +8,11 @@ import { toUTC, validateTimeRange } from '$lib/utils/timezone';
 import { normalizeError } from '$lib/utils/errors.js';
 import type { EventRecord } from '../../types/events';
 
-// Event creation schema
+// Event creation schema - simplified to just title, description, and date
 const eventCreateSchema = z.object({
 	title: z.string().min(1, 'Title is required').max(200),
 	description: z.string().optional(),
-	scopeType: z.enum(['global', 'space', 'group', 'course']),
-	scopeId: z.string().optional(),
-	start: z.string().refine((val) => !isNaN(Date.parse(val)), 'Invalid start date'),
-	end: z.string().refine((val) => !isNaN(Date.parse(val)), 'Invalid end date'),
-	locationType: z.enum(['physical', 'virtual']).optional(),
-	locationValue: z.string().optional(),
-	reminderLeadMinutes: z.coerce.number().min(0).optional()
+	date: z.string().refine((val) => !isNaN(Date.parse(val)), 'Invalid date')
 });
 
 type EventCreateData = z.infer<typeof eventCreateSchema>;
@@ -43,8 +37,8 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		const from = url.searchParams.get('from');
 		const to = url.searchParams.get('to');
 
-		// Build filter
-		let filter = `(createdBy = "${locals.user!.id}" || event_participants_via_event.user ?= "${locals.user!.id}")`;
+		// Build filter - only show events created by the current user
+		let filter = `createdBy = "${locals.user!.id}"`;
 
 		if (scopeType) {
 			filter += ` && scopeType = "${scopeType}"`;
@@ -101,58 +95,30 @@ export const actions: Actions = {
 
 			const data = createForm.data as EventCreateData;
 
-			if (!validateTimeRange(data.start, data.end)) {
-				const messageText = 'Event start time must be before end time';
-				setError(createForm, 'start', messageText);
-				setError(createForm, 'end', messageText);
-				setMessage(createForm, { type: 'error', text: messageText });
-				return fail(400, { createForm, message: messageText });
-			}
+			// Parse the date and create start/end times
+			// Event starts at the selected date and time, ends 1 hour later
+			const eventDate = new Date(data.date);
+			const endDate = new Date(eventDate.getTime() + 60 * 60 * 1000); // Add 1 hour
 
-			// Validate event data
+			// Validate event data with simplified structure
 			validateEventData({
 				title: data.title,
-				start: data.start,
-				end: data.end,
-				scopeType: data.scopeType,
-				scopeId: data.scopeId
+				start: eventDate.toISOString(),
+				end: endDate.toISOString(),
+				scopeType: 'global', // Default to global scope
+				scopeId: undefined
 			});
 
-			// Check for conflicts
-			const conflictCheck = await hasConflict(locals.pb, {
-				scopeType: data.scopeType,
-				scopeId: data.scopeId,
-				start: data.start,
-				end: data.end
-			});
-
-			if (conflictCheck.hasConflict) {
-				return fail(409, {
-					createForm,
-					conflicts: conflictCheck.conflictingEvents,
-					message: 'Event conflicts with existing event(s)'
-				});
-			}
-
-			// Build location object
-			let location;
-			if (data.locationType && data.locationValue) {
-				location = JSON.stringify({
-					type: data.locationType,
-					value: data.locationValue
-				});
-			}
-
-			// Create event
+			// Create event with default values for removed fields
 			await locals.pb.collection('events').create({
 				title: data.title,
 				description: data.description || '',
-				scopeType: data.scopeType,
-				scopeId: data.scopeId || '',
-				start: toUTC(data.start),
-				end: toUTC(data.end),
-				location,
-				reminderLeadMinutes: data.reminderLeadMinutes,
+				scopeType: 'global', // Default scope
+				scopeId: '', // Empty scope ID
+				start: toUTC(eventDate.toISOString()),
+				end: toUTC(endDate.toISOString()),
+				location: undefined, // No location
+				reminderLeadMinutes: 30, // Default 30 minute reminder
 				createdBy: locals.user!.id
 			});
 

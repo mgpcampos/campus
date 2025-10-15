@@ -25,7 +25,6 @@
 	const baseNavigationItems = [
 		{ href: '/feed', label: 'Feed', icon: MessageSquare, requiresAuth: false },
 		{ href: '/spaces', label: 'Spaces', icon: Users, requiresAuth: true },
-		{ href: '/groups', label: 'Groups', icon: Users, requiresAuth: true },
 		{ href: '/events', label: 'Events', icon: CalendarDays, requiresAuth: true },
 		{ href: '/calendar', label: 'Calendar', icon: Calendar, requiresAuth: true },
 		{ href: '/materials', label: 'Materials', icon: BookOpen, requiresAuth: true },
@@ -133,16 +132,6 @@
 							</div>
 						</div>
 					{/if}
-
-					<div class="pt-4">
-						<Button
-							class="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-							href="/feed"
-						>
-							<Plus class="h-5 w-5" aria-hidden="true" />
-							<span class={expanded ? 'inline' : 'sr-only'}>Compose</span>
-						</Button>
-					</div>
 				</div>
 			</nav>
 		</div>

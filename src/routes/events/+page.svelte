@@ -89,49 +89,19 @@
 					{#each data.upcomingEvents as event}
 						<Card.Root class="transition-shadow hover:shadow-md">
 							<Card.Header>
-								<div class="flex items-start justify-between gap-4">
-									<div class="flex-1">
-										<Card.Title class="mb-1">{event.title}</Card.Title>
-										<Card.Description>
-											<span class="inline-flex items-center gap-1">
-												<Clock class="h-3 w-3" />
-												{formatDate(event.start)} at {formatTime(event.start)}
-											</span>
-										</Card.Description>
-									</div>
-									<span
-										class="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-									>
-										{getScopeLabel(event)}
-									</span>
-								</div>
-							</Card.Header>
-							<Card.Content class="space-y-2">
-								{#if event.description}
-									<p class="text-sm text-muted-foreground">{event.description}</p>
-								{/if}
-								<div class="flex flex-wrap gap-4 text-sm text-muted-foreground">
+								<Card.Title class="mb-2">{event.title}</Card.Title>
+								<Card.Description>
 									<span class="inline-flex items-center gap-1">
 										<Clock class="h-3 w-3" />
-										{getEventDuration(event.start, event.end)}
+										{formatDate(event.start)} at {formatTime(event.start)}
 									</span>
-									{#if event.locationValue}
-										<span class="inline-flex items-center gap-1">
-											<MapPin class="h-3 w-3" />
-											{event.locationValue}
-										</span>
-									{/if}
-									{#if event.expand?.createdBy}
-										<span class="inline-flex items-center gap-1">
-											<Users class="h-3 w-3" />
-											By {event.expand.createdBy.name}
-										</span>
-									{/if}
-								</div>
-							</Card.Content>
-							<Card.Footer>
-								<Button href="/calendar" variant="outline" size="sm">View in Calendar</Button>
-							</Card.Footer>
+								</Card.Description>
+							</Card.Header>
+							{#if event.description}
+								<Card.Content>
+									<p class="text-sm text-muted-foreground">{event.description}</p>
+								</Card.Content>
+							{/if}
 						</Card.Root>
 					{/each}
 				</div>
@@ -150,22 +120,13 @@
 					{#each data.pastEvents as event}
 						<Card.Root class="opacity-75">
 							<Card.Header>
-								<div class="flex items-start justify-between gap-4">
-									<div class="flex-1">
-										<Card.Title class="mb-1">{event.title}</Card.Title>
-										<Card.Description>
-											<span class="inline-flex items-center gap-1">
-												<Clock class="h-3 w-3" />
-												{formatDate(event.start)} at {formatTime(event.start)}
-											</span>
-										</Card.Description>
-									</div>
-									<span
-										class="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-800 dark:text-gray-200"
-									>
-										{getScopeLabel(event)}
+								<Card.Title class="mb-2">{event.title}</Card.Title>
+								<Card.Description>
+									<span class="inline-flex items-center gap-1">
+										<Clock class="h-3 w-3" />
+										{formatDate(event.start)} at {formatTime(event.start)}
 									</span>
-								</div>
+								</Card.Description>
 							</Card.Header>
 							{#if event.description}
 								<Card.Content>

@@ -35,9 +35,6 @@
 		<div class="mt-1 text-sm">
 			Members: {memberCount === null ? '—' : memberCount}
 		</div>
-		<div class="mt-1 text-sm">
-			<a class="text-blue-600 underline" href={`/spaces/${space.slug}/groups`}>View Groups</a>
-		</div>
 		<div class="mt-3 flex gap-2">
 			{#if member}
 				<form on:submit|preventDefault={leave}>

@@ -196,19 +196,23 @@
 			<div class="min-w-0 flex-1">
 				<!-- Header -->
 				<div class="mb-1 flex items-center justify-between">
-					<div class="flex items-center space-x-1">
+					<div class="flex items-center space-x-2">
 						<a
-							href={author ? `/profile/${author.username}` : '#'}
+							href={author
+								? `/profile/${author.username || author.email?.split('@')[0] || author.id}`
+								: '#'}
 							class="rounded font-semibold text-foreground hover:underline focus:ring-2 focus:ring-primary/50 focus:outline-none"
 						>
 							{author?.name || 'Unknown User'}
 						</a>
 						<span class="text-muted-foreground">·</span>
 						<a
-							href={author ? `/profile/${author.username}` : '#'}
+							href={author
+								? `/profile/${author.username || author.email?.split('@')[0] || author.id}`
+								: '#'}
 							class="rounded text-muted-foreground hover:underline focus:ring-2 focus:ring-primary/50 focus:outline-none"
 						>
-							@{author?.username || 'unknown'}
+							@{author?.username || author?.email?.split('@')[0] || 'unknown'}
 						</a>
 						<span class="text-muted-foreground">·</span>
 						<time class="text-sm text-muted-foreground" datetime={post.created}>

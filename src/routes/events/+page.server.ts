@@ -7,17 +7,22 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 
 	try {
 		const now = new Date().toISOString();
+		const userId = locals.user?.id;
 
-		// Fetch upcoming events
+		if (!userId) {
+			return error(401, 'User not authenticated');
+		}
+
+		// Fetch upcoming events created by the current user only
 		const upcomingEvents = await locals.pb.collection('events').getList(1, 20, {
-			filter: `end >= "${now}"`,
+			filter: `end >= "${now}" && createdBy = "${userId}"`,
 			sort: 'start',
 			expand: 'createdBy'
 		});
 
-		// Fetch past events
+		// Fetch past events created by the current user only
 		const pastEvents = await locals.pb.collection('events').getList(1, 10, {
-			filter: `end < "${now}"`,
+			filter: `end < "${now}" && createdBy = "${userId}"`,
 			sort: '-start',
 			expand: 'createdBy'
 		});
