@@ -1,5 +1,6 @@
-import { redirect, fail } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import { ClientResponseError } from 'pocketbase';
+import { requireAuth } from '$lib/auth.js';
 import { createSpace } from '$lib/services/spaces.js';
 import { toErrorPayload } from '$lib/utils/errors.js';
 
@@ -17,15 +18,15 @@ function slugify(value) {
 }
 
 /** @type {import('./$types').PageServerLoad} */
-export function load({ locals }) {
-	if (!locals.user) throw redirect(302, '/auth/login');
+export function load({ url, locals }) {
+	requireAuth(locals, url.pathname);
 	return {};
 }
 
 /** @type {import('./$types').Actions} */
 export const actions = {
-	default: async ({ request, locals }) => {
-		if (!locals.user) throw redirect(302, '/auth/login');
+	default: async ({ url, request, locals }) => {
+		requireAuth(locals, url.pathname);
 		const data = await request.formData();
 
 		const name = /** @type {string | null} */ (data.get('name'));

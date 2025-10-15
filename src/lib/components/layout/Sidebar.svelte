@@ -13,7 +13,8 @@
 		Calendar,
 		UserCircle,
 		ChevronLeft,
-		ChevronRight
+		ChevronRight,
+		CalendarDays
 	} from '@lucide/svelte';
 	import { page } from '$app/stores';
 
@@ -23,10 +24,12 @@
 	// Navigation items
 	const baseNavigationItems = [
 		{ href: '/feed', label: 'Feed', icon: MessageSquare, requiresAuth: false },
-		{ href: '/materials', label: 'Materials', icon: BookOpen, requiresAuth: true },
-		{ href: '/calendar', label: 'Calendar', icon: Calendar, requiresAuth: true },
-		{ href: '/profiles', label: 'Profiles', icon: UserCircle, requiresAuth: true },
 		{ href: '/spaces', label: 'Spaces', icon: Users, requiresAuth: true },
+		{ href: '/groups', label: 'Groups', icon: Users, requiresAuth: true },
+		{ href: '/events', label: 'Events', icon: CalendarDays, requiresAuth: true },
+		{ href: '/calendar', label: 'Calendar', icon: Calendar, requiresAuth: true },
+		{ href: '/materials', label: 'Materials', icon: BookOpen, requiresAuth: true },
+		{ href: '/profiles', label: 'Profiles', icon: UserCircle, requiresAuth: true },
 		{ href: '/profile', label: 'Profile', icon: User, requiresAuth: true }
 	];
 	const adminNavItems = [

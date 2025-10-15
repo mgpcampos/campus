@@ -1,4 +1,5 @@
-import { redirect, fail } from '@sveltejs/kit';
+import { fail } from '@sveltejs/kit';
+import { requireAuth } from '$lib/auth.js';
 import {
 	getGroup,
 	getGroupMemberCount,
@@ -9,8 +10,8 @@ import {
 import { getPosts } from '$lib/services/posts.js';
 
 /** @type {import('./$types').PageServerLoad} */
-export async function load({ params, locals }) {
-	if (!locals.user) throw redirect(302, '/auth/login');
+export async function load({ url, params, locals }) {
+	requireAuth(locals, url.pathname);
 	const group = await getGroup(params.groupId);
 	const memberCount = await getGroupMemberCount(params.groupId);
 	const membershipRole = await getGroupMembershipRole(params.groupId);
@@ -21,8 +22,8 @@ export async function load({ params, locals }) {
 
 /** @type {import('./$types').Actions} */
 export const actions = {
-	join: async ({ params, locals }) => {
-		if (!locals.user) throw redirect(302, '/auth/login');
+	join: async ({ url, params, locals }) => {
+		requireAuth(locals, url.pathname);
 		try {
 			await joinGroup(params.groupId);
 		} catch {
@@ -30,8 +31,8 @@ export const actions = {
 		}
 		return { success: true };
 	},
-	leave: async ({ params, locals }) => {
-		if (!locals.user) throw redirect(302, '/auth/login');
+	leave: async ({ url, params, locals }) => {
+		requireAuth(locals, url.pathname);
 		try {
 			await leaveGroup(params.groupId);
 		} catch {

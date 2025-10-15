@@ -200,9 +200,64 @@
 			</Button>
 		</div>
 	{:else if posts.length === 0}
-		<div class="py-12 text-center">
-			<p class="mb-2 text-lg text-foreground">No posts yet</p>
-			<p class="text-sm text-muted-foreground">Be the first to share something!</p>
+		<div class="flex flex-col items-center justify-center py-16 text-center">
+			<div class="mb-4 rounded-full bg-muted p-4">
+				<svg
+					class="h-12 w-12 text-muted-foreground"
+					fill="none"
+					viewBox="0 0 24 24"
+					stroke="currentColor"
+					aria-hidden="true"
+				>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="1.5"
+						d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
+					/>
+				</svg>
+			</div>
+			<h3 class="mb-2 text-xl font-semibold text-foreground">No posts yet</h3>
+			<p class="mb-6 max-w-sm text-sm text-muted-foreground">
+				Be the first to share something! Start a conversation, ask a question, or share an update
+				with the community.
+			</p>
+			<div class="flex flex-wrap justify-center gap-3">
+				<Button href="/spaces" variant="outline">
+					<svg
+						class="mr-2 h-4 w-4"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke="currentColor"
+						aria-hidden="true"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+						/>
+					</svg>
+					Explore Spaces
+				</Button>
+				<Button href="/materials" variant="outline">
+					<svg
+						class="mr-2 h-4 w-4"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke="currentColor"
+						aria-hidden="true"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+						/>
+					</svg>
+					Browse Materials
+				</Button>
+			</div>
 		</div>
 	{:else}
 		<!-- Posts list -->

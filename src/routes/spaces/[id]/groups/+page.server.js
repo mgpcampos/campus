@@ -1,5 +1,6 @@
-import { redirect, fail } from '@sveltejs/kit';
+import { fail } from '@sveltejs/kit';
 import { ClientResponseError } from 'pocketbase';
+import { requireAuth } from '$lib/auth.js';
 import { getSpace } from '$lib/services/spaces.js';
 import { getGroups, createGroup } from '$lib/services/groups.js';
 import { createGroupSchema } from '$lib/schemas/group.js';
@@ -55,7 +56,7 @@ async function resolveSpaceContext(pb, spaceIdentifier, user) {
 }
 
 export async function load({ params, locals, url, depends }) {
-	if (!locals.user) throw redirect(302, '/auth/login');
+	requireAuth(locals, url.pathname);
 	depends('app:groups');
 	const { space, permissions } = await resolveSpaceContext(locals.pb, params.id, locals.user);
 	const search = url.searchParams.get('q') || '';
@@ -64,9 +65,9 @@ export async function load({ params, locals, url, depends }) {
 }
 
 export const actions = {
-	/** @param {{ request: Request, params: any, locals: any }} ctx */
-	create: async ({ request, params, locals }) => {
-		if (!locals.user) throw redirect(302, '/auth/login');
+	/** @param {{ request: Request, params: any, locals: any, url: URL }} ctx */
+	create: async ({ url, request, params, locals }) => {
+		requireAuth(locals, url.pathname);
 		const { space, permissions } = await resolveSpaceContext(locals.pb, params.id, locals.user);
 		if (!permissions.canCreateGroups) {
 			return fail(403, { error: 'You need to join this space before creating a group.' });

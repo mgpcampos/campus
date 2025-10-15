@@ -1,9 +1,9 @@
-import { redirect } from '@sveltejs/kit';
+import { requireAuth } from '$lib/auth.js';
 import { getSpaces, getSpaceMemberCount } from '$lib/services/spaces.js';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ url, locals }) {
-	if (!locals.user) throw redirect(302, '/auth/login');
+	requireAuth(locals, url.pathname);
 	const pageParam = url.searchParams.get('page');
 	const page = pageParam ? Number(pageParam) : 1;
 	const search = url.searchParams.get('q') || '';

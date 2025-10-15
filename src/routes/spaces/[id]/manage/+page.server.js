@@ -1,9 +1,10 @@
 import { redirect, fail } from '@sveltejs/kit';
+import { requireAuth } from '$lib/auth.js';
 import { getSpace, updateSpace } from '$lib/services/spaces.js';
 import { getMembershipRole } from '$lib/services/memberships.js';
 
-export async function load({ params, locals }) {
-	if (!locals.user) throw redirect(302, '/auth/login');
+export async function load({ url, params, locals }) {
+	requireAuth(locals, url.pathname);
 	const space = await getSpace(params.id, { pb: locals.pb });
 	const role = await getMembershipRole(space.id, { pb: locals.pb });
 	// Only owners or moderators
@@ -14,8 +15,8 @@ export async function load({ params, locals }) {
 }
 
 export const actions = {
-	update: async ({ request, params, locals }) => {
-		if (!locals.user) throw redirect(302, '/auth/login');
+	update: async ({ url, request, params, locals }) => {
+		requireAuth(locals, url.pathname);
 		const space = await getSpace(params.id, { pb: locals.pb });
 		const role = await getMembershipRole(space.id, { pb: locals.pb });
 		if (!role || (role !== 'owner' && role !== 'moderator')) {

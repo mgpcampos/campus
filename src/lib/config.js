@@ -61,5 +61,10 @@ export const config = {
 		sampleRate: analyticsSampleRate,
 		flushIntervalMs: 8000,
 		endpoint: '/api/analytics'
+	},
+
+	// Support configuration
+	support: {
+		email: publicEnv.PUBLIC_SUPPORT_EMAIL || 'support@example.com'
 	}
 };

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { config } from '$lib/config.js';
+
 	let { data } = $props<{
 		data: {
 			error: Error & { status?: number; message?: string };
@@ -11,14 +13,33 @@
 		return Math.min(599, Math.max(400, numericValue));
 	}
 
+	function generateErrorId(): string {
+		const timestamp = Date.now().toString(36);
+		const random = Math.random().toString(36).substring(2, 9);
+		return `ERR-${timestamp}-${random}`.toUpperCase();
+	}
+
 	const error = data?.error;
 	const status = clampStatus(data?.status ?? error?.status, 500);
+	const errorId = generateErrorId();
+	const timestamp = new Date().toISOString();
 
 	const isNotFound = status === 404;
 	const title = isNotFound ? '404 – Page not found | Campus' : 'Unexpected error | Campus';
 	const description = isNotFound
 		? 'We looked everywhere but could not find the page you requested.'
 		: 'Something went wrong on our side. Please try again or contact support.';
+
+	// Log error details for debugging (only on client)
+	if (typeof window !== 'undefined' && !isNotFound) {
+		console.error('Error Details:', {
+			errorId,
+			status,
+			timestamp,
+			message: error?.message,
+			error
+		});
+	}
 </script>
 
 <svelte:head>
@@ -44,10 +65,21 @@
 
 	<p class="max-w-xl text-base text-muted-foreground">
 		{description}
-		{#if !isNotFound}
-			({error?.message || 'Unknown error'})
+		{#if !isNotFound && error?.message}
+			<br />
+			<span class="text-sm italic">{error.message}</span>
 		{/if}
 	</p>
+
+	{#if !isNotFound}
+		<div class="rounded-md bg-muted/50 px-4 py-3 text-sm">
+			<p class="mb-1 font-medium text-foreground">Error Reference:</p>
+			<p class="font-mono text-muted-foreground">{errorId}</p>
+			<p class="mt-1 text-xs text-muted-foreground">
+				Please include this reference when contacting support
+			</p>
+		</div>
+	{/if}
 
 	<div class="flex flex-wrap items-center justify-center gap-3">
 		<a
@@ -74,11 +106,11 @@
 		{/if}
 	</div>
 
-	{#if status === 500}
+	{#if !isNotFound}
 		<p class="text-xs text-muted-foreground">
 			Need more help? Contact
-			<a class="font-medium text-primary underline" href="mailto:support@campus.local">
-				support@campus.local
+			<a class="font-medium text-primary underline" href="mailto:{config.support.email}">
+				{config.support.email}
 			</a>
 			.
 		</p>

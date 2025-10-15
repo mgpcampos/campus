@@ -5,7 +5,7 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import PostForm from '$lib/components/forms/PostForm.svelte';
 	import Feed from '$lib/components/feed/Feed.svelte';
-	import { MessageSquare } from '@lucide/svelte';
+	import { MessageSquare, User } from '@lucide/svelte';
 
 	let { data } = $props();
 
@@ -77,11 +77,25 @@
 			</div>
 		</div>
 	{:else}
-		<div class="border-b border-border/40 bg-card/50">
-			<div class="p-4 text-center">
-				<p class="mb-3 text-foreground">Sign in to share updates with your peers.</p>
+		<div
+			class="border-b border-border/40 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20"
+		>
+			<div class="px-4 py-6 text-center">
+				<div
+					class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10"
+				>
+					<MessageSquare class="h-6 w-6 text-primary" />
+				</div>
+				<h3 class="mb-2 text-lg font-semibold text-foreground">Join the Conversation</h3>
+				<p class="mb-4 text-sm text-muted-foreground">
+					Sign in to share updates, collaborate with peers, and stay connected with your academic
+					community.
+				</p>
 				<div class="flex justify-center gap-3">
-					<Button href="/auth/login" size="sm">Sign In</Button>
+					<Button href="/auth/login" size="sm">
+						<User class="mr-2 h-4 w-4" />
+						Sign In
+					</Button>
 					<Button href="/auth/register" variant="outline" size="sm">Create Account</Button>
 				</div>
 			</div>
@@ -153,6 +167,7 @@
 						<input
 							type="search"
 							placeholder="Search posts..."
+							aria-label="Search posts"
 							class="h-8 w-48 rounded-full border border-input bg-background px-3 pr-8 text-sm placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
 							oninput={handleSearchInput}
 						/>

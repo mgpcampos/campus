@@ -1,12 +1,13 @@
-import { redirect, fail, error } from '@sveltejs/kit';
+import { fail, error } from '@sveltejs/kit';
 import { ClientResponseError } from 'pocketbase';
+import { requireAuth } from '$lib/auth.js';
 import { getSpace, getSpaceMemberCount } from '$lib/services/spaces.js';
 import { joinSpace, leaveSpace, getMembershipRole } from '$lib/services/memberships.js';
 import { getPosts } from '$lib/services/posts.js';
 
 /** @type {import('./$types').PageServerLoad} */
-export async function load({ params, locals }) {
-	if (!locals.user) throw redirect(302, '/auth/login');
+export async function load({ url, params, locals }) {
+	requireAuth(locals, url.pathname);
 	const identifier = params.id;
 	try {
 		const space = await getSpace(identifier, { pb: locals.pb });
@@ -62,8 +63,8 @@ export async function load({ params, locals }) {
 
 /** @type {import('./$types').Actions} */
 export const actions = {
-	join: async ({ params, locals }) => {
-		if (!locals.user) throw redirect(302, '/auth/login');
+	join: async ({ url, params, locals }) => {
+		requireAuth(locals, url.pathname);
 		try {
 			const space = await getSpace(params.id, { pb: locals.pb });
 			await joinSpace(space.id, { pb: locals.pb });
@@ -75,8 +76,8 @@ export const actions = {
 		}
 		return { success: true };
 	},
-	leave: async ({ params, locals }) => {
-		if (!locals.user) throw redirect(302, '/auth/login');
+	leave: async ({ url, params, locals }) => {
+		requireAuth(locals, url.pathname);
 		try {
 			const space = await getSpace(params.id, { pb: locals.pb });
 			await leaveSpace(space.id, { pb: locals.pb });
