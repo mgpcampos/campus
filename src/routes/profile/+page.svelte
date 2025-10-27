@@ -5,6 +5,7 @@
 	import { currentUser } from '$lib/pocketbase.js';
 	import { onMount } from 'svelte';
 	import { createClientFormOptions } from '$lib/validation';
+	import { t } from '$lib/i18n';
 
 	let { data } = $props();
 
@@ -44,14 +45,14 @@
 </script>
 
 <svelte:head>
-	<title>Profile | Campus</title>
+	<title>{t('profile.pageTitle')}</title>
 </svelte:head>
 
 <div class="min-h-screen bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
 	<div class="mx-auto max-w-2xl">
 		<div class="rounded-lg bg-white shadow">
 			<div class="px-4 py-5 sm:p-6">
-				<h1 class="mb-6 text-2xl font-bold text-gray-900">Profile Settings</h1>
+				<h1 class="mb-6 text-2xl font-bold text-gray-900">{t('profile.heading')}</h1>
 
 				{#if successMessage}
 					<div class="mb-4 rounded border border-green-200 bg-green-50 px-4 py-3 text-green-700">
@@ -68,7 +69,9 @@
 				<form method="POST" use:enhance class="space-y-6">
 					<div class="grid grid-cols-1 gap-6">
 						<div>
-							<label for="name" class="block text-sm font-medium text-gray-700"> Full Name </label>
+							<label for="name" class="block text-sm font-medium text-gray-700">
+								{t('profile.fullName')}
+							</label>
 							<input
 								id="name"
 								type="text"
@@ -87,7 +90,7 @@
 
 						<div>
 							<label for="username" class="block text-sm font-medium text-gray-700">
-								Username
+								{t('profile.username')}
 							</label>
 							<input
 								id="username"
@@ -106,14 +109,16 @@
 						</div>
 
 						<div>
-							<label for="bio" class="block text-sm font-medium text-gray-700"> Bio </label>
+							<label for="bio" class="block text-sm font-medium text-gray-700">
+								{t('profile.bio')}
+							</label>
 							<textarea
 								id="bio"
 								name="bio"
 								rows="4"
 								bind:value={$form.bio}
 								class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 focus:outline-none sm:text-sm"
-								placeholder="Tell us about yourself..."
+								placeholder={t('profile.bioPlaceholder')}
 							></textarea>
 							{#if $errors.bio}
 								<p class="mt-1 text-sm text-red-600">{$errors.bio}</p>
@@ -121,7 +126,9 @@
 						</div>
 
 						<div>
-							<label for="email" class="block text-sm font-medium text-gray-700"> Email </label>
+							<label for="email" class="block text-sm font-medium text-gray-700">
+								{t('profile.email')}
+							</label>
 							<input
 								id="email"
 								type="email"
@@ -129,7 +136,7 @@
 								disabled
 								class="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-gray-500 shadow-sm sm:text-sm"
 							/>
-							<p class="mt-1 text-sm text-gray-500">Email cannot be changed</p>
+							<p class="mt-1 text-sm text-gray-500">{t('profile.emailCannotChange')}</p>
 						</div>
 					</div>
 
@@ -138,7 +145,7 @@
 							href="/"
 							class="rounded-md bg-gray-300 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-400"
 						>
-							Cancel
+							{t('profile.cancel')}
 						</a>
 						<button
 							type="submit"
@@ -166,9 +173,9 @@
 										d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
 									></path>
 								</svg>
-								Saving...
+								{t('profile.saving')}
 							{:else}
-								Save Changes
+								{t('profile.saveChanges')}
 							{/if}
 						</button>
 					</div>

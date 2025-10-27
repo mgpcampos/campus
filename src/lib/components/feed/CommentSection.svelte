@@ -11,6 +11,7 @@
 	import { MessageCircle, Send, Trash2, Edit } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
 	import { withErrorToast } from '$lib/utils/errors.js';
+	import { t } from '$lib/i18n';
 
 	export let postId: string;
 	export let initialCommentCount = 0;
@@ -201,23 +202,23 @@
 					<div class="flex-1">
 						<Textarea
 							bind:value={newCommentContent}
-							placeholder="Write a comment..."
+							placeholder={t('feed.writeCommentPlaceholder')}
 							class="min-h-[80px] resize-none"
 							onkeydown={handleKeydown}
 							disabled={submitting}
 						/>
 						<div class="mt-2 flex items-center justify-between">
-							<span class="text-xs text-gray-500"> Press Ctrl+Enter to submit </span>
+							<span class="text-xs text-gray-500"> {t('feed.pressCtrlEnter')} </span>
 							<Button
 								onclick={submitComment}
 								disabled={!newCommentContent.trim() || submitting}
 								size="sm"
 							>
 								{#if submitting}
-									Posting...
+									{t('feed.posting')}
 								{:else}
 									<Send size={14} class="mr-1" />
-									Comment
+									{t('feed.comment')}
 								{/if}
 							</Button>
 						</div>
@@ -226,18 +227,19 @@
 			</div>
 		{:else}
 			<p class="mb-4 text-sm text-gray-500">
-				<a href="/auth/login" class="text-blue-600 hover:underline">Sign in</a> to comment
+				<a href="/auth/login" class="text-blue-600 hover:underline">{t('common.signIn')}</a>
+				{t('feed.signInToComment')}
 			</p>
 		{/if}
 
 		<!-- Comments list -->
 		{#if loading && comments.length === 0}
 			<div class="py-4 text-center">
-				<p class="text-gray-500">Loading comments...</p>
+				<p class="text-gray-500">{t('feed.loadingComments')}</p>
 			</div>
 		{:else if comments.length === 0}
 			<div class="py-4 text-center">
-				<p class="text-gray-500">No comments yet. Be the first to comment!</p>
+				<p class="text-gray-500">{t('feed.noCommentsYet')}</p>
 			</div>
 		{:else}
 			<div class="space-y-4">

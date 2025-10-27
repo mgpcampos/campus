@@ -6,6 +6,7 @@
 	import PostForm from '$lib/components/forms/PostForm.svelte';
 	import Feed from '$lib/components/feed/Feed.svelte';
 	import { MessageSquare, User } from '@lucide/svelte';
+	import { t } from '$lib/i18n';
 
 	let { data } = $props();
 
@@ -86,17 +87,16 @@
 				>
 					<MessageSquare class="h-6 w-6 text-primary" />
 				</div>
-				<h3 class="mb-2 text-lg font-semibold text-foreground">Join the Conversation</h3>
+				<h3 class="mb-2 text-lg font-semibold text-foreground">{t('feed.startConversation')}</h3>
 				<p class="mb-4 text-sm text-muted-foreground">
-					Sign in to share updates, collaborate with peers, and stay connected with your academic
-					community.
+					{t('feed.signInDescription')}
 				</p>
 				<div class="flex justify-center gap-3">
 					<Button href="/auth/login" size="sm">
 						<User class="mr-2 h-4 w-4" />
-						Sign In
+						{t('header.signIn')}
 					</Button>
-					<Button href="/auth/register" variant="outline" size="sm">Create Account</Button>
+					<Button href="/auth/register" variant="outline" size="sm">{t('header.signUp')}</Button>
 				</div>
 			</div>
 		</div>
@@ -122,7 +122,7 @@
 						class="px-3"
 					>
 						<MessageSquare class="mr-2 h-4 w-4" aria-hidden="true" />
-						New
+						{t('feed.new')}
 					</Button>
 					<Button
 						variant={feedSort === 'top' ? 'default' : 'ghost'}
@@ -133,7 +133,7 @@
 						tabindex={feedSort === 'top' ? 0 : -1}
 						class="px-3"
 					>
-						Top
+						{t('feed.top')}
 					</Button>
 					<Button
 						variant={feedSort === 'trending' ? 'default' : 'ghost'}
@@ -144,7 +144,7 @@
 						tabindex={feedSort === 'trending' ? 0 : -1}
 						class="px-3"
 					>
-						Trending
+						{t('feed.trending')}
 					</Button>
 				</div>
 
@@ -166,7 +166,7 @@
 					<div class="relative">
 						<input
 							type="search"
-							placeholder="Search posts..."
+							placeholder={t('feed.searchPlaceholder')}
 							aria-label="Search posts"
 							class="h-8 w-48 rounded-full border border-input bg-background px-3 pr-8 text-sm placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
 							oninput={handleSearchInput}

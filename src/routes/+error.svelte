@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { config } from '$lib/config.js';
+	import { t } from '$lib/i18n';
 
 	let { data } = $props<{
 		data: {
@@ -25,10 +26,10 @@
 	const timestamp = new Date().toISOString();
 
 	const isNotFound = status === 404;
-	const title = isNotFound ? '404 – Page not found | Campus' : 'Unexpected error | Campus';
+	const title = isNotFound ? t('errors.pageNotFoundTitle') : t('errors.unexpectedErrorTitle');
 	const description = isNotFound
-		? 'We looked everywhere but could not find the page you requested.'
-		: 'Something went wrong on our side. Please try again or contact support.';
+		? t('errors.pageNotFoundDescription')
+		: t('errors.unexpectedErrorDescription');
 
 	// Log error details for debugging (only on client)
 	if (typeof window !== 'undefined' && !isNotFound) {
@@ -56,11 +57,11 @@
 	>
 		<span>{status}</span>
 		<span aria-hidden="true">•</span>
-		<span>{isNotFound ? 'Page not found' : 'Error'}</span>
+		<span>{isNotFound ? t('errors.pageNotFound') : t('errors.error')}</span>
 	</div>
 
 	<h1 class="text-3xl font-semibold text-foreground sm:text-4xl">
-		{isNotFound ? 'We can’t find that page' : 'We hit a snag'}
+		{isNotFound ? t('errors.pageNotFoundHeading') : t('errors.errorHeading')}
 	</h1>
 
 	<p class="max-w-xl text-base text-muted-foreground">
@@ -73,10 +74,10 @@
 
 	{#if !isNotFound}
 		<div class="rounded-md bg-muted/50 px-4 py-3 text-sm">
-			<p class="mb-1 font-medium text-foreground">Error Reference:</p>
+			<p class="mb-1 font-medium text-foreground">{t('errors.errorReference')}</p>
 			<p class="font-mono text-muted-foreground">{errorId}</p>
 			<p class="mt-1 text-xs text-muted-foreground">
-				Please include this reference when contacting support
+				{t('errors.contactSupport')}
 			</p>
 		</div>
 	{/if}
@@ -86,14 +87,14 @@
 			href="/"
 			class="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
 		>
-			Return home
+			{t('errors.returnHome')}
 		</a>
 		{#if isNotFound}
 			<a
 				href="/feed"
 				class="inline-flex items-center rounded-md border border-input px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
 			>
-				Browse the feed
+				{t('errors.browseFeed')}
 			</a>
 		{:else}
 			<button
@@ -101,14 +102,14 @@
 				onclick={() => window.location.reload()}
 				class="inline-flex items-center rounded-md border border-input px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
 			>
-				Try again
+				{t('errors.tryAgain')}
 			</button>
 		{/if}
 	</div>
 
 	{#if !isNotFound}
 		<p class="text-xs text-muted-foreground">
-			Need more help? Contact
+			{t('errors.needHelp')}
 			<a class="font-medium text-primary underline" href="mailto:{config.support.email}">
 				{config.support.email}
 			</a>

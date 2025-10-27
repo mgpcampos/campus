@@ -6,6 +6,7 @@
 	import SettingsModal from '$lib/components/settings/SettingsModal.svelte';
 	import NotificationsDropdown from '$lib/components/notifications/NotificationsDropdown.svelte';
 	import { cn } from '$lib/utils.js';
+	import { t } from '$lib/i18n/index.js';
 
 	const logoutFormId = 'user-menu-logout-form';
 
@@ -35,7 +36,7 @@
 			<div class="flex h-8 w-8 items-center justify-center rounded-full bg-primary">
 				<span class="text-lg font-bold text-primary-foreground">C</span>
 			</div>
-			<span class="text-xl font-bold text-foreground">Campus</span>
+			<span class="text-xl font-bold text-foreground">{t('common.appName')}</span>
 		</a>
 
 		<!-- Actions -->
@@ -54,19 +55,25 @@
 								variant="ghost"
 								size="sm"
 								class="relative h-8 w-8 rounded-full"
-								aria-label="User menu"
+								aria-label={t('header.userMenu')}
 								aria-expanded={userMenuOpen}
 							>
 								{#if $currentUser && $currentUser.avatar}
 									<img
 										src={pb.files.getURL($currentUser, $currentUser.avatar, { thumb: '40x40' })}
-										alt="{$currentUser?.name || 'User'}'s avatar"
+										alt={t('header.avatarAlt', {
+											name:
+												$currentUser?.name ||
+												$currentUser?.username ||
+												$currentUser?.email?.split('@')[0] ||
+												t('header.defaultUserName')
+										})}
 										class="h-8 w-8 rounded-full object-cover"
 									/>
 								{:else}
 									<User class="h-4 w-4" />
 								{/if}
-								<span class="sr-only">Open user menu</span>
+								<span class="sr-only">{t('header.openUserMenu')}</span>
 							</Button>
 						{/snippet}
 					</DropdownMenu.Trigger>
@@ -83,16 +90,16 @@
 						<DropdownMenu.Group>
 							<DropdownMenu.Item>
 								<User class="mr-2 h-4 w-4" aria-hidden="true" />
-								<a href="/profile" class="flex-1">Profile</a>
+								<a href="/profile" class="flex-1">{t('header.profile')}</a>
 							</DropdownMenu.Item>
 							<DropdownMenu.Item onSelect={openSettings}>
 								<Settings class="mr-2 h-4 w-4" aria-hidden="true" />
-								<span>Settings</span>
+								<span>{t('header.settings')}</span>
 							</DropdownMenu.Item>
 							{#if $currentUser.isAdmin}
 								<DropdownMenu.Item>
 									<Shield class="mr-2 h-4 w-4" aria-hidden="true" />
-									<a href="/admin" class="flex-1">Admin dashboard</a>
+									<a href="/admin" class="flex-1">{t('header.adminDashboard')}</a>
 								</DropdownMenu.Item>
 							{/if}
 						</DropdownMenu.Group>
@@ -109,7 +116,7 @@
 									)}
 								>
 									<LogOut class="mr-2 h-4 w-4" aria-hidden="true" />
-									<span class="flex-1">Sign out</span>
+									<span class="flex-1">{t('header.signOut')}</span>
 								</button>
 							{/snippet}
 						</DropdownMenu.Item>
@@ -124,8 +131,8 @@
 					aria-hidden="true"
 				></form>
 			{:else}
-				<Button variant="ghost" size="sm" href="/auth/login">Sign In</Button>
-				<Button size="sm" href="/auth/register">Sign Up</Button>
+				<Button variant="ghost" size="sm" href="/auth/login">{t('header.signIn')}</Button>
+				<Button size="sm" href="/auth/register">{t('header.signUp')}</Button>
 			{/if}
 		</nav>
 	</div>

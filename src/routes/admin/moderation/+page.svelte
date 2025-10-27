@@ -6,6 +6,7 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { pb } from '$lib/pocketbase.js';
 	import { goto } from '$app/navigation';
+	import { t } from '$lib/i18n';
 
 	interface ModerationCase {
 		id: string;
@@ -169,20 +170,20 @@
 </script>
 
 <svelte:head>
-	<title>Moderation Dashboard | Campus Admin</title>
+	<title>{t('admin.moderation')} | Campus Admin</title>
 </svelte:head>
 
 <div class="mx-auto max-w-7xl space-y-6 py-6">
 	<header>
-		<h1 class="text-3xl font-semibold tracking-tight">Moderation Dashboard</h1>
-		<p class="mt-2 text-muted-foreground">Review and manage flagged content and moderation cases</p>
+		<h1 class="text-3xl font-semibold tracking-tight">{t('admin.moderation')}</h1>
+		<p class="mt-2 text-muted-foreground">{t('admin.moderationCases')}</p>
 	</header>
 
 	<!-- Stats Overview -->
 	<div class="grid gap-4 md:grid-cols-4">
 		<Card.Root>
 			<Card.Header class="pb-2">
-				<Card.Title class="text-sm font-medium">Open Cases</Card.Title>
+				<Card.Title class="text-sm font-medium">{t('admin.openCases')}</Card.Title>
 			</Card.Header>
 			<Card.Content>
 				<div class="text-2xl font-bold">{caseStats.open}</div>
@@ -191,7 +192,7 @@
 
 		<Card.Root>
 			<Card.Header class="pb-2">
-				<Card.Title class="text-sm font-medium">In Review</Card.Title>
+				<Card.Title class="text-sm font-medium">{t('admin.inReview')}</Card.Title>
 			</Card.Header>
 			<Card.Content>
 				<div class="text-2xl font-bold">{caseStats.in_review}</div>
@@ -200,7 +201,7 @@
 
 		<Card.Root>
 			<Card.Header class="pb-2">
-				<Card.Title class="text-sm font-medium">Escalated</Card.Title>
+				<Card.Title class="text-sm font-medium">{t('admin.escalated')}</Card.Title>
 			</Card.Header>
 			<Card.Content>
 				<div class="text-2xl font-bold text-red-600">{caseStats.escalated}</div>
@@ -209,7 +210,7 @@
 
 		<Card.Root>
 			<Card.Header class="pb-2">
-				<Card.Title class="text-sm font-medium">Resolved</Card.Title>
+				<Card.Title class="text-sm font-medium">{t('admin.resolved')}</Card.Title>
 			</Card.Header>
 			<Card.Content>
 				<div class="text-2xl font-bold text-green-600">{caseStats.resolved}</div>
@@ -221,42 +222,42 @@
 	<Card.Root>
 		<Card.Header>
 			<div class="flex items-center justify-between">
-				<Card.Title>Moderation Cases</Card.Title>
+				<Card.Title>{t('admin.moderationCases')}</Card.Title>
 				<div class="flex gap-2">
 					<Button
 						variant={activeFilter === 'all' ? 'default' : 'outline'}
 						size="sm"
 						onclick={() => (activeFilter = 'all')}
 					>
-						All
+						{t('admin.all')}
 					</Button>
 					<Button
 						variant={activeFilter === 'open' ? 'default' : 'outline'}
 						size="sm"
 						onclick={() => (activeFilter = 'open')}
 					>
-						Open ({caseStats.open})
+						{t('admin.open')} ({caseStats.open})
 					</Button>
 					<Button
 						variant={activeFilter === 'in_review' ? 'default' : 'outline'}
 						size="sm"
 						onclick={() => (activeFilter = 'in_review')}
 					>
-						In Review ({caseStats.in_review})
+						{t('admin.inReview')} ({caseStats.in_review})
 					</Button>
 					<Button
 						variant={activeFilter === 'escalated' ? 'default' : 'outline'}
 						size="sm"
 						onclick={() => (activeFilter = 'escalated')}
 					>
-						Escalated ({caseStats.escalated})
+						{t('admin.escalated')} ({caseStats.escalated})
 					</Button>
 					<Button
 						variant={activeFilter === 'resolved' ? 'default' : 'outline'}
 						size="sm"
 						onclick={() => (activeFilter = 'resolved')}
 					>
-						Resolved ({caseStats.resolved})
+						{t('admin.resolved')} ({caseStats.resolved})
 					</Button>
 				</div>
 			</div>
@@ -265,7 +266,9 @@
 			<div class="space-y-4">
 				{#if filteredCases.length === 0}
 					<p class="py-8 text-center text-muted-foreground">
-						No {activeFilter === 'all' ? '' : activeFilter} cases at the moment
+						{t('admin.noCasesAtMoment', {
+							filter: activeFilter === 'all' ? t('admin.all') : activeFilter
+						})}
 					</p>
 				{:else}
 					{#each filteredCases as caseRecord (caseRecord.id)}
@@ -283,17 +286,18 @@
 										<div class="flex items-center gap-2">
 											<Badge variant="outline" class={getStateColor(caseRecord.state)}>
 												<StateIcon class="mr-1 h-3 w-3" aria-hidden="true" />
-												{caseRecord.state.replace('_', ' ')}
+												{t(`admin.${caseRecord.state}`)}
 											</Badge>
 											{#if isSLABreached(caseRecord)}
-												<Badge variant="destructive">SLA Breach</Badge>
+												<Badge variant="destructive">{t('admin.slaBreach')}</Badge>
 											{/if}
 										</div>
 										<Card.Title class="mt-2 text-base capitalize">
 											{caseRecord.sourceType} #{caseRecord.sourceId.slice(0, 8)}
 										</Card.Title>
 										<Card.Description>
-											Created {formatDate(caseRecord.created)}
+											{t('admin.created')}
+											{formatDate(caseRecord.created)}
 										</Card.Description>
 									</div>
 								</div>
@@ -305,14 +309,14 @@
 										<!-- Evidence -->
 										{#if caseRecord.evidence && caseRecord.evidence.length > 0}
 											<div>
-												<h4 class="mb-2 text-sm font-semibold">Evidence</h4>
+												<h4 class="mb-2 text-sm font-semibold">{t('admin.evidence')}</h4>
 												<div class="space-y-2">
 													{#each caseRecord.evidence as evidence}
 														<div class="rounded-md border border-border/50 bg-muted/50 p-3 text-sm">
 															<p class="font-medium capitalize">{evidence.type}</p>
 															{#if evidence.reason}
 																<p class="mt-1 text-muted-foreground">
-																	Reason: {evidence.reason}
+																	{t('admin.reason')}: {evidence.reason}
 																</p>
 															{/if}
 															{#if evidence.body}
@@ -322,7 +326,7 @@
 															{/if}
 															{#if evidence.flagCount}
 																<p class="mt-1 text-muted-foreground">
-																	Flags: {evidence.flagCount}
+																	{t('admin.flags')}: {evidence.flagCount}
 																</p>
 															{/if}
 														</div>
@@ -334,18 +338,20 @@
 										<!-- Actions -->
 										<div class="flex gap-2">
 											<Button variant="outline" onclick={() => viewSource(caseRecord)}>
-												View Source
+												{t('admin.viewSource')}
 											</Button>
 											{#if caseRecord.state === 'open'}
 												<Button variant="outline" onclick={() => handleReview(caseRecord.id)}>
-													Start Review
+													{t('admin.startReview')}
 												</Button>
 												<Button variant="destructive" onclick={() => handleEscalate(caseRecord.id)}>
-													Escalate
+													{t('admin.escalate')}
 												</Button>
 											{/if}
 											{#if caseRecord.state === 'in_review' || caseRecord.state === 'escalated'}
-												<Button onclick={() => handleResolve(caseRecord.id)}>Resolve Case</Button>
+												<Button onclick={() => handleResolve(caseRecord.id)}
+													>{t('admin.resolveCase')}</Button
+												>
 											{/if}
 										</div>
 									</div>

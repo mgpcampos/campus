@@ -7,6 +7,7 @@
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Search, UserCircle, BookOpen } from '@lucide/svelte';
 	import { pb } from '$lib/pocketbase.js';
+	import { t } from '$lib/i18n';
 
 	interface Profile {
 		id: string;
@@ -102,7 +103,7 @@
 			biography = '';
 			await invalidateAll();
 		} catch (err: any) {
-			error = err.message || 'Failed to create profile';
+			error = err.message || t('profiles.createFailed');
 		} finally {
 			creating = false;
 		}
@@ -110,20 +111,20 @@
 </script>
 
 <svelte:head>
-	<title>Academic Profiles | Campus</title>
+	<title>{t('profiles.pageTitle')}</title>
 </svelte:head>
 
 <div class="mx-auto max-w-7xl space-y-6 py-6 sm:py-10">
 	<div class="flex items-start justify-between">
 		<header>
-			<h1 class="text-3xl font-semibold tracking-tight text-foreground">Academic Profiles</h1>
+			<h1 class="text-3xl font-semibold tracking-tight text-foreground">{t('profiles.heading')}</h1>
 			<p class="mt-2 text-base text-muted-foreground">
-				Browse faculty, researchers, and students with their scientific production records
+				{t('profiles.subtitle')}
 			</p>
 		</header>
 		<Button onclick={() => (createDialogOpen = true)}>
 			<UserCircle class="mr-2 h-4 w-4" />
-			Create Profile
+			{t('profiles.createProfile')}
 		</Button>
 	</div>
 
@@ -132,7 +133,7 @@
 		<Card.Content class="pt-6">
 			<div class="grid gap-4 md:grid-cols-3">
 				<div class="md:col-span-3">
-					<Label for="search">Search</Label>
+					<Label for="search">{t('profiles.search')}</Label>
 					<div class="relative mt-1">
 						<Search
 							class="absolute top-3 left-3 h-4 w-4 text-muted-foreground"
@@ -141,7 +142,7 @@
 						<Input
 							id="search"
 							type="text"
-							placeholder="Search by name, department, or role..."
+							placeholder={t('profiles.searchPlaceholder')}
 							bind:value={searchQuery}
 							class="pl-9"
 						/>
@@ -149,13 +150,13 @@
 				</div>
 
 				<div>
-					<Label for="role-filter">Role</Label>
+					<Label for="role-filter">{t('profiles.role')}</Label>
 					<select
 						id="role-filter"
 						bind:value={selectedRole}
 						class="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
 					>
-						<option value="all">All Roles</option>
+						<option value="all">{t('profiles.allRoles')}</option>
 						{#each roles as role (role)}
 							<option value={role}>{role.charAt(0).toUpperCase() + role.slice(1)}</option>
 						{/each}
@@ -163,13 +164,13 @@
 				</div>
 
 				<div>
-					<Label for="department-filter">Department</Label>
+					<Label for="department-filter">{t('profiles.department')}</Label>
 					<select
 						id="department-filter"
 						bind:value={selectedDepartment}
 						class="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
 					>
-						<option value="all">All Departments</option>
+						<option value="all">{t('profiles.allDepartments')}</option>
 						{#each departments as dept}
 							<option value={dept}>{dept}</option>
 						{/each}
@@ -186,7 +187,7 @@
 						}}
 						class="w-full"
 					>
-						Clear Filters
+						{t('profiles.clearFilters')}
 					</Button>
 				</div>
 			</div>
@@ -195,7 +196,7 @@
 
 	<!-- Results Count -->
 	<div class="text-sm text-muted-foreground" role="status" aria-live="polite">
-		Showing {filteredProfiles.length} of {data.profiles.length} profiles
+		{t('profiles.showingResults', { count: filteredProfiles.length, total: data.profiles.length })}
 	</div>
 
 	<!-- Profiles Grid -->
@@ -203,8 +204,8 @@
 		<Card.Root>
 			<Card.Content class="py-12 text-center">
 				<UserCircle class="mx-auto mb-4 h-12 w-12 text-muted-foreground" aria-hidden="true" />
-				<h3 class="mb-2 text-lg font-semibold">No profiles found</h3>
-				<p class="text-muted-foreground">Try adjusting your search criteria</p>
+				<h3 class="mb-2 text-lg font-semibold">{t('profiles.noProfilesFound')}</h3>
+				<p class="text-muted-foreground">{t('profiles.noProfilesHint')}</p>
 			</Card.Content>
 		</Card.Root>
 	{:else}
@@ -242,11 +243,11 @@
 
 						<div class="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
 							<BookOpen class="h-4 w-4" aria-hidden="true" />
-							<span>{profile.publicationCount || 0} publications</span>
+							<span>{t('profiles.publications', { count: profile.publicationCount || 0 })}</span>
 						</div>
 					</Card.Content>
 					<Card.Footer>
-						<Button variant="outline" class="w-full">View Profile</Button>
+						<Button variant="outline" class="w-full">{t('profiles.viewProfile')}</Button>
 					</Card.Footer>
 				</Card.Root>
 			{/each}
@@ -257,9 +258,9 @@
 	<Dialog.Root bind:open={createDialogOpen}>
 		<Dialog.Content>
 			<Dialog.Header>
-				<Dialog.Title>Create Academic Profile</Dialog.Title>
+				<Dialog.Title>{t('profiles.createDialogTitle')}</Dialog.Title>
 				<Dialog.Description>
-					Create your academic profile to showcase your research and publications
+					{t('profiles.createDialogDescription')}
 				</Dialog.Description>
 			</Dialog.Header>
 
@@ -271,40 +272,45 @@
 				{/if}
 
 				<div>
-					<Label for="displayName">Display Name *</Label>
-					<Input id="displayName" bind:value={displayName} placeholder="Your full name" required />
-				</div>
-
-				<div>
-					<Label for="role">Role *</Label>
-					<select
-						id="role"
-						bind:value={role}
-						class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-					>
-						<option value="student">Student</option>
-						<option value="professor">Professor</option>
-						<option value="researcher">Researcher</option>
-						<option value="staff">Staff</option>
-					</select>
-				</div>
-
-				<div>
-					<Label for="department">Department *</Label>
+					<Label for="displayName">{t('profiles.displayName')} *</Label>
 					<Input
-						id="department"
-						bind:value={department}
-						placeholder="e.g., Computer Science"
+						id="displayName"
+						bind:value={displayName}
+						placeholder={t('profiles.displayNamePlaceholder')}
 						required
 					/>
 				</div>
 
 				<div>
-					<Label for="biography">Biography</Label>
+					<Label for="role">{t('profiles.role')} *</Label>
+					<select
+						id="role"
+						bind:value={role}
+						class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+					>
+						<option value="student">{t('profiles.roleStudent')}</option>
+						<option value="professor">{t('profiles.roleProfessor')}</option>
+						<option value="researcher">{t('profiles.roleResearcher')}</option>
+						<option value="staff">{t('profiles.roleStaff')}</option>
+					</select>
+				</div>
+
+				<div>
+					<Label for="department">{t('profiles.department')} *</Label>
+					<Input
+						id="department"
+						bind:value={department}
+						placeholder={t('profiles.departmentPlaceholder')}
+						required
+					/>
+				</div>
+
+				<div>
+					<Label for="biography">{t('profiles.biography')}</Label>
 					<textarea
 						id="biography"
 						bind:value={biography}
-						placeholder="Brief professional biography..."
+						placeholder={t('profiles.biographyPlaceholder')}
 						class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
 						rows="3"
 					></textarea>
@@ -312,9 +318,11 @@
 			</div>
 
 			<Dialog.Footer>
-				<Button variant="outline" onclick={() => (createDialogOpen = false)}>Cancel</Button>
+				<Button variant="outline" onclick={() => (createDialogOpen = false)}
+					>{t('profiles.cancel')}</Button
+				>
 				<Button onclick={handleCreate} disabled={creating || !displayName || !department}>
-					{creating ? 'Creating...' : 'Create Profile'}
+					{creating ? t('profiles.creating') : t('profiles.createProfileButton')}
 				</Button>
 			</Dialog.Footer>
 		</Dialog.Content>

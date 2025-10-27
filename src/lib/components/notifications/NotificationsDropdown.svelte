@@ -10,6 +10,7 @@
 	import { onMount } from 'svelte';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Bell } from '@lucide/svelte';
+	import { t } from '$lib/i18n';
 
 	let open = $state(false);
 	onMount(() => {
@@ -45,15 +46,15 @@
 		aria-label="Notifications"
 	>
 		<div class="mb-1 flex items-center justify-between border-b px-2 py-1">
-			<span class="text-sm font-semibold">Notifications</span>
+			<span class="text-sm font-semibold">{t('notifications.title')}</span>
 			{#if $unreadCount > 0}
-				<button class="text-xs text-blue-600 hover:underline" onclick={() => markAllRead()}
-					>Mark all read</button
-				>
+				<button class="text-xs text-blue-600 hover:underline" onclick={() => markAllRead()}>
+					{t('notifications.markAllRead')}
+				</button>
 			{/if}
 		</div>
 		{#if $notifications.length === 0}
-			<div class="p-3 text-sm text-gray-500">No notifications yet</div>
+			<div class="p-3 text-sm text-gray-500">{t('notifications.noNotifications')}</div>
 		{:else}
 			{#each $notifications as n (n.id)}
 				<button

@@ -13,6 +13,7 @@
 	import { Loader2, RefreshCw } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
 	import { notifyError, withErrorToast } from '$lib/utils/errors.js';
+	import { t } from '$lib/i18n';
 
 	export let scope = 'global';
 	export let space: string | null = null;
@@ -217,10 +218,9 @@
 					/>
 				</svg>
 			</div>
-			<h3 class="mb-2 text-xl font-semibold text-foreground">No posts yet</h3>
+			<h3 class="mb-2 text-xl font-semibold text-foreground">{t('feed.noPostsYet')}</h3>
 			<p class="mb-6 max-w-sm text-sm text-muted-foreground">
-				Be the first to share something! Start a conversation, ask a question, or share an update
-				with the community.
+				{t('feed.emptyFeedDescription')}
 			</p>
 			<div class="flex flex-wrap justify-center gap-3">
 				<Button href="/spaces" variant="outline">
@@ -238,7 +238,7 @@
 							d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
 						/>
 					</svg>
-					Explore Spaces
+					{t('feed.exploreSpaces')}
 				</Button>
 				<Button href="/materials" variant="outline">
 					<svg
@@ -255,7 +255,7 @@
 							d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
 						/>
 					</svg>
-					Browse Materials
+					{t('feed.browseMaterials')}
 				</Button>
 			</div>
 		</div>
@@ -285,7 +285,7 @@
 			</div>
 		{:else if posts.length > 0}
 			<div class="py-6 text-center">
-				<p class="text-sm text-muted-foreground">You've reached the end!</p>
+				<p class="text-sm text-muted-foreground">{t('feed.youReachedEnd')}</p>
 			</div>
 		{/if}
 	{/if}

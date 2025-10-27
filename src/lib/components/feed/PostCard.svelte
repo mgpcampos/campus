@@ -5,7 +5,7 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import ImageAttachment from '$lib/components/media/ImageAttachment.svelte';
 	import VideoAttachment from '$lib/components/media/VideoAttachment.svelte';
-	import { Heart, MessageCircle, MoreHorizontal, Edit, Trash2 } from '@lucide/svelte';
+	import { Heart, MessageCircle, MoreHorizontal, Edit, Trash2 } from 'lucide-svelte';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import linkifyIt from 'linkify-it';
 	import { toggleLike, hasUserLikedPost } from '$lib/services/likes.js';
@@ -23,6 +23,7 @@
 	}
 	import { toast } from 'svelte-sonner';
 	import { notifyError } from '$lib/utils/errors.js';
+	import { t } from '$lib/i18n';
 
 	export let post: any;
 	export let showActions = true;
@@ -235,13 +236,13 @@
 								{#if isOwner}
 									<DropdownMenu.Item onclick={handleEdit}>
 										<Edit size={16} class="mr-2" />
-										Edit
+										{t('postCard.edit')}
 									</DropdownMenu.Item>
 								{/if}
 								{#if canModerate}
 									<DropdownMenu.Item onclick={handleDelete} class="text-destructive">
 										<Trash2 size={16} class="mr-2" />
-										Delete
+										{t('postCard.delete')}
 									</DropdownMenu.Item>
 								{/if}
 								{#if !isOwner}
@@ -253,14 +254,14 @@
 													targetId: post.id,
 													reason: 'inappropriate'
 												});
-												toast.success('Reported');
+												toast.success(t('postCard.reported'));
 											} catch (e) {
 												await notifyError(e, { context: 'reportPost' });
 											}
 										}}
 									>
 										<Trash2 size={16} class="mr-2" />
-										Report
+										{t('postCard.report')}
 									</DropdownMenu.Item>
 								{/if}
 							</DropdownMenu.Content>
@@ -344,7 +345,7 @@
 									d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
 								/>
 							</svg>
-							<span class="text-sm">Share</span>
+							<span class="text-sm">{t('feed.share')}</span>
 						</Button>
 					</div>
 

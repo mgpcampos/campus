@@ -2,6 +2,7 @@
 
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { t } from '$lib/i18n';
 
 	type SpaceListItem = {
 		id: string;
@@ -34,11 +35,11 @@
 	});
 	const hasNoResults = $derived.by(() => filteredSpaces.length === 0);
 	const pageTitle = $derived.by(() =>
-		normalizedSearch ? `Spaces matching “${search}” | Campus` : 'Spaces | Campus'
+		normalizedSearch ? t('spaces.pageTitleWithSearch', { query: search }) : t('spaces.pageTitle')
 	);
 
 	function formatMemberCount(space: SpaceListItem) {
-		if (space.memberCountHidden) return 'Hidden';
+		if (space.memberCountHidden) return t('spaces.hidden');
 		if (typeof space.memberCount === 'number') {
 			return numberFormatter.format(space.memberCount);
 		}
@@ -50,26 +51,25 @@
 	<title>{pageTitle}</title>
 </svelte:head>
 
-<h1 class="mb-4 text-2xl font-bold">Spaces</h1>
+<h1 class="mb-4 text-2xl font-bold">{t('spaces.heading')}</h1>
 <form method="GET" class="mb-4 flex gap-2" role="search" aria-label="Space search">
 	<input
 		type="text"
 		name="q"
-		placeholder="Search"
+		placeholder={t('spaces.searchPlaceholder')}
 		value={search}
 		class="rounded border px-2 py-1"
 	/>
-	<button class="rounded bg-blue-600 px-3 py-1 text-white" type="submit">Search</button>
+	<button class="rounded bg-blue-600 px-3 py-1 text-white" type="submit"
+		>{t('spaces.searchButton')}</button
+	>
 </form>
 {#if hasNoResults}
 	<div class="rounded border border-dashed p-6 text-center text-sm text-muted-foreground">
 		{#if search.trim().length > 0}
-			No spaces matched “{search}”. Try a different keyword or create a new space.
+			{t('spaces.noResultsFor', { query: search })}
 		{:else}
-			No spaces are available yet. Be the first to <a
-				class="text-blue-600 underline"
-				href="/spaces/create">create one</a
-			>.
+			{@html t('spaces.noSpaces')}
 		{/if}
 	</div>
 {:else}
@@ -80,7 +80,7 @@
 					>{space.name ?? space.slug ?? space.id}</a
 				>
 				<div class="text-sm text-gray-600">{space.description}</div>
-				<div class="mt-1 text-xs">Members: {formatMemberCount(space)}</div>
+				<div class="mt-1 text-xs">{t('spaces.members')}: {formatMemberCount(space)}</div>
 			</li>
 		{/each}
 	</ul>

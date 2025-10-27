@@ -4,6 +4,7 @@
 	import { onMount } from 'svelte';
 	import type { EventRecord } from '../../types/events';
 	import type { PageData } from './$types';
+	import { t } from '$lib/i18n';
 
 	export let data: PageData;
 
@@ -59,7 +60,7 @@
 		return async ({ result }: any) => {
 			if (result.type === 'success') {
 				showCreateModal = false;
-				liveRegionMessage = 'Event created successfully';
+				liveRegionMessage = t('calendar.eventCreated');
 				await invalidateAll();
 				// Restore focus to create button
 				if (previousFocus) {
@@ -75,7 +76,7 @@
 		return async ({ result }: any) => {
 			if (result.type === 'success') {
 				selectedEvent = null;
-				liveRegionMessage = `${eventTitle} deleted successfully`;
+				liveRegionMessage = t('calendar.eventDeleted', { title: eventTitle });
 				await invalidateAll();
 			}
 			isSubmitting = false;
@@ -157,7 +158,7 @@
 </script>
 
 <svelte:head>
-	<title>Calendar | Campus</title>
+	<title>{t('calendar.pageTitle')}</title>
 </svelte:head>
 
 <!-- Accessible live region for dynamic updates -->
@@ -167,19 +168,19 @@
 
 <div class="container mx-auto px-4 py-8">
 	<div class="mb-6 flex items-center justify-between">
-		<h1 class="text-3xl font-bold">Calendar</h1>
+		<h1 class="text-3xl font-bold">{t('calendar.heading')}</h1>
 		<button
 			onclick={openCreateModal}
 			class="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
 			aria-label="Create new event"
 		>
-			Create Event
+			{t('calendar.createEvent')}
 		</button>
 	</div>
 
 	{#if data.events.length === 0}
 		<div class="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
-			<p class="text-gray-600">No events scheduled. Create your first event to get started!</p>
+			<p class="text-gray-600">{t('calendar.noEvents')}</p>
 		</div>
 	{:else}
 		<div class="space-y-6" role="feed" aria-label="Calendar events">

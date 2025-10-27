@@ -5,6 +5,7 @@
 	import { goto } from '$app/navigation';
 	import { createClientFormOptions } from '$lib/validation';
 	import { ariaValidity } from '$lib/actions/ariaValidity';
+	import { t } from '$lib/i18n';
 	import type { PageData } from './$types';
 
 	type LoginForm = {
@@ -100,8 +101,8 @@
 		return {
 			valid: false,
 			errors: {
-				email: fieldErrors.email?.[0] ?? 'Please enter a valid email address',
-				password: fieldErrors.password?.[0] ?? 'Password is required'
+				email: fieldErrors.email?.[0] ?? t('auth.validEmailRequired'),
+				password: fieldErrors.password?.[0] ?? t('auth.passwordRequired')
 			}
 		};
 	});
@@ -144,19 +145,19 @@
 </script>
 
 <svelte:head>
-	<title>Campus | Sign In</title>
+	<title>{t('auth.title')}</title>
 </svelte:head>
 
 <div class="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
 	<div class="w-full max-w-md space-y-8">
 		<div>
 			<h1 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-				Sign in to your account
+				{t('auth.signInToAccount')}
 			</h1>
 			<p class="mt-2 text-center text-sm text-gray-600">
-				Or
+				{t('auth.or')}
 				<a href="/auth/register" class="font-medium text-blue-600 hover:text-blue-500">
-					create a new account
+					{t('auth.createNewAccount')}
 				</a>
 			</p>
 		</div>
@@ -174,7 +175,9 @@
 
 			<div class="space-y-4">
 				<div>
-					<label for="email" class="block text-sm font-medium text-gray-700"> Email address </label>
+					<label for="email" class="block text-sm font-medium text-gray-700">
+						{t('auth.emailAddress')}
+					</label>
 					<input
 						id="email"
 						name="email"
@@ -183,7 +186,7 @@
 						required
 						bind:value={$form.email}
 						class="relative mt-1 block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-blue-500 focus:ring-blue-500 focus:outline-none sm:text-sm"
-						placeholder="Email address"
+						placeholder={t('auth.emailAddress')}
 						aria-invalid={emailErrorText ? 'true' : undefined}
 						aria-describedby={emailErrorText ? errorIds.email : undefined}
 						use:ariaValidity={{ invalid: Boolean(emailErrorText), errorId: errorIds.email }}
@@ -200,7 +203,9 @@
 				</div>
 
 				<div>
-					<label for="password" class="block text-sm font-medium text-gray-700"> Password </label>
+					<label for="password" class="block text-sm font-medium text-gray-700">
+						{t('auth.password')}
+					</label>
 					<input
 						id="password"
 						name="password"
@@ -209,7 +214,7 @@
 						required
 						bind:value={$form.password}
 						class="relative mt-1 block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-blue-500 focus:ring-blue-500 focus:outline-none sm:text-sm"
-						placeholder="Password"
+						placeholder={t('auth.password')}
 						aria-invalid={passwordErrorText ? 'true' : undefined}
 						aria-describedby={passwordErrorText ? errorIds.password : undefined}
 						use:ariaValidity={{ invalid: Boolean(passwordErrorText), errorId: errorIds.password }}
@@ -253,9 +258,9 @@
 								d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
 							></path>
 						</svg>
-						Signing in...
+						{t('auth.signingIn')}
 					{:else}
-						Sign in
+						{t('auth.login')}
 					{/if}
 				</button>
 			</div>

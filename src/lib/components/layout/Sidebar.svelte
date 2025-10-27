@@ -17,23 +17,25 @@
 		CalendarDays
 	} from '@lucide/svelte';
 	import { page } from '$app/stores';
+	import { t } from '$lib/i18n/index.js';
 
 	let { class: className = '' } = $props();
 	let expanded = $state(true);
 
-	// Navigation items
-	const baseNavigationItems = [
-		{ href: '/feed', label: 'Feed', icon: MessageSquare, requiresAuth: false },
-		{ href: '/spaces', label: 'Spaces', icon: Users, requiresAuth: true },
-		{ href: '/events', label: 'Events', icon: CalendarDays, requiresAuth: true },
-		{ href: '/calendar', label: 'Calendar', icon: Calendar, requiresAuth: true },
-		{ href: '/materials', label: 'Materials', icon: BookOpen, requiresAuth: true },
-		{ href: '/profiles', label: 'Profiles', icon: UserCircle, requiresAuth: true },
-		{ href: '/profile', label: 'Profile', icon: User, requiresAuth: true }
+	// Navigation items - using derived getter to make them reactive to locale changes
+	const getNavigationItems = () => [
+		{ href: '/feed', label: t('sidebar.feed'), icon: MessageSquare, requiresAuth: false },
+		{ href: '/spaces', label: t('sidebar.spaces'), icon: Users, requiresAuth: true },
+		{ href: '/events', label: t('sidebar.events'), icon: CalendarDays, requiresAuth: true },
+		{ href: '/calendar', label: t('sidebar.calendar'), icon: Calendar, requiresAuth: true },
+		{ href: '/materials', label: t('sidebar.materials'), icon: BookOpen, requiresAuth: true },
+		{ href: '/profiles', label: t('sidebar.profiles'), icon: UserCircle, requiresAuth: true },
+		{ href: '/profile', label: t('sidebar.profile'), icon: User, requiresAuth: true }
 	];
-	const adminNavItems = [
-		{ href: '/admin', label: 'Admin Dashboard', icon: Shield, requiresAuth: true },
-		{ href: '/admin/moderation', label: 'Moderation', icon: Shield, requiresAuth: true }
+
+	const getAdminNavItems = () => [
+		{ href: '/admin', label: t('sidebar.adminDashboard'), icon: Shield, requiresAuth: true },
+		{ href: '/admin/moderation', label: t('sidebar.moderation'), icon: Shield, requiresAuth: true }
 	];
 
 	function isActive(href: string): boolean {
@@ -54,7 +56,7 @@
 {#if $currentUser}
 	<aside
 		class={`hidden flex-shrink-0 flex-col bg-background/95 transition-[width] duration-200 md:flex ${expanded ? 'w-64' : 'w-16'} ${className}`}
-		aria-label="Sidebar navigation"
+		aria-label={t('sidebar.navigation')}
 	>
 		<div class="sticky top-14 h-[calc(100vh-3.5rem)] overflow-hidden">
 			<nav class="flex h-full flex-col">
@@ -62,15 +64,17 @@
 					class={`flex items-center ${expanded ? 'justify-between px-3' : 'justify-center px-2'} pt-3 pb-4`}
 				>
 					{#if expanded}
-						<p class="text-xs font-semibold text-muted-foreground uppercase">Menu</p>
+						<p class="text-xs font-semibold text-muted-foreground uppercase">
+							{t('sidebar.menuHeading')}
+						</p>
 					{:else}
-						<span class="sr-only">Sidebar menu</span>
+						<span class="sr-only">{t('sidebar.menuCollapsedLabel')}</span>
 					{/if}
 					<button
 						type="button"
 						onclick={toggleSidebar}
 						class="flex h-8 w-8 items-center justify-center rounded-full bg-muted/40 text-muted-foreground transition-colors hover:bg-muted focus:ring-2 focus:ring-primary/50 focus:outline-none"
-						aria-label={expanded ? 'Collapse sidebar' : 'Expand sidebar'}
+						aria-label={expanded ? t('sidebar.collapseSidebar') : t('sidebar.expandSidebar')}
 						aria-expanded={expanded}
 					>
 						{#if expanded}
@@ -82,7 +86,7 @@
 				</div>
 				<div class="flex-1 overflow-y-auto px-2 pb-4">
 					<div class="space-y-1" role="navigation">
-						{#each baseNavigationItems as item}
+						{#each getNavigationItems() as item}
 							{#if !item.requiresAuth || $currentUser}
 								{@const IconComponent = item.icon}
 								<a
@@ -110,10 +114,10 @@
 									? 'px-3 text-xs font-semibold text-muted-foreground uppercase'
 									: 'sr-only'}
 							>
-								Admin
+								{t('sidebar.adminSection')}
 							</p>
 							<div class="mt-1 space-y-1" role="group" aria-labelledby="sidebar-admin-heading">
-								{#each adminNavItems as item}
+								{#each getAdminNavItems() as item}
 									{@const IconComponent = item.icon}
 									<a
 										href={item.href}

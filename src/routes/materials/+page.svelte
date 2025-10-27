@@ -11,6 +11,7 @@
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import { FileText, Link as LinkIcon, Search, Filter } from '@lucide/svelte';
 	import type { MaterialWithUploader } from '$lib/types/materials';
+	import { t } from '$lib/i18n';
 
 	let { data }: { data: PageData } = $props();
 
@@ -59,29 +60,29 @@
 <div class="container mx-auto px-4 py-8">
 	<div class="mb-6 flex items-center justify-between">
 		<div>
-			<h1 class="text-3xl font-bold">My Materials</h1>
-			<p class="text-muted-foreground">Your uploaded educational resources</p>
+			<h1 class="text-3xl font-bold">{t('materials.myMaterials')}</h1>
+			<p class="text-muted-foreground">{t('materials.subtitle')}</p>
 		</div>
 
 		<Dialog.Root bind:open={uploadOpen}>
 			<Dialog.Trigger>
-				<Button>Upload Material</Button>
+				<Button>{t('materials.uploadMaterial')}</Button>
 			</Dialog.Trigger>
 			<Dialog.Content class="max-h-[90vh] max-w-2xl overflow-y-auto">
 				<Dialog.Header>
-					<Dialog.Title>Upload New Material</Dialog.Title>
-					<Dialog.Description>Share an educational resource with your peers</Dialog.Description>
+					<Dialog.Title>{t('materials.uploadNew')}</Dialog.Title>
+					<Dialog.Description>{t('materials.uploadDescription')}</Dialog.Description>
 				</Dialog.Header>
 
 				<form method="POST" action="?/upload" enctype="multipart/form-data" use:uploadEnhance>
 					<div class="space-y-4">
 						<div>
-							<Label for="title">Title *</Label>
+							<Label for="title">{t('materials.titleLabel')} *</Label>
 							<Input
 								id="title"
 								name="title"
 								bind:value={$uploadForm.title}
-								placeholder="e.g., Data Structures Study Guide"
+								placeholder={t('materials.titlePlaceholder')}
 							/>
 							{#if $errors.title}
 								<p class="text-sm text-destructive">{$errors.title}</p>
@@ -89,19 +90,19 @@
 						</div>
 
 						<div>
-							<Label for="description">Description</Label>
+							<Label for="description">{t('materials.descriptionLabel')}</Label>
 							<textarea
 								id="description"
 								name="description"
 								bind:value={$uploadForm.description}
-								placeholder="Brief description of the material"
+								placeholder={t('materials.descriptionPlaceholder')}
 								class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
 								rows="3"
 							></textarea>
 						</div>
 
 						<div>
-							<Label for="file">File *</Label>
+							<Label for="file">{t('materials.fileLabel')} *</Label>
 							<Input id="file" name="file" type="file" accept="*/*" />
 							{#if $errors.file}
 								<p class="text-sm text-destructive">{$errors.file}</p>
@@ -111,10 +112,10 @@
 
 					<Dialog.Footer class="mt-6">
 						<Button type="button" variant="outline" onclick={() => (uploadOpen = false)}>
-							Cancel
+							{t('materials.cancel')}
 						</Button>
 						<Button type="submit" disabled={$delayed}>
-							{$delayed ? 'Uploading...' : 'Upload'}
+							{$delayed ? t('materials.uploading') : t('materials.upload')}
 						</Button>
 					</Dialog.Footer>
 				</form>
@@ -129,26 +130,26 @@
 				<Input
 					name="q"
 					bind:value={$searchForm.q}
-					placeholder="Search your materials..."
+					placeholder={t('materials.searchPlaceholder')}
 					class="pl-9"
 					aria-label="Search materials by keyword"
 				/>
 			</div>
-			<Button type="submit">Search</Button>
+			<Button type="submit">{t('materials.searchButton')}</Button>
 		</div>
 	</form>
 
 	<div class="mb-4 text-sm text-muted-foreground" role="status" aria-live="polite">
-		Showing {data.materials.length} of {data.total} materials
+		{t('materials.showing', { count: data.materials.length, total: data.total })}
 	</div>
 
 	{#if data.materials.length === 0}
 		<Card.Root class="text-center">
 			<Card.Content class="py-12">
 				<FileText class="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-				<h3 class="mb-2 text-lg font-semibold">No materials found</h3>
+				<h3 class="mb-2 text-lg font-semibold">{t('materials.noMaterialsFound')}</h3>
 				<p class="text-muted-foreground">
-					Try adjusting your search criteria or upload a new material
+					{t('materials.noMaterialsHint')}
 				</p>
 			</Card.Content>
 		</Card.Root>
@@ -170,9 +171,9 @@
 								>
 								<Card.Description class="mt-1">
 									{#if uploader}
-										by {uploader.name || uploader.username}
+										{t('materials.by', { name: uploader.name || uploader.username })}
 									{:else}
-										Unknown uploader
+										{t('materials.unknownUploader')}
 									{/if}
 								</Card.Description>
 							</div>
@@ -217,7 +218,7 @@
 							rel="noopener noreferrer"
 							aria-label="View details for {material.title}"
 						>
-							View
+							{t('materials.view')}
 						</Button>
 						<Button
 							href="/api/materials/{material.id}/download"
@@ -225,7 +226,7 @@
 							class="flex-1"
 							aria-label="Download {material.title}"
 						>
-							Download
+							{t('materials.download')}
 						</Button>
 					</Card.Footer>
 				</Card.Root>
@@ -235,15 +236,18 @@
 		{#if data.totalPages > 1}
 			<div class="mt-6 flex items-center justify-center gap-2">
 				{#if data.page > 1}
-					<Button href={buildPageUrl(data.page - 1)} variant="outline">Previous</Button>
+					<Button href={buildPageUrl(data.page - 1)} variant="outline"
+						>{t('materials.previous')}</Button
+					>
 				{/if}
 
 				<span class="text-sm text-muted-foreground">
-					Page {data.page} of {data.totalPages}
+					{t('materials.pageOf', { page: data.page, total: data.totalPages })}
 				</span>
 
 				{#if data.page < data.totalPages}
-					<Button href={buildPageUrl(data.page + 1)} variant="outline">Next</Button>
+					<Button href={buildPageUrl(data.page + 1)} variant="outline">{t('materials.next')}</Button
+					>
 				{/if}
 			</div>
 		{/if}

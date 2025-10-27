@@ -3,12 +3,13 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import * as Tabs from '$lib/components/ui/tabs/index.js';
+	import { t } from '$lib/i18n';
 
 	let { data }: { data: any } = $props();
 
 	function formatDate(dateString: string) {
 		const date = new Date(dateString);
-		return date.toLocaleDateString('en-US', {
+		return date.toLocaleDateString('pt-BR', {
 			weekday: 'short',
 			year: 'numeric',
 			month: 'short',
@@ -18,7 +19,7 @@
 
 	function formatTime(dateString: string) {
 		const date = new Date(dateString);
-		return date.toLocaleTimeString('en-US', {
+		return date.toLocaleTimeString('pt-BR', {
 			hour: 'numeric',
 			minute: '2-digit'
 		});
@@ -40,49 +41,49 @@
 	function getScopeLabel(event: any): string {
 		switch (event.scopeType) {
 			case 'global':
-				return 'Campus-wide';
+				return t('events.campusWide');
 			case 'space':
-				return 'Space Event';
+				return t('events.spaceEvent');
 			case 'group':
-				return 'Group Event';
+				return t('events.groupEvent');
 			case 'course':
-				return 'Course Event';
+				return t('events.courseEvent');
 			default:
-				return 'Event';
+				return t('events.event');
 		}
 	}
 </script>
 
 <svelte:head>
-	<title>Events | Campus</title>
+	<title>{t('events.title')} | Campus</title>
 	<meta name="description" content="Browse upcoming and past events" />
 </svelte:head>
 
 <div class="container mx-auto px-4 py-8">
 	<div class="mb-6 flex items-center justify-between">
 		<div>
-			<h1 class="mb-2 text-3xl font-bold">Events</h1>
-			<p class="text-muted-foreground">Stay updated with campus activities</p>
+			<h1 class="mb-2 text-3xl font-bold">{t('events.title')}</h1>
+			<p class="text-muted-foreground">{t('events.subtitle')}</p>
 		</div>
 		<Button href="/calendar">
 			<Calendar class="mr-2 h-4 w-4" />
-			View Calendar
+			{t('events.viewCalendar')}
 		</Button>
 	</div>
 
 	<Tabs.Root value="upcoming" class="w-full">
 		<Tabs.List class="mb-6 grid w-full grid-cols-2">
-			<Tabs.Trigger value="upcoming">Upcoming</Tabs.Trigger>
-			<Tabs.Trigger value="past">Past</Tabs.Trigger>
+			<Tabs.Trigger value="upcoming">{t('events.upcoming')}</Tabs.Trigger>
+			<Tabs.Trigger value="past">{t('events.past')}</Tabs.Trigger>
 		</Tabs.List>
 
 		<Tabs.Content value="upcoming">
 			{#if data.upcomingEvents.length === 0}
 				<div class="flex flex-col items-center justify-center py-16 text-center">
 					<Calendar class="mb-4 h-16 w-16 text-muted-foreground" />
-					<h2 class="mb-2 text-xl font-semibold">No upcoming events</h2>
-					<p class="mb-4 text-muted-foreground">Check back later or create your own event</p>
-					<Button href="/calendar">Create Event</Button>
+					<h2 class="mb-2 text-xl font-semibold">{t('events.noUpcomingEvents')}</h2>
+					<p class="mb-4 text-muted-foreground">{t('events.noUpcomingEventsDescription')}</p>
+					<Button href="/calendar">{t('events.createEvent')}</Button>
 				</div>
 			{:else}
 				<div class="space-y-4">
@@ -93,7 +94,9 @@
 								<Card.Description>
 									<span class="inline-flex items-center gap-1">
 										<Clock class="h-3 w-3" />
-										{formatDate(event.start)} at {formatTime(event.start)}
+										{formatDate(event.start)}
+										{t('events.at')}
+										{formatTime(event.start)}
 									</span>
 								</Card.Description>
 							</Card.Header>
@@ -112,8 +115,8 @@
 			{#if data.pastEvents.length === 0}
 				<div class="flex flex-col items-center justify-center py-16 text-center">
 					<Calendar class="mb-4 h-16 w-16 text-muted-foreground" />
-					<h2 class="mb-2 text-xl font-semibold">No past events</h2>
-					<p class="text-muted-foreground">Past events will appear here</p>
+					<h2 class="mb-2 text-xl font-semibold">{t('events.noPastEvents')}</h2>
+					<p class="text-muted-foreground">{t('events.noPastEventsDescription')}</p>
 				</div>
 			{:else}
 				<div class="space-y-4">
@@ -124,7 +127,9 @@
 								<Card.Description>
 									<span class="inline-flex items-center gap-1">
 										<Clock class="h-3 w-3" />
-										{formatDate(event.start)} at {formatTime(event.start)}
+										{formatDate(event.start)}
+										{t('events.at')}
+										{formatTime(event.start)}
 									</span>
 								</Card.Description>
 							</Card.Header>

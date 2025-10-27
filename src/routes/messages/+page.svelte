@@ -7,6 +7,7 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { MessageCircle, Plus } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
+	import { t } from '$lib/i18n';
 
 	let { data }: { data: PageData } = $props();
 
@@ -17,26 +18,26 @@
 	function handleNewThread() {
 		// For now, direct to a hypothetical thread creation page
 		// Could be implemented as a modal or separate route
-		toast.info('Thread creation coming soon');
+		toast.info(t('messages.threadCreationComingSoon'));
 	}
 </script>
 
 <svelte:head>
-	<title>Messages | Campus</title>
+	<title>{t('messages.pageTitle')}</title>
 </svelte:head>
 
 <div class="mx-auto max-w-5xl space-y-6 py-6 sm:py-10">
 	<header class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 		<div class="space-y-1">
-			<h1 class="text-3xl font-semibold tracking-tight text-foreground">Messages</h1>
+			<h1 class="text-3xl font-semibold tracking-tight text-foreground">{t('messages.title')}</h1>
 			<p class="text-base text-muted-foreground">
-				Connect with members through direct and group conversations
+				{t('messages.subtitle')}
 			</p>
 		</div>
 
 		<Button onclick={handleNewThread} size="sm">
 			<Plus class="mr-2 h-4 w-4" aria-hidden="true" />
-			New Conversation
+			{t('messages.newConversation')}
 		</Button>
 	</header>
 
@@ -50,11 +51,11 @@
 		<Card.Root>
 			<Card.Content class="py-12 text-center">
 				<MessageCircle class="mx-auto mb-4 h-12 w-12 text-muted-foreground/50" aria-hidden="true" />
-				<h2 class="mb-2 text-lg font-semibold">Sign in to view messages</h2>
+				<h2 class="mb-2 text-lg font-semibold">{t('messages.signInToView')}</h2>
 				<p class="mb-6 text-muted-foreground">
-					Connect with other members by signing in to your account
+					{t('messages.signInToConnect')}
 				</p>
-				<Button href="/auth/login">Sign In</Button>
+				<Button href="/auth/login">{t('messages.signIn')}</Button>
 			</Card.Content>
 		</Card.Root>
 	{:else}

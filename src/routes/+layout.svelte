@@ -14,6 +14,8 @@
 	import { Toaster } from '$lib/components/ui/sonner/index.js';
 	import { online, initConnectionListeners } from '$lib/stores/connection';
 	import { initAnalytics } from '$lib/services/analytics';
+	import { ModeWatcher, setMode } from 'mode-watcher';
+	import { initLocale, setLocale } from '$lib/i18n/index.js';
 
 	let { children, data } = $props();
 
@@ -127,6 +129,19 @@
 
 	// Initialize PocketBase auth state on mount
 	onMount(() => {
+		// Initialize i18n locale from storage/user preference
+		const locale = initLocale();
+
+		// If user has a saved locale preference, apply it
+		const user = data.user;
+		if (user?.locale && user.locale !== locale) {
+			setLocale(user.locale);
+		}
+
+		if (typeof user?.prefersDarkMode === 'boolean') {
+			setMode(user.prefersDarkMode ? 'dark' : 'light');
+		}
+
 		// Initialize online/offline listeners
 		const disposeConnection = initConnectionListeners();
 		const teardownAnalytics = initAnalytics();
@@ -186,6 +201,8 @@
 	<meta name="twitter:description" content={profiledMeta.twitterDescription} />
 	<meta name="twitter:image" content={profiledMeta.twitterImage} />
 </svelte:head>
+
+<ModeWatcher defaultMode="light" />
 
 <div class="min-h-screen bg-background text-foreground">
 	<!-- Skip links for accessibility -->

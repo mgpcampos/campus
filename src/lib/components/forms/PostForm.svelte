@@ -23,6 +23,7 @@
 	import { validateImages, validateVideo, MAX_ATTACHMENTS } from '$lib/utils/media.js';
 	import { writable } from 'svelte/store';
 	import { ariaValidity } from '$lib/actions/ariaValidity';
+	import { t } from '$lib/i18n';
 
 	type PostFormMessage = {
 		type: 'success' | 'error';
@@ -35,20 +36,20 @@
 	const MEDIA_OPTIONS = [
 		{
 			value: /** @type {'text'} */ ('text'),
-			label: 'Text',
-			helper: 'Plain text update without attachments.',
+			label: t('postForm.text'),
+			helper: t('postForm.textHelper'),
 			icon: MessageSquare
 		},
 		{
 			value: /** @type {'images'} */ ('images'),
-			label: 'Images',
-			helper: `Upload up to ${MAX_ATTACHMENTS} images. Alt text is required.`,
+			label: t('postForm.images'),
+			helper: t('postForm.imagesHelper', { count: MAX_ATTACHMENTS }),
 			icon: ImagePlus
 		},
 		{
 			value: /** @type {'video'} */ ('video'),
-			label: 'Video',
-			helper: 'Upload a single MP4 (≤5 minutes) with a poster thumbnail.',
+			label: t('postForm.video'),
+			helper: t('postForm.videoHelper'),
 			icon: Video
 		}
 	] as const;
@@ -390,13 +391,13 @@
 	{/if}
 
 	<div class="space-y-2">
-		<Label for="post-content">What's on your mind?</Label>
+		<Label for="post-content">{t('postForm.label')}</Label>
 		<Textarea
 			id="post-content"
 			name="content"
 			ref={contentField}
 			bind:value={$form.content}
-			placeholder="Share a progress update, insightful resource, or question for the community."
+			placeholder={t('postForm.placeholder')}
 			rows={4}
 			disabled={disabled || $submitting}
 			class="resize-none"
@@ -416,7 +417,7 @@
 	</div>
 
 	<div class="space-y-2">
-		<Label class="text-sm font-medium text-muted-foreground">Media type</Label>
+		<Label class="text-sm font-medium text-muted-foreground">{t('postForm.mediaTypeLabel')}</Label>
 		<div class="inline-flex flex-wrap gap-2">
 			{#each MEDIA_OPTIONS as option (option.value)}
 				{@const Icon = option.icon}
@@ -456,10 +457,10 @@
 				disabled={disabled || $submitting}
 			>
 				<ImagePlus class="mr-2 h-4 w-4" aria-hidden="true" />
-				Add images
+				{t('postForm.addImages')}
 			</Button>
 			<p class="text-xs text-muted-foreground">
-				JPEG, PNG, WebP, GIF, HEIC. Up to {MAX_ATTACHMENTS} images.
+				{t('postForm.imageFormats', { count: MAX_ATTACHMENTS })}
 			</p>
 			{#if $attachments.length > 0}
 				<div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
