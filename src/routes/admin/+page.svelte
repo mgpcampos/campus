@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '$lib/i18n';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { formatDistanceToNowStrict } from 'date-fns';
 	import type { PageData } from './$types';
@@ -45,7 +46,7 @@
 	}
 
 	function vitalStatus(name: 'lcp' | 'cls' | 'fid', value: number | null) {
-		if (value == null) return { label: 'No data', tone: 'text-muted-foreground' };
+		if (value == null) return { label: t('adminDashboard.noData'), tone: 'text-muted-foreground' };
 		const thresholds = {
 			lcp: { good: 2.5, needs: 4 },
 			cls: { good: 0.1, needs: 0.25 },
@@ -55,9 +56,17 @@
 		const { good, needs } = thresholds[name];
 		const goodLabel = name === 'cls' ? value <= good : value <= good;
 		const needsLabel = name === 'cls' ? value <= needs : value <= needs;
-		if (goodLabel) return { label: 'Good', tone: 'text-emerald-600 dark:text-emerald-400' };
-		if (needsLabel) return { label: 'Needs attention', tone: 'text-amber-600 dark:text-amber-400' };
-		return { label: 'Poor', tone: 'text-destructive' };
+		if (goodLabel)
+			return {
+				label: t('adminDashboard.vitalsGood'),
+				tone: 'text-emerald-600 dark:text-emerald-400'
+			};
+		if (needsLabel)
+			return {
+				label: t('adminDashboard.vitalsNeedsAttention'),
+				tone: 'text-amber-600 dark:text-amber-400'
+			};
+		return { label: t('adminDashboard.vitalsPoor'), tone: 'text-destructive' };
 	}
 
 	function eventTone(type: string) {
@@ -78,28 +87,32 @@
 
 <div class="space-y-6">
 	<header class="space-y-2">
-		<h1 class="text-3xl font-semibold tracking-tight">Welcome back, {admin.name}</h1>
+		<h1 class="text-3xl font-semibold tracking-tight">
+			{t('adminDashboard.welcomeBack', { name: admin.name })}
+		</h1>
 		<p class="text-muted-foreground">
-			High-level overview of engagement, system health, and moderation activity across the platform.
+			{t('adminDashboard.overview')}
 		</p>
 	</header>
 
 	<section aria-label="Key metrics" class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
 		<Card.Root>
 			<Card.Header>
-				<Card.Title>Total members</Card.Title>
-				<Card.Description>Registered accounts</Card.Description>
+				<Card.Title>{t('adminDashboard.totalMembers')}</Card.Title>
+				<Card.Description>{t('adminDashboard.registeredAccounts')}</Card.Description>
 			</Card.Header>
 			<Card.Content class="flex items-end justify-between">
 				<span class="text-3xl font-semibold">{numberFormatter.format(metrics.usersTotal)}</span>
-				<span class="text-sm text-muted-foreground">includes admins and moderators</span>
+				<span class="text-sm text-muted-foreground"
+					>{t('adminDashboard.includesAdminsModerators')}</span
+				>
 			</Card.Content>
 		</Card.Root>
 
 		<Card.Root>
 			<Card.Header>
-				<Card.Title>Spaces</Card.Title>
-				<Card.Description>Active communities</Card.Description>
+				<Card.Title>{t('adminDashboard.spaces')}</Card.Title>
+				<Card.Description>{t('adminDashboard.activeCommunities')}</Card.Description>
 			</Card.Header>
 			<Card.Content class="text-3xl font-semibold">
 				{numberFormatter.format(metrics.spacesTotal)}
@@ -108,8 +121,8 @@
 
 		<Card.Root>
 			<Card.Header>
-				<Card.Title>Groups</Card.Title>
-				<Card.Description>Organized study cohorts</Card.Description>
+				<Card.Title>{t('adminDashboard.groups')}</Card.Title>
+				<Card.Description>{t('adminDashboard.organizedCohorts')}</Card.Description>
 			</Card.Header>
 			<Card.Content class="text-3xl font-semibold">
 				{numberFormatter.format(metrics.groupsTotal)}
@@ -118,12 +131,12 @@
 
 		<Card.Root>
 			<Card.Header>
-				<Card.Title>Open reports</Card.Title>
-				<Card.Description>User generated moderation requests</Card.Description>
+				<Card.Title>{t('adminDashboard.openReportsCard')}</Card.Title>
+				<Card.Description>{t('adminDashboard.moderationRequests')}</Card.Description>
 			</Card.Header>
 			<Card.Content class="flex items-center justify-between">
 				<span class="text-3xl font-semibold">{numberFormatter.format(metrics.openReports)}</span>
-				<span class="text-sm text-muted-foreground">needs review</span>
+				<span class="text-sm text-muted-foreground">{t('adminDashboard.needsReview')}</span>
 			</Card.Content>
 		</Card.Root>
 	</section>
@@ -134,27 +147,32 @@
 				class="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:justify-between"
 			>
 				<div>
-					<Card.Title>Engagement</Card.Title>
+					<Card.Title>{t('adminDashboard.engagement')}</Card.Title>
 					<Card.Description
-						>Last {analytics.rangeDays}
-						{analytics.rangeDays === 1 ? 'day' : 'days'}</Card.Description
+						>{t('adminDashboard.lastDays', { days: analytics.rangeDays })}</Card.Description
 					>
 				</div>
 				<div class="flex gap-6 text-sm text-muted-foreground">
 					<div>
-						<span class="block text-xs tracking-wide uppercase">Page views</span>
+						<span class="block text-xs tracking-wide uppercase"
+							>{t('adminDashboard.pageViews')}</span
+						>
 						<span class="text-base font-medium text-foreground">
 							{numberFormatter.format(analytics.pageViews)}
 						</span>
 					</div>
 					<div>
-						<span class="block text-xs tracking-wide uppercase">Unique sessions</span>
+						<span class="block text-xs tracking-wide uppercase"
+							>{t('adminDashboard.uniqueSessions')}</span
+						>
 						<span class="text-base font-medium text-foreground">
 							{numberFormatter.format(analytics.uniqueSessions)}
 						</span>
 					</div>
 					<div>
-						<span class="block text-xs tracking-wide uppercase">Active users</span>
+						<span class="block text-xs tracking-wide uppercase"
+							>{t('adminDashboard.activeUsers')}</span
+						>
 						<span class="text-base font-medium text-foreground">
 							{numberFormatter.format(analytics.uniqueUsers)}
 						</span>
@@ -183,19 +201,19 @@
 						</div>
 					</div>
 				{:else}
-					<p class="text-sm text-muted-foreground">No analytics data captured yet.</p>
+					<p class="text-sm text-muted-foreground">{t('adminDashboard.noAnalyticsData')}</p>
 				{/if}
 			</Card.Content>
 		</Card.Root>
 
 		<Card.Root>
 			<Card.Header>
-				<Card.Title>Top pages</Card.Title>
-				<Card.Description>Most visited destinations</Card.Description>
+				<Card.Title>{t('adminDashboard.topPages')}</Card.Title>
+				<Card.Description>{t('adminDashboard.mostVisited')}</Card.Description>
 			</Card.Header>
 			<Card.Content class="space-y-3">
 				{#if analytics.topPages.length === 0}
-					<p class="text-sm text-muted-foreground">Not enough events captured.</p>
+					<p class="text-sm text-muted-foreground">{t('adminDashboard.notEnoughEvents')}</p>
 				{:else}
 					<ul class="space-y-3 text-sm">
 						{#each analytics.topPages as page}
@@ -213,8 +231,8 @@
 	<section class="grid gap-4 lg:grid-cols-2">
 		<Card.Root>
 			<Card.Header>
-				<Card.Title>Core Web Vitals</Card.Title>
-				<Card.Description>Performance measurements from real users</Card.Description>
+				<Card.Title>{t('adminDashboard.coreWebVitals')}</Card.Title>
+				<Card.Description>{t('adminDashboard.performanceMeasurements')}</Card.Description>
 			</Card.Header>
 			<Card.Content class="space-y-4">
 				{#each Object.entries(analytics.vitals) as [key, value]}
@@ -241,12 +259,12 @@
 
 		<Card.Root>
 			<Card.Header>
-				<Card.Title>Recent telemetry</Card.Title>
-				<Card.Description>Latest analytics events</Card.Description>
+				<Card.Title>{t('adminDashboard.recentTelemetry')}</Card.Title>
+				<Card.Description>{t('adminDashboard.latestAnalyticsEvents')}</Card.Description>
 			</Card.Header>
 			<Card.Content class="space-y-3">
 				{#if recentEvents.length === 0}
-					<p class="text-sm text-muted-foreground">No telemetry recorded yet.</p>
+					<p class="text-sm text-muted-foreground">{t('adminDashboard.noTelemetry')}</p>
 				{:else}
 					<ul class="space-y-3">
 						{#each recentEvents as event (event.id)}
@@ -278,12 +296,12 @@
 	<section class="grid gap-4 lg:grid-cols-2">
 		<Card.Root>
 			<Card.Header>
-				<Card.Title>Open reports</Card.Title>
-				<Card.Description>Content awaiting moderation</Card.Description>
+				<Card.Title>{t('adminDashboard.openReportsSection')}</Card.Title>
+				<Card.Description>{t('adminDashboard.contentAwaitingModeration')}</Card.Description>
 			</Card.Header>
 			<Card.Content class="space-y-3">
 				{#if recentReports.length === 0}
-					<p class="text-sm text-muted-foreground">No open reports 🎉</p>
+					<p class="text-sm text-muted-foreground">{t('adminDashboard.noOpenReports')}</p>
 				{:else}
 					<ul class="space-y-4 text-sm">
 						{#each recentReports as report (report.id)}
@@ -313,12 +331,12 @@
 
 		<Card.Root>
 			<Card.Header>
-				<Card.Title>Moderation log</Card.Title>
-				<Card.Description>Recent actions from moderators</Card.Description>
+				<Card.Title>{t('adminDashboard.moderationLog')}</Card.Title>
+				<Card.Description>{t('adminDashboard.recentModerationActions')}</Card.Description>
 			</Card.Header>
 			<Card.Content class="space-y-3">
 				{#if recentModeration.length === 0}
-					<p class="text-sm text-muted-foreground">No moderation actions yet.</p>
+					<p class="text-sm text-muted-foreground">{t('adminDashboard.noModerationActions')}</p>
 				{:else}
 					<ul class="space-y-3 text-sm">
 						{#each recentModeration as entry (entry.id)}

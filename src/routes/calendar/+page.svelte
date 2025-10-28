@@ -251,11 +251,13 @@
 			bind:this={modalElement}
 			class="max-h-screen w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-6 shadow-xl"
 		>
-			<h2 id="modal-title" class="mb-4 text-2xl font-bold">Create Event</h2>
+			<h2 id="modal-title" class="mb-4 text-2xl font-bold">{t('calendarCreate.heading')}</h2>
 
 			<form method="POST" action="?/createEvent" use:enhance={handleCreateSubmit} class="space-y-4">
 				<div>
-					<label for="title" class="block text-sm font-medium text-gray-700">Title *</label>
+					<label for="title" class="block text-sm font-medium text-gray-700"
+						>{t('calendarCreate.titleLabel')}</label
+					>
 					<input
 						type="text"
 						id="title"
@@ -267,7 +269,7 @@
 
 				<div>
 					<label for="description" class="block text-sm font-medium text-gray-700"
-						>Description</label
+						>{t('calendarCreate.descriptionLabel')}</label
 					>
 					<textarea
 						id="description"
@@ -278,7 +280,9 @@
 				</div>
 
 				<div>
-					<label for="date" class="block text-sm font-medium text-gray-700">Date & Time *</label>
+					<label for="date" class="block text-sm font-medium text-gray-700"
+						>{t('calendarCreate.dateLabel')}</label
+					>
 					<input
 						type="datetime-local"
 						id="date"
@@ -294,7 +298,7 @@
 						onclick={closeCreateModal}
 						class="rounded-md border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:outline-none"
 					>
-						Cancel
+						{t('calendarCreate.cancelButton')}
 					</button>
 					<button
 						type="submit"
@@ -303,7 +307,7 @@
 						aria-live="polite"
 						aria-busy={isSubmitting}
 					>
-						{isSubmitting ? 'Creating...' : 'Create Event'}
+						{isSubmitting ? t('calendarCreate.creatingButton') : t('calendarCreate.createButton')}
 					</button>
 				</div>
 			</form>

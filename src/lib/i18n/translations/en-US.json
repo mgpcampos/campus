@@ -63,6 +63,11 @@
 	},
 	"profile": {
 		"title": "Profile Settings",
+		"heading": "Edit Your Profile",
+		"fullName": "Full Name",
+		"email": "Email Address",
+		"emailCannotChange": "Email address cannot be changed",
+		"saveChanges": "Save Changes",
 		"displayName": "Display name",
 		"displayNamePlaceholder": "Your display name",
 		"username": "Username",
@@ -117,7 +122,11 @@
 		"loadMore": "Load more",
 		"postDeleted": "Post deleted successfully",
 		"reported": "Reported",
-		"whatsOnYourMind": "What's on your mind?"
+		"whatsOnYourMind": "What's on your mind?",
+		"new": "Newest",
+		"top": "Top",
+		"trending": "Trending",
+		"searchPlaceholder": "Search"
 	},
 	"messaging": {
 		"typeMessage": "Type your message...",
@@ -138,7 +147,10 @@
 	},
 	"materials": {
 		"title": "Materials",
+		"subtitle": "Upload and share educational resources with the community",
+		"view": "View",
 		"upload": "Upload Material",
+		"uploadNew": "Upload Material",
 		"uploadDescription": "Upload a new material for the community.",
 		"myMaterials": "My Materials",
 		"myMaterialsSubtitle": "Your uploaded educational resources",
@@ -164,7 +176,7 @@
 		"unknownUploader": "Unknown uploader",
 		"moreTags": "+{{count}} more",
 		"viewDetails": "View details for {{title}}",
-		"download": "Download {{title}}",
+		"download": "Download",
 		"openLink": "Open link",
 		"openLinkFor": "Open link for {{title}}",
 		"uploadedOn": "Uploaded on {{date}}",
@@ -346,6 +358,7 @@
 	},
 	"spaces": {
 		"title": "Spaces",
+		"heading": "Spaces",
 		"pageTitle": "Spaces | Campus",
 		"pageTitleWithSearch": "Spaces matching \"{{query}}\" | Campus",
 		"searchPlaceholder": "Search",
@@ -355,11 +368,14 @@
 		"noSpacesAvailable": "No spaces are available yet. Be the first to",
 		"createOne": "create one",
 		"members": "Members",
-		"hidden": "Hidden"
+		"hidden": "Hidden",
+		"emptyPosts": "No posts yet. Be the first to contribute!",
+		"joinPrompt": "Join this space to see its posts."
 	},
 	"calendar": {
 		"title": "Calendar | Campus",
 		"pageTitle": "Calendar",
+		"heading": "Calendar",
 		"createEvent": "Create Event",
 		"createNewEvent": "Create new event",
 		"noEvents": "No events scheduled. Create your first event to get started!",
@@ -376,6 +392,20 @@
 	"profiles": {
 		"pageTitle": "Academic Profiles | Campus",
 		"title": "Academic Profiles",
+		"heading": "Academic Profiles",
+		"return": "Return",
+		"editProfileButton": "Edit profile",
+		"search": "Search",
+		"displayName": "Display Name",
+		"role": "Role",
+		"department": "Department",
+		"biography": "Biography",
+		"roleStudent": "Student",
+		"roleProfessor": "Professor",
+		"roleResearcher": "Researcher",
+		"roleStaff": "Staff",
+		"cancel": "Cancel",
+		"createProfileButton": "Create Profile",
 		"subtitle": "Browse faculty, researchers, and students with their scientific production records",
 		"createProfile": "Create Profile",
 		"searchLabel": "Search",
@@ -404,7 +434,13 @@
 		"create": "Create",
 		"createProfileError": "Failed to create profile",
 		"publications": "{{count}} publications",
-		"viewProfile": "View Profile"
+		"publicationsHeading": "Publications",
+		"aboutHeading": "About",
+		"linksHeading": "Links",
+		"noPublications": "No publications yet.",
+		"viewProfile": "View Profile",
+		"createDialogTitle": "Create New Academic Profile",
+		"createDialogDescription": "Create an academic profile to share your biography, role, and department with the community."
 	},
 	"messages": {
 		"pageTitle": "Messages | Campus",
@@ -427,5 +463,88 @@
 		"title": "Groups Are No Longer Supported",
 		"description": "The groups experience has been retired. Please use spaces to collaborate with your peers.",
 		"browseSpaces": "Browse Spaces"
+	},
+	"spacesCreate": {
+		"pageTitle": "Create Space | Campus",
+		"heading": "Create Space",
+		"nameLabel": "Name",
+		"slugLabel": "Slug",
+		"slugHelper": "Choose a short, unique slug. It becomes the URL, like",
+		"descriptionLabel": "Description",
+		"publicLabel": "Public",
+		"avatarLabel": "Avatar",
+		"createButton": "Create"
+	},
+	"spacesManage": {
+		"descriptionLabel": "Description",
+		"saveButton": "Save",
+		"backLink": "Back",
+		"backButton": "Back"
+	},
+	"spaceDetail": {
+		"leaveButton": "Leave",
+		"joinButton": "Join",
+		"manageLink": "Manage",
+		"postsHeading": "Posts",
+		"manageButton": "Manage"
+	},
+	"adminDashboard": {
+		"pageTitle": "Admin Dashboard | Campus",
+		"welcomeBack": "Welcome back, {{name}}",
+		"subtitle": "High-level overview of engagement, system health, and moderation activity across the platform.",
+		"keyMetrics": "Key metrics",
+		"totalMembers": "Total members",
+		"registeredAccounts": "Registered accounts",
+		"includesAdmins": "includes admins and moderators",
+		"spacesTitle": "Spaces",
+		"activeCommunities": "Active communities",
+		"groupsTitle": "Groups",
+		"studyCohorts": "Organized study cohorts",
+		"openReports": "Open reports",
+		"moderationRequests": "User generated moderation requests",
+		"needsReview": "needs review",
+		"engagementTitle": "Engagement",
+		"pageViews": "Page views",
+		"uniqueSessions": "Unique sessions",
+		"activeUsers": "Active users",
+		"topPages": "Top pages",
+		"mostVisited": "Most visited destinations",
+		"coreWebVitals": "Core Web Vitals",
+		"performanceMeasurements": "Performance measurements from real users",
+		"recentTelemetry": "Recent telemetry",
+		"latestEvents": "Latest analytics events",
+		"contentAwaiting": "Content awaiting moderation",
+		"moderationLog": "Moderation log",
+		"recentActions": "Recent actions from moderators",
+		"noData": "No data",
+		"good": "Good",
+		"needsAttention": "Needs attention",
+		"poor": "Poor"
+	},
+	"profileDetail": {
+		"memberships": "Memberships",
+		"spacesHeading": "Spaces",
+		"groupsHeading": "Groups",
+		"recentPosts": "Recent Posts"
+	},
+	"messageThread": {
+		"errorLoading": "Error loading conversation",
+		"signInToView": "Please sign in to view this conversation",
+		"conversationLocked": "This conversation is locked"
+	},
+	"calendarCreate": {
+		"heading": "Create Event",
+		"modalTitle": "Create Event",
+		"titleLabel": "Title *",
+		"descriptionLabel": "Description",
+		"dateLabel": "Date & Time *",
+		"createButton": "Create Event",
+		"creatingButton": "Creating Event",
+		"cancelButton": "Cancel"
+	},
+	"groupDetail": {
+		"leaveButton": "Leave",
+		"joinButton": "Join",
+		"postsHeading": "Posts"
 	}
 }

@@ -1,10 +1,15 @@
+<script>
+	import { t } from '$lib/i18n';
+	export let data;
+</script>
+
 <svelte:head>
 	<title>Groups Removed | Campus</title>
 	<meta name="robots" content="noindex" />
 </svelte:head>
 
 <div class="space-y-4 py-10 text-center">
-	<h1 class="text-2xl font-semibold">Groups Are No Longer Available</h1>
+	<h1 class="text-2xl font-semibold">{t('groupDetail.groupsUnavailable')}</h1>
 	<p class="text-muted-foreground">
 		This space no longer supports groups. Please connect through spaces directly instead.
 	</p>

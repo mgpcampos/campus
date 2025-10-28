@@ -1,6 +1,7 @@
 <svelte:options runes />
 
 <script lang="ts">
+	import { t } from '$lib/i18n/index.js';
 	type GroupRecord = Record<string, any>;
 	type GroupPost = Record<string, any>;
 
@@ -48,19 +49,19 @@
 	<div>
 		<h1 class="text-2xl font-bold">{groupName}</h1>
 		<div class="text-gray-600">{groupDescription}</div>
-		<div class="mt-1 text-sm">Members: {displayMemberCount}</div>
+		<div class="mt-1 text-sm">{t('spaces.members')}: {displayMemberCount}</div>
 		<div class="mt-3 flex gap-2">
 			{#if member}
 				<button
 					class="rounded bg-gray-300 px-3 py-1"
 					disabled={working}
-					onclick={() => action('leave')}>Leave</button
+					onclick={() => action('leave')}>{t('groupDetail.leaveButton')}</button
 				>
 			{:else}
 				<button
 					class="rounded bg-blue-600 px-3 py-1 text-white"
 					disabled={working}
-					onclick={() => action('join')}>Join</button
+					onclick={() => action('join')}>{t('groupDetail.joinButton')}</button
 				>
 			{/if}
 		</div>
@@ -68,7 +69,7 @@
 </div>
 
 <section>
-	<h2 class="mb-3 text-xl font-semibold">Posts</h2>
+	<h2 class="mb-3 text-xl font-semibold">{t('groupDetail.postsHeading')}</h2>
 	<ul class="space-y-3">
 		{#each postsItems as post}
 			<li class="rounded border p-3">

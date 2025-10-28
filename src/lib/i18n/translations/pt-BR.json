@@ -63,6 +63,11 @@
 	},
 	"profile": {
 		"title": "Configurações de Perfil",
+		"heading": "Editar Seu Perfil",
+		"fullName": "Nome Completo",
+		"email": "Endereço de Email",
+		"emailCannotChange": "O endereço de email não pode ser alterado",
+		"saveChanges": "Salvar Alterações",
 		"displayName": "Nome de exibição",
 		"displayNamePlaceholder": "Seu nome de exibição",
 		"username": "Nome de usuário",
@@ -117,7 +122,11 @@
 		"loadMore": "Carregar mais",
 		"postDeleted": "Publicação excluída com sucesso",
 		"reported": "Denunciado",
-		"whatsOnYourMind": "O que você está pensando?"
+		"whatsOnYourMind": "O que você está pensando?",
+		"new": "Mais recentes",
+		"top": "Mais populares",
+		"trending": "Em alta",
+		"searchPlaceholder": "Buscar"
 	},
 	"messaging": {
 		"typeMessage": "Digite sua mensagem...",
@@ -138,7 +147,10 @@
 	},
 	"materials": {
 		"title": "Materiais",
+		"subtitle": "Envie e compartilhe recursos educacionais com a comunidade",
+		"view": "Ver",
 		"upload": "Enviar Material",
+		"uploadNew": "Enviar Material",
 		"uploadDescription": "Envie um novo material para a comunidade.",
 		"myMaterials": "Meus Materiais",
 		"myMaterialsSubtitle": "Seus recursos educacionais enviados",
@@ -164,7 +176,7 @@
 		"unknownUploader": "Remetente desconhecido",
 		"moreTags": "+{{count}} mais",
 		"viewDetails": "Ver detalhes de {{title}}",
-		"download": "Baixar {{title}}",
+		"download": "Baixar",
 		"openLink": "Abrir link",
 		"openLinkFor": "Abrir link para {{title}}",
 		"uploadedOn": "Enviado em {{date}}",
@@ -346,6 +358,7 @@
 	},
 	"spaces": {
 		"title": "Espaços",
+		"heading": "Espaços",
 		"pageTitle": "Espaços | Campus",
 		"pageTitleWithSearch": "Espaços correspondentes a \"{{query}}\" | Campus",
 		"searchPlaceholder": "Buscar",
@@ -355,11 +368,14 @@
 		"noSpacesAvailable": "Ainda não há espaços disponíveis. Seja o primeiro a",
 		"createOne": "criar um",
 		"members": "Membros",
-		"hidden": "Oculto"
+		"hidden": "Oculto",
+		"emptyPosts": "Ainda não há publicações. Seja o primeiro a contribuir!",
+		"joinPrompt": "Junte-se a este espaço para ver suas publicações."
 	},
 	"calendar": {
 		"title": "Calendário | Campus",
 		"pageTitle": "Calendário",
+		"heading": "Calendário",
 		"createEvent": "Criar Evento",
 		"createNewEvent": "Criar novo evento",
 		"noEvents": "Nenhum evento agendado. Crie seu primeiro evento para começar!",
@@ -376,6 +392,20 @@
 	"profiles": {
 		"pageTitle": "Perfis Acadêmicos | Campus",
 		"title": "Perfis Acadêmicos",
+		"heading": "Perfis Acadêmicos",
+		"return": "Voltar",
+		"editProfileButton": "Editar perfil",
+		"search": "Buscar",
+		"displayName": "Nome de Exibição",
+		"role": "Função",
+		"department": "Departamento",
+		"biography": "Biografia",
+		"roleStudent": "Estudante",
+		"roleProfessor": "Professor",
+		"roleResearcher": "Pesquisador",
+		"roleStaff": "Funcionário",
+		"cancel": "Cancelar",
+		"createProfileButton": "Criar Perfil",
 		"subtitle": "Navegue por professores, pesquisadores e estudantes com seus registros de produção científica",
 		"createProfile": "Criar Perfil",
 		"searchLabel": "Buscar",
@@ -404,7 +434,13 @@
 		"create": "Criar",
 		"createProfileError": "Falha ao criar perfil",
 		"publications": "{{count}} publicações",
-		"viewProfile": "Ver Perfil"
+		"publicationsHeading": "Publicações",
+		"aboutHeading": "Sobre",
+		"linksHeading": "Links",
+		"noPublications": "Ainda não há publicações.",
+		"viewProfile": "Ver Perfil",
+		"createDialogTitle": "Criar Novo Perfil Acadêmico",
+		"createDialogDescription": "Crie um perfil acadêmico para compartilhar sua biografia, função e departamento com a comunidade."
 	},
 	"messages": {
 		"pageTitle": "Mensagens | Campus",
@@ -426,6 +462,89 @@
 		"pageTitle": "Grupos Removidos | Campus",
 		"title": "Grupos Não São Mais Suportados",
 		"description": "A experiência de grupos foi descontinuada. Por favor, use espaços para colaborar com seus colegas.",
-		"browseSpaces": "Navegar Espaços"
+		"browseSpaces": "Navegar pelos Espaços"
+	},
+	"spacesCreate": {
+		"pageTitle": "Criar Espaço | Campus",
+		"heading": "Criar Espaço",
+		"nameLabel": "Nome",
+		"slugLabel": "Slug",
+		"slugHelper": "Escolha um slug curto e único. Ele se torna a URL, como",
+		"descriptionLabel": "Descrição",
+		"publicLabel": "Público",
+		"avatarLabel": "Avatar",
+		"createButton": "Criar"
+	},
+	"spacesManage": {
+		"descriptionLabel": "Descrição",
+		"saveButton": "Salvar",
+		"backLink": "Voltar",
+		"backButton": "Voltar"
+	},
+	"spaceDetail": {
+		"leaveButton": "Sair",
+		"joinButton": "Entrar",
+		"manageLink": "Gerenciar",
+		"postsHeading": "Publicações",
+		"manageButton": "Gerenciar"
+	},
+	"adminDashboard": {
+		"pageTitle": "Painel Administrativo | Campus",
+		"welcomeBack": "Bem-vindo de volta, {{name}}",
+		"subtitle": "Visão geral de alto nível do engajamento, saúde do sistema e atividade de moderação na plataforma.",
+		"keyMetrics": "Métricas principais",
+		"totalMembers": "Total de membros",
+		"registeredAccounts": "Contas registradas",
+		"includesAdmins": "inclui admins e moderadores",
+		"spacesTitle": "Espaços",
+		"activeCommunities": "Comunidades ativas",
+		"groupsTitle": "Grupos",
+		"studyCohorts": "Grupos de estudo organizados",
+		"openReports": "Denúncias abertas",
+		"moderationRequests": "Solicitações de moderação geradas pelos usuários",
+		"needsReview": "precisa de revisão",
+		"engagementTitle": "Engajamento",
+		"pageViews": "Visualizações de página",
+		"uniqueSessions": "Sessões únicas",
+		"activeUsers": "Usuários ativos",
+		"topPages": "Páginas principais",
+		"mostVisited": "Destinos mais visitados",
+		"coreWebVitals": "Core Web Vitals",
+		"performanceMeasurements": "Medições de desempenho de usuários reais",
+		"recentTelemetry": "Telemetria recente",
+		"latestEvents": "Últimos eventos de análise",
+		"contentAwaiting": "Conteúdo aguardando moderação",
+		"moderationLog": "Registro de moderação",
+		"recentActions": "Ações recentes de moderadores",
+		"noData": "Sem dados",
+		"good": "Bom",
+		"needsAttention": "Precisa de atenção",
+		"poor": "Ruim"
+	},
+	"profileDetail": {
+		"memberships": "Participações",
+		"spacesHeading": "Espaços",
+		"groupsHeading": "Grupos",
+		"recentPosts": "Publicações Recentes"
+	},
+	"messageThread": {
+		"errorLoading": "Erro ao carregar conversa",
+		"signInToView": "Por favor, faça login para ver esta conversa",
+		"conversationLocked": "Esta conversa está bloqueada"
+	},
+	"calendarCreate": {
+		"heading": "Criar Evento",
+		"modalTitle": "Criar Evento",
+		"titleLabel": "Título *",
+		"descriptionLabel": "Descrição",
+		"dateLabel": "Data e Hora *",
+		"createButton": "Criar Evento",
+		"creatingButton": "Criando Evento",
+		"cancelButton": "Cancelar"
+	},
+	"groupDetail": {
+		"leaveButton": "Sair",
+		"joinButton": "Entrar",
+		"postsHeading": "Publicações"
 	}
 }

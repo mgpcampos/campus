@@ -77,7 +77,7 @@
 				<form method="POST" action="?/upload" enctype="multipart/form-data" use:uploadEnhance>
 					<div class="space-y-4">
 						<div>
-							<Label for="title">{t('materials.titleLabel')} *</Label>
+							<Label for="title">{t('materials.titleLabel')}</Label>
 							<Input
 								id="title"
 								name="title"
@@ -102,7 +102,7 @@
 						</div>
 
 						<div>
-							<Label for="file">{t('materials.fileLabel')} *</Label>
+							<Label for="file">{t('materials.fileLabel')}</Label>
 							<Input id="file" name="file" type="file" accept="*/*" />
 							{#if $errors.file}
 								<p class="text-sm text-destructive">{$errors.file}</p>
@@ -205,7 +205,6 @@
 
 						<div class="flex items-center justify-between text-xs text-muted-foreground">
 							<span>{formatDate(material.created)}</span>
-							<span class="capitalize">{material.visibility}</span>
 						</div>
 					</Card.Content>
 

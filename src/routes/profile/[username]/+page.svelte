@@ -1,4 +1,5 @@
 <script>
+	import { t } from '$lib/i18n';
 	export let data;
 	const { profile, posts, memberships } = data;
 </script>
@@ -22,10 +23,12 @@
 	</section>
 
 	<section aria-labelledby="memberships-heading" class="rounded-lg bg-white p-6 shadow">
-		<h2 id="memberships-heading" class="mb-4 text-lg font-semibold">Memberships</h2>
+		<h2 id="memberships-heading" class="mb-4 text-lg font-semibold">
+			{t('profileDetail.membershipsHeading')}
+		</h2>
 		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 			<div>
-				<h3 class="mb-2 font-medium">Spaces</h3>
+				<h3 class="mb-2 font-medium">{t('profileDetail.spacesSubheading')}</h3>
 				{#if memberships.spaces.length === 0}
 					<p class="text-sm text-gray-500">No spaces joined.</p>
 				{:else}
@@ -39,7 +42,7 @@
 				{/if}
 			</div>
 			<div>
-				<h3 class="mb-2 font-medium">Groups</h3>
+				<h3 class="mb-2 font-medium">{t('profileDetail.groupsSubheading')}</h3>
 				{#if memberships.groups.length === 0}
 					<p class="text-sm text-gray-500">No groups joined.</p>
 				{:else}
@@ -59,7 +62,9 @@
 	</section>
 
 	<section aria-labelledby="posts-heading" class="rounded-lg bg-white p-6 shadow">
-		<h2 id="posts-heading" class="mb-4 text-lg font-semibold">Recent Posts</h2>
+		<h2 id="posts-heading" class="mb-4 text-lg font-semibold">
+			{t('profileDetail.recentPostsHeading')}
+		</h2>
 		{#if posts.items.length === 0}
 			<p class="text-sm text-gray-500">No posts yet.</p>
 		{:else}

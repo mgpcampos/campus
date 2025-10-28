@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { ChevronLeft, Mail, MapPin, Link as LinkIcon, Calendar } from '@lucide/svelte';
 	import { page } from '$app/stores';
+	import { t } from '$lib/i18n';
 
 	let { data } = $props();
 
@@ -29,7 +30,7 @@
 			class="mb-6 inline-flex items-center text-sm text-gray-600 hover:text-gray-900"
 		>
 			<ChevronLeft size={16} class="mr-1" />
-			Back to Profiles
+			{t('profiles.return')}
 		</a>
 
 		<!-- Profile Header -->
@@ -59,21 +60,21 @@
 							href="/profile"
 							class="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
 						>
-							Edit Profile
+							{t('profiles.editProfileButton')}
 						</a>
 					{/if}
 				</div>
 
 				{#if profile.biography}
 					<div class="mt-6 border-t border-gray-200 pt-6">
-						<h2 class="text-sm font-semibold text-gray-900">About</h2>
+						<h2 class="text-sm font-semibold text-gray-900">{t('profiles.aboutHeading')}</h2>
 						<p class="mt-2 text-gray-700">{@html profile.biography}</p>
 					</div>
 				{/if}
 
 				{#if profile.links && profile.links.length > 0}
 					<div class="mt-6 border-t border-gray-200 pt-6">
-						<h2 class="mb-3 text-sm font-semibold text-gray-900">Links</h2>
+						<h2 class="mb-3 text-sm font-semibold text-gray-900">{t('profiles.linksHeading')}</h2>
 						<div class="flex flex-wrap gap-3">
 							{#each profile.links as link}
 								<a
@@ -95,10 +96,10 @@
 		<!-- Publications Section -->
 		<div class="rounded-lg bg-white shadow">
 			<div class="px-6 py-6">
-				<h2 class="mb-6 text-2xl font-bold text-gray-900">Publications</h2>
+				<h2 class="mb-6 text-2xl font-bold text-gray-900">{t('profiles.publicationsHeading')}</h2>
 
 				{#if publications.length === 0}
-					<p class="text-gray-600">No publications yet.</p>
+					<p class="text-gray-600">{t('profiles.noPublications')}</p>
 				{:else}
 					<div class="space-y-6">
 						{#each publications as pub}

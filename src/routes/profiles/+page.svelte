@@ -194,11 +194,6 @@
 		</Card.Content>
 	</Card.Root>
 
-	<!-- Results Count -->
-	<div class="text-sm text-muted-foreground" role="status" aria-live="polite">
-		{t('profiles.showingResults', { count: filteredProfiles.length, total: data.profiles.length })}
-	</div>
-
 	<!-- Profiles Grid -->
 	{#if filteredProfiles.length === 0}
 		<Card.Root>

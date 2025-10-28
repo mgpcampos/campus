@@ -1,39 +1,44 @@
 <script>
+	import { t } from '$lib/i18n';
 	export let form;
 </script>
 
 <svelte:head>
-	<title>Create Space | Campus</title>
+	<title>{t('spacesCreate.pageTitle')}</title>
 </svelte:head>
 
-<h1 class="mb-4 text-2xl font-bold">Create Space</h1>
+<h1 class="mb-4 text-2xl font-bold">{t('spacesCreate.heading')}</h1>
 {#if form?.error}
 	<div class="mb-4 rounded bg-red-100 p-2 text-red-700">{form.error}</div>
 {/if}
 <form method="POST" enctype="multipart/form-data" class="space-y-3">
 	<div>
-		<label for="name" class="block text-sm font-medium">Name</label>
+		<label for="name" class="block text-sm font-medium">{t('spacesCreate.nameLabel')}</label>
 		<input id="name" name="name" required class="w-full rounded border px-2 py-1" />
 	</div>
 	<div>
-		<label for="slug" class="block text-sm font-medium">Slug</label>
+		<label for="slug" class="block text-sm font-medium">{t('spacesCreate.slugLabel')}</label>
 		<input id="slug" name="slug" required class="w-full rounded border px-2 py-1" />
 		<p class="mt-1 text-xs text-gray-500">
-			Choose a short, unique slug. It becomes the URL, like <code>/spaces/your-slug</code>.
+			{t('spacesCreate.slugHelper')} <code>/spaces/your-slug</code>.
 		</p>
 	</div>
 	<div>
-		<label for="description" class="block text-sm font-medium">Description</label>
+		<label for="description" class="block text-sm font-medium"
+			>{t('spacesCreate.descriptionLabel')}</label
+		>
 		<textarea id="description" name="description" class="w-full rounded border px-2 py-1" rows="3"
 		></textarea>
 	</div>
 	<div class="flex items-center gap-2">
 		<input id="isPublic" name="isPublic" type="checkbox" checked />
-		<label for="isPublic">Public</label>
+		<label for="isPublic">{t('spacesCreate.publicLabel')}</label>
 	</div>
 	<div>
-		<label for="avatar" class="block text-sm font-medium">Avatar</label>
+		<label for="avatar" class="block text-sm font-medium">{t('spacesCreate.avatarLabel')}</label>
 		<input id="avatar" type="file" name="avatar" accept="image/*" />
 	</div>
-	<button class="rounded bg-blue-600 px-4 py-2 text-white" type="submit">Create</button>
+	<button class="rounded bg-blue-600 px-4 py-2 text-white" type="submit"
+		>{t('spacesCreate.createButton')}</button
+	>
 </form>

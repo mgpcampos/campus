@@ -3,6 +3,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { currentUser } from '$lib/pocketbase';
+	import { t } from '$lib/i18n';
 	import MessageTimeline from '$lib/components/messaging/MessageTimeline.svelte';
 	import MessageComposer from '$lib/components/messaging/MessageComposer.svelte';
 	import FlagDialog from '$lib/components/messaging/FlagDialog.svelte';
@@ -166,7 +167,7 @@
 			<Card.Content class="flex items-center gap-3 py-6">
 				<AlertCircle class="h-5 w-5 text-destructive" aria-hidden="true" />
 				<div>
-					<p class="font-semibold text-destructive">Error loading conversation</p>
+					<p class="font-semibold text-destructive">{t('messageThread.errorLoading')}</p>
 					<p class="text-sm text-muted-foreground">{data.error}</p>
 				</div>
 			</Card.Content>
@@ -174,7 +175,7 @@
 	{:else if !$currentUser}
 		<Card.Root>
 			<Card.Content class="py-12 text-center">
-				<p class="text-muted-foreground">Please sign in to view this conversation</p>
+				<p class="text-muted-foreground">{t('messageThread.signInRequired')}</p>
 			</Card.Content>
 		</Card.Root>
 	{:else}
@@ -197,7 +198,7 @@
 					<Card.Content class="flex items-center gap-3 py-4">
 						<Lock class="h-5 w-5 text-destructive" aria-hidden="true" />
 						<div>
-							<p class="font-semibold text-destructive">This conversation is locked</p>
+							<p class="font-semibold text-destructive">{t('messageThread.conversationLocked')}</p>
 							<p class="text-sm text-muted-foreground">
 								A moderator has locked this conversation. No new messages can be sent.
 							</p>
