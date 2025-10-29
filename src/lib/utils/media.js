@@ -1,5 +1,12 @@
 // Configuration constants
-export const ALLOWED_IMAGE_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+export const ALLOWED_IMAGE_MIME = [
+	'image/jpeg',
+	'image/png',
+	'image/webp',
+	'image/gif',
+	'image/heic',
+	'image/heif'
+];
 export const ALLOWED_VIDEO_MIME = ['video/mp4'];
 export const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 export const MAX_VIDEO_SIZE_BYTES = 250 * 1024 * 1024; // 250MB ceiling for 5 minute H.264 uploads
@@ -85,9 +92,6 @@ export function validatePostMedia(params) {
 		case 'video': {
 			const [file] = attachments;
 			const { valid, errors } = validateVideo(file, params.videoDuration ?? null);
-			if (!params.poster) {
-				errors.push('Video poster thumbnail is required for video posts');
-			}
 			if (attachments.length !== 1) {
 				errors.push('Video posts require exactly one video');
 			}

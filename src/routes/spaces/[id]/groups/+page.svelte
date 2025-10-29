@@ -1,6 +1,5 @@
 <script>
 	import { t } from '$lib/i18n';
-	export let data;
 </script>
 
 <svelte:head>

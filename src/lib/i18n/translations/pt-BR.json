@@ -104,6 +104,14 @@
 		"signInDescription": "Faça login para compartilhar atualizações, colaborar com colegas e manter-se conectado com sua comunidade acadêmica.",
 		"writeCommentPlaceholder": "Escreva um comentário...",
 		"pressCtrlEnter": "Pressione Ctrl+Enter para enviar",
+		"commentAdded": "Comentário adicionado",
+		"commentDeleted": "Comentário excluído",
+		"deleteCommentConfirm": "Excluir este comentário?",
+		"commentToggleZero": "0 comentários",
+		"commentToggleOne": "1 comentário",
+		"commentToggleMany": "{{count}} comentários",
+		"loadMoreComments": "Carregar mais comentários",
+		"yourAvatarAlt": "Seu avatar",
 		"posting": "Enviando...",
 		"comment": "Comentar",
 		"signInToComment": "Faça login para comentar",
@@ -345,7 +353,12 @@
 		"placeholder": "Compartilhe uma atualização de progresso, recurso interessante ou pergunta para a comunidade.",
 		"mediaTypeLabel": "Tipo de mídia",
 		"addImages": "Adicionar imagens",
-		"imageFormats": "JPEG, PNG, WebP, GIF, HEIC. Até {{count}} imagens."
+		"selectVideo": "Selecionar vídeo",
+		"imageFormats": "JPEG, PNG, WebP, GIF, HEIC. Até {{count}} imagens.",
+		"contentRequired": "É necessário que a publicação possua conteúdo.",
+		"contentMaxLength": "O conteúdo da publicação deve ter menos de 2000 caracteres.",
+		"publish": "Publicar",
+		"createdPost": "Publicação criada com sucesso!"
 	},
 	"postCard": {
 		"edit": "Editar",

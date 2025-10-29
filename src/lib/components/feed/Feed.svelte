@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, createEventDispatcher } from 'svelte';
-	import { getPosts } from '$lib/services/posts.js';
+	import { getPosts, deletePost } from '$lib/services/posts.js';
 	import {
 		subscribeFeed,
 		enablePolling,
@@ -169,16 +169,27 @@
 	}
 
 	async function handleDelete(postId: string) {
-		try {
-			// Optimistically remove from UI
-			posts = posts.filter((p) => p.id !== postId);
-			dispatch('delete', { postId });
-			toast.success('Post deleted successfully');
-		} catch (err) {
-			await notifyError(err, { context: 'deletePost' });
-			// Reload to restore state
+		const previousPosts = [...posts];
+		posts = posts.filter((p) => p.id !== postId);
+		feedPosts.set(posts);
+
+		const success = await withErrorToast(
+			async () => {
+				await deletePost(postId);
+				return true;
+			},
+			{ context: 'deletePost' }
+		);
+
+		if (!success) {
+			posts = previousPosts;
+			feedPosts.set(posts);
 			await refreshFeed();
+			return;
 		}
+
+		dispatch('delete', { postId });
+		toast.success(t('feed.postDeleted'));
 	}
 
 	// Public method to add new post to feed

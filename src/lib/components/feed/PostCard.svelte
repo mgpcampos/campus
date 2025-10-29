@@ -54,6 +54,7 @@
 	$: formattedDate = formatDistanceToNow(new Date(post.created), { addSuffix: true });
 	$: linkedContent = linkifyContent(post.content);
 	$: canInteract = $currentUser !== null;
+	$: canDelete = Boolean(isOwner || canModerate);
 
 	onMount(() => {
 		let unsubscribeFn = () => {};
@@ -80,6 +81,9 @@
 				} catch {}
 			};
 		})();
+		if (showActions) {
+			loadCommentSection().catch((error) => console.error('comment preload failed', error));
+		}
 		return () => unsubscribeFn();
 	});
 
@@ -239,7 +243,7 @@
 										{t('postCard.edit')}
 									</DropdownMenu.Item>
 								{/if}
-								{#if canModerate}
+								{#if canDelete}
 									<DropdownMenu.Item onclick={handleDelete} class="text-destructive">
 										<Trash2 size={16} class="mr-2" />
 										{t('postCard.delete')}
@@ -360,13 +364,9 @@
 							/>
 						</div>
 					{:else}
-						<button
-							class="mt-2 text-sm text-blue-500 hover:underline"
-							onclick={loadCommentSection}
-							type="button"
-						>
-							Load comments...
-						</button>
+						<div class="mt-4 text-sm text-muted-foreground">
+							{t('feed.loadingComments')}
+						</div>
 					{/if}
 				{/if}
 			</div>

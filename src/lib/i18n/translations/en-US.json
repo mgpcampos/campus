@@ -104,6 +104,14 @@
 		"signInDescription": "Sign in to share updates, collaborate with peers, and stay connected with your academic community.",
 		"writeCommentPlaceholder": "Write a comment...",
 		"pressCtrlEnter": "Press Ctrl+Enter to submit",
+		"commentAdded": "Comment added",
+		"commentDeleted": "Comment deleted",
+		"deleteCommentConfirm": "Delete this comment?",
+		"commentToggleZero": "0 comments",
+		"commentToggleOne": "1 comment",
+		"commentToggleMany": "{{count}} comments",
+		"loadMoreComments": "Load more comments",
+		"yourAvatarAlt": "Your avatar",
 		"posting": "Posting...",
 		"comment": "Comment",
 		"signInToComment": "Sign in to comment",
@@ -345,7 +353,12 @@
 		"placeholder": "Share a progress update, insightful resource, or question for the community.",
 		"mediaTypeLabel": "Media type",
 		"addImages": "Add images",
-		"imageFormats": "JPEG, PNG, WebP, GIF, HEIC. Up to {{count}} images."
+		"imageFormats": "JPEG, PNG, WebP, GIF, HEIC. Up to {{count}} images.",
+		"selectVideo": "Select video",
+		"contentRequired": "Post content is required.",
+		"contentMaxLength": "Post content must be less than 2000 characters.",
+		"publish": "Publish",
+		"createdPost": "Post created successfully!"
 	},
 	"postCard": {
 		"edit": "Edit",

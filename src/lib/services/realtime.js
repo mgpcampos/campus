@@ -6,12 +6,41 @@ export const feedPosts = writable([]); // array of post records
 /** @type {import('svelte/store').Writable<{scope:string; space:string|null; group:string|null}>} */
 export const feedContext = writable({ scope: 'global', space: null, group: null });
 /** @type {import('svelte/store').Writable<{connected:boolean; lastEvent:number}>} */
-export const realtimeStatus = writable({ connected: true, lastEvent: Date.now() });
+export const realtimeStatus = writable({
+	connected: Boolean(pb.realtime.isConnected),
+	lastEvent: Date.now()
+});
 
 /** @type {null | (()=>void)} */
 let postsUnsub = null;
-/** @type {null | ReturnType<typeof setInterval>} */
-let heartbeatInterval = null;
+let realtimeEventsSetup = false;
+
+async function ensureRealtimeEvents() {
+	if (realtimeEventsSetup) return;
+	realtimeEventsSetup = true;
+
+	const previousOnDisconnect = pb.realtime.onDisconnect;
+	pb.realtime.onDisconnect = (activeSubscriptions) => {
+		if (typeof previousOnDisconnect === 'function') {
+			try {
+				previousOnDisconnect(activeSubscriptions);
+			} catch {
+				/* ignore chained disconnect handler error */
+			}
+		}
+		realtimeStatus.update((status) => ({ ...status, connected: false }));
+	};
+
+	try {
+		await pb.realtime.subscribe('PB_CONNECT', () => {
+			realtimeStatus.update((status) => ({ ...status, connected: true, lastEvent: Date.now() }));
+		});
+	} catch (error) {
+		console.warn('Failed to subscribe to PB_CONNECT', error);
+	}
+
+	realtimeStatus.update((status) => ({ ...status, connected: Boolean(pb.realtime.isConnected) }));
+}
 
 /**
  * @param {any} record
@@ -30,8 +59,13 @@ function matchesContext(record, ctx) {
 export async function subscribeFeed(ctx) {
 	feedContext.set(ctx);
 	await unsubscribeFeed();
+	await ensureRealtimeEvents();
 	postsUnsub = await pb.collection('posts').subscribe('*', (e) => {
-		realtimeStatus.update((s) => ({ ...s, lastEvent: Date.now() }));
+		realtimeStatus.update((s) => ({
+			...s,
+			lastEvent: Date.now(),
+			connected: Boolean(pb.realtime.isConnected)
+		}));
 		const current = /** @type {any[]} */ (get(feedPosts));
 		if (!matchesContext(e.record, ctx)) return;
 		if (e.action === 'create') {
@@ -42,7 +76,6 @@ export async function subscribeFeed(ctx) {
 			feedPosts.set(current.filter((p) => p.id !== e.record.id));
 		}
 	});
-	startHeartbeat();
 	return postsUnsub;
 }
 
@@ -60,25 +93,6 @@ export async function unsubscribeFeed() {
 		}
 		postsUnsub = null;
 	}
-	stopHeartbeat();
-}
-
-function startHeartbeat() {
-	stopHeartbeat();
-	heartbeatInterval = setInterval(() => {
-		const status = get(realtimeStatus);
-		const diff = Date.now() - status.lastEvent;
-		if (diff > 30000 && status.connected) {
-			realtimeStatus.set({ ...status, connected: false });
-		} else if (diff <= 30000 && !status.connected) {
-			realtimeStatus.set({ ...status, connected: true });
-		}
-	}, 5000);
-}
-
-function stopHeartbeat() {
-	if (heartbeatInterval) clearInterval(heartbeatInterval);
-	heartbeatInterval = null;
 }
 
 // Simple polling fallback when disconnected

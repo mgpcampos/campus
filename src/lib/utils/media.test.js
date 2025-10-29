@@ -53,6 +53,12 @@ describe('media utils', () => {
 		const res = validateImages([f1]);
 		expect(res.valid).toBe(true);
 	});
+	it('includes modern iphone formats', () => {
+		const heic = makeFile('a.heic', 'image/heic', 1024);
+		const heif = makeFile('b.heif', 'image/heif', 2048);
+		const res = validateImages([heic, heif]);
+		expect(res.valid).toBe(true);
+	});
 	it('rejects invalid mime', () => {
 		const f = makeFile('a.txt', 'text/plain', 100);
 		const res = validateImages([f]);

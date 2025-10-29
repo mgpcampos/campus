@@ -10,15 +10,7 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Textarea } from '$lib/components/ui/textarea/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
-	import {
-		ImagePlus,
-		UploadCloud,
-		FileVideo,
-		Loader2,
-		X,
-		MessageSquare,
-		Video
-	} from '@lucide/svelte';
+	import { ImagePlus, FileVideo, Loader2, X, MessageSquare, Video } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
 	import { validateImages, validateVideo, MAX_ATTACHMENTS } from '$lib/utils/media.js';
 	import { writable } from 'svelte/store';
@@ -59,7 +51,6 @@
 	const dispatch = createEventDispatcher<{ postCreated: any }>();
 
 	const attachments = writable<AttachmentPreview[]>([]);
-	const poster = writable<AttachmentPreview | null>(null);
 	const uploadError = writable<string | null>(null);
 	const generalError = writable<string | null>(null);
 	const videoDurationDisplay = writable<number | null>(null);
@@ -102,26 +93,18 @@
 	});
 
 	const errorIds = {
-		content: 'post-content-error',
-		mediaAltText: 'post-media-alt-text-error'
+		content: 'post-content-error'
 	} as const;
 
 	const nativeInvalid = $state({
-		content: false,
-		mediaAltText: false
+		content: false
 	});
 
 	const contentInvalid = $derived.by(
 		() => (Array.isArray($errors.content) && $errors.content.length > 0) || nativeInvalid.content
 	);
-	const mediaAltInvalid = $derived.by(
-		() =>
-			(Array.isArray($errors.mediaAltText) && $errors.mediaAltText.length > 0) ||
-			nativeInvalid.mediaAltText
-	);
 
 	let contentField = $state<HTMLTextAreaElement | null>(null);
-	let mediaAltField = $state<HTMLTextAreaElement | null>(null);
 
 	$effect(() => {
 		if (!contentField) return;
@@ -132,20 +115,11 @@
 		return () => action.destroy();
 	});
 
-	$effect(() => {
-		if (!mediaAltField) return;
-		const action = ariaValidity(mediaAltField, {
-			invalid: mediaAltInvalid,
-			errorId: errorIds.mediaAltText
-		});
-		return () => action.destroy();
-	});
-
-	function handleNativeInvalid(field: 'content' | 'mediaAltText') {
+	function handleNativeInvalid(field: 'content') {
 		nativeInvalid[field] = true;
 	}
 
-	function handleNativeInput(field: 'content' | 'mediaAltText') {
+	function handleNativeInput(field: 'content') {
 		if (nativeInvalid[field]) {
 			nativeInvalid[field] = false;
 		}
@@ -153,9 +127,7 @@
 
 	let imageInput = $state<HTMLInputElement | null>(null);
 	let videoInput = $state<HTMLInputElement | null>(null);
-	let posterInput = $state<HTMLInputElement | null>(null);
 
-	const altLength = $derived.by(() => ($form.mediaAltText ?? '').length);
 	$effect(() => {
 		if ($message?.type === 'error') {
 			$generalError = $message.text;
@@ -166,7 +138,6 @@
 
 	onDestroy(() => {
 		clearPreviews($attachments);
-		if ($poster) revokePreview($poster);
 	});
 
 	function revokePreview(preview: AttachmentPreview | null) {
@@ -194,12 +165,9 @@
 	}
 
 	function resetVideoMetadata() {
-		if ($poster) revokePreview($poster);
-		$poster = null;
 		$form.videoPoster = undefined;
 		$form.videoDuration = undefined;
 		$videoDurationDisplay = null;
-		syncFileInput(posterInput, []);
 	}
 
 	function clearMediaState() {
@@ -253,8 +221,8 @@
 			.forEach(revokePreview);
 		$attachments = nextPreviews;
 		$form.attachments = nextPreviews.map((preview: AttachmentPreview) => preview.file);
-		syncFileInput(imageInput, $form.attachments as File[]);
 		target.value = '';
+		syncFileInput(imageInput, $form.attachments as File[]);
 		$uploadError = null;
 	}
 
@@ -296,36 +264,13 @@
 		const preview: AttachmentPreview = { file, url: URL.createObjectURL(file) };
 		$attachments = [preview];
 		$form.attachments = [file];
+		target.value = '';
 		syncFileInput(videoInput, [file]);
 		$form.mediaType = 'video';
 		$form.videoDuration = duration ?? undefined;
 		$videoDurationDisplay = duration ?? null;
 		$uploadError = null;
 		$generalError = null;
-		target.value = '';
-	}
-
-	function handlePosterSelect(event: Event) {
-		const target = event.target as HTMLInputElement;
-		const [file] = Array.from(target.files ?? []);
-		if (!file) {
-			target.value = '';
-			return;
-		}
-		const { valid, errors: validationErrors } = validateImages([file]);
-		if (!valid) {
-			$uploadError = validationErrors[0] ?? 'Poster image not supported';
-			validationErrors.slice(0, 3).forEach((message) => toast.error(message));
-			target.value = '';
-			return;
-		}
-		if ($poster) revokePreview($poster);
-		const preview: AttachmentPreview = { file, url: URL.createObjectURL(file) };
-		$poster = preview;
-		$form.videoPoster = file;
-		syncFileInput(posterInput, [file]);
-		$uploadError = null;
-		target.value = '';
 	}
 
 	function removeAttachment(index: number) {
@@ -343,25 +288,12 @@
 		}
 	}
 
-	function removePoster() {
-		if ($poster) revokePreview($poster);
-		$poster = null;
-		$form.videoPoster = undefined;
-		syncFileInput(posterInput, []);
-	}
-
 	function currentMediaHelper() {
 		const current = MEDIA_OPTIONS.find((option) => option.value === $form.mediaType);
 		return current?.helper ?? '';
 	}
 
-	const canSubmit = $derived.by(
-		() =>
-			$form.content.trim().length > 0 &&
-			!disabled &&
-			!$submitting &&
-			($form.mediaType !== 'video' || ($attachments.length === 1 && $poster))
-	);
+	const canSubmit = $derived.by(() => $form.content.trim().length > 0 && !disabled && !$submitting);
 
 	const ACCEPT_IMAGES = 'image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif';
 </script>
@@ -506,7 +438,7 @@
 				disabled={disabled || $submitting}
 			>
 				<FileVideo class="mr-2 h-4 w-4" aria-hidden="true" />
-				Select video
+				{t('postForm.selectVideo')}
 			</Button>
 			{#if $attachments.length === 1}
 				<div
@@ -533,54 +465,9 @@
 					</Button>
 				</div>
 			{/if}
-
-			<div class="space-y-2">
-				<input
-					type="file"
-					name="videoPoster"
-					accept={ACCEPT_IMAGES}
-					class="hidden"
-					bind:this={posterInput}
-					onchange={handlePosterSelect}
-					disabled={disabled || $submitting}
-				/>
-				<div class="flex flex-wrap items-center gap-3">
-					<Button
-						type="button"
-						variant="outline"
-						size="sm"
-						onclick={() => posterInput?.click()}
-						disabled={disabled || $submitting}
-					>
-						<UploadCloud class="mr-2 h-4 w-4" aria-hidden="true" />
-						Add poster image
-					</Button>
-					{#if $poster}
-						<div class="relative h-20 w-32 overflow-hidden rounded-md border border-border/60">
-							<img
-								src={$poster.url}
-								alt="Video poster preview"
-								class="h-full w-full object-cover"
-							/>
-							<button
-								type="button"
-								onclick={removePoster}
-								class="absolute top-2 right-2 rounded-full bg-background/80 p-1 text-foreground shadow"
-								disabled={disabled || $submitting}
-							>
-								<X class="h-4 w-4" aria-hidden="true" />
-								<span class="sr-only">Remove poster</span>
-							</button>
-						</div>
-					{/if}
-				</div>
-				{#if $errors.videoPoster}
-					<p class="text-sm text-red-600">{$errors.videoPoster[0]}</p>
-				{/if}
-				{#if $errors.videoDuration}
-					<p class="text-sm text-red-600">{$errors.videoDuration[0]}</p>
-				{/if}
-			</div>
+			{#if $errors.videoDuration}
+				<p class="text-sm text-red-600">{$errors.videoDuration[0]}</p>
+			{/if}
 		</div>
 	{/if}
 
@@ -591,39 +478,12 @@
 		<p class="text-sm text-red-600">{$errors.attachments[0]}</p>
 	{/if}
 
-	{#if $form.mediaType !== 'text'}
-		<div class="space-y-2">
-			<Label for="media-alt-text">Media alt text</Label>
-			<Textarea
-				id="media-alt-text"
-				name="mediaAltText"
-				rows={2}
-				ref={mediaAltField}
-				bind:value={$form.mediaAltText}
-				disabled={disabled || $submitting}
-				aria-invalid={mediaAltInvalid ? 'true' : undefined}
-				aria-describedby={mediaAltInvalid ? errorIds.mediaAltText : undefined}
-				oninvalid={() => handleNativeInvalid('mediaAltText')}
-				oninput={() => handleNativeInput('mediaAltText')}
-			/>
-			<div class="flex items-center justify-between text-xs text-muted-foreground">
-				<span>Describe the media for screen readers.</span>
-				<span>{altLength}/2000</span>
-			</div>
-			{#if $errors.mediaAltText}
-				<p class="text-sm text-red-600" id={errorIds.mediaAltText} role="alert">
-					{$errors.mediaAltText[0]}
-				</p>
-			{/if}
-		</div>
-	{/if}
-
 	<div class="flex items-center justify-end gap-3">
 		<Button type="submit" disabled={!canSubmit}>
 			{#if $submitting}
 				<Loader2 class="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
 			{/if}
-			Publish post
+			{t('postForm.publish')}
 		</Button>
 	</div>
 </form>

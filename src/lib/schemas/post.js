@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { fileArraySchema, fileLikeSchema } from './helpers.js';
+import { t } from '$lib/i18n';
 
 /**
  * @typedef {import('zod').RefinementCtx} RefinementCtx
@@ -166,13 +167,6 @@ const validateMediaPayload = (data, ctx) => {
 				});
 			}
 			validateAttachmentsMime(attachments, IMAGE_MIME_TYPES, ctx, ['attachments']);
-			if (!ensureAltTextPresent(altText)) {
-				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
-					message: 'Alt text is required for image posts',
-					path: ['mediaAltText']
-				});
-			}
 			if (data.videoPoster) {
 				ctx.addIssue({
 					code: z.ZodIssueCode.custom,
@@ -198,20 +192,7 @@ const validateMediaPayload = (data, ctx) => {
 				});
 			}
 			validateAttachmentsMime(attachments, VIDEO_MIME_TYPES, ctx, ['attachments']);
-			if (!ensureAltTextPresent(altText)) {
-				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
-					message: 'Alt text is required for video posts',
-					path: ['mediaAltText']
-				});
-			}
-			if (!data.videoPoster) {
-				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
-					message: 'Video poster is required for video posts',
-					path: ['videoPoster']
-				});
-			} else {
+			if (data.videoPoster) {
 				const mime = getMimeType(data.videoPoster);
 				if (!POSTER_MIME_TYPES.includes(mime)) {
 					ctx.addIssue({
@@ -267,8 +248,8 @@ export const createPostSchema = z
 	.object({
 		content: z
 			.string()
-			.min(1, 'Post content is required')
-			.max(2000, 'Post content must be less than 2000 characters'),
+			.min(1, { message: t('postForm.contentRequired') })
+			.max(2000, { message: t('postForm.contentMaxLength') }),
 		scope: z.enum(['global', 'space', 'group']).default('global'),
 		space: z.string().trim().min(1).optional(),
 		group: z.string().trim().min(1).optional(),
@@ -299,8 +280,8 @@ export const updatePostSchema = z
 	.object({
 		content: z
 			.string()
-			.min(1, 'Post content is required')
-			.max(2000, 'Post content must be less than 2000 characters')
+			.min(1, { message: t('postForm.contentRequired') })
+			.max(2000, { message: t('postForm.contentMaxLength') })
 			.optional(),
 		scope: z.enum(['global', 'space', 'group']).optional(),
 		space: z.string().trim().min(1).optional(),

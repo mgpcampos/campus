@@ -5,6 +5,7 @@ import { withZod } from '$lib/validation';
 import { createPost } from '$lib/services/posts.js';
 import { normalizeError, getUserMessage } from '$lib/utils/errors.js';
 import { recordPostModerationSignal } from '$lib/services/moderation.js';
+import { t } from '$lib/i18n';
 import type { z } from 'zod';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -99,7 +100,7 @@ export const actions: Actions = {
 
 			return message(
 				form,
-				{ type: 'success', text: 'Post published successfully!', post: hydratedPost },
+				{ type: 'success', text: t('postForm.createdPost'), post: hydratedPost },
 				{ removeFiles: true }
 			);
 		} catch (error) {

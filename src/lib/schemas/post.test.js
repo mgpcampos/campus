@@ -34,7 +34,20 @@ describe('Post Schemas', () => {
 			expect(result.scope).toBe('global');
 		});
 
-		it('should validate image posts with alt text', () => {
+		it('should validate image posts without requiring alt text', () => {
+			const files = [createMockFile('image.jpg', 'image/jpeg')];
+			const data = {
+				content: 'Look at this image',
+				scope: 'global',
+				mediaType: 'images',
+				attachments: files
+			};
+
+			const result = createPostSchema.parse(data);
+			expect(result.attachments).toHaveLength(1);
+		});
+
+		it('should validate image posts with alt text when provided', () => {
 			const files = [createMockFile('image.jpg', 'image/jpeg')];
 			const data = {
 				content: 'Look at this image',
@@ -49,21 +62,22 @@ describe('Post Schemas', () => {
 			expect(result.mediaAltText).toBe('A test image');
 		});
 
-		it('should reject image posts without alt text', () => {
-			const files = [createMockFile('image.jpg', 'image/jpeg')];
+		it('should validate video posts with duration', () => {
+			const videoFile = createMockFile('video.mp4', 'video/mp4');
 			const data = {
-				content: 'Look at this image',
+				content: 'Watch this video',
 				scope: 'global',
-				mediaType: 'images',
-				attachments: files
+				mediaType: 'video',
+				attachments: [videoFile],
+				videoDuration: 120
 			};
 
-			expect(() => createPostSchema.parse(data)).toThrowError(
-				/Alt text is required for image posts/
-			);
+			const result = createPostSchema.parse(data);
+			expect(result.attachments).toHaveLength(1);
+			expect(result.videoDuration).toBe(120);
 		});
 
-		it('should validate video posts with poster and duration', () => {
+		it('should validate video posts with optional poster', () => {
 			const videoFile = createMockFile('video.mp4', 'video/mp4');
 			const posterFile = createMockFile('poster.jpg', 'image/jpeg');
 			const data = {
@@ -71,7 +85,6 @@ describe('Post Schemas', () => {
 				scope: 'global',
 				mediaType: 'video',
 				attachments: [videoFile],
-				mediaAltText: 'Demonstrating the project',
 				videoPoster: posterFile,
 				videoDuration: 120
 			};
@@ -81,14 +94,13 @@ describe('Post Schemas', () => {
 			expect(result.videoDuration).toBe(120);
 		});
 
-		it('should reject video posts without poster or duration', () => {
+		it('should reject video posts without duration', () => {
 			const videoFile = createMockFile('video.mp4', 'video/mp4');
 			const data = {
 				content: 'Watch this video',
 				scope: 'global',
 				mediaType: 'video',
-				attachments: [videoFile],
-				mediaAltText: 'Project walkthrough'
+				attachments: [videoFile]
 			};
 
 			expect(() => createPostSchema.parse(data)).toThrow();
@@ -162,8 +174,7 @@ describe('Post Schemas', () => {
 		it('should validate media updates when mediaType included', () => {
 			const data = {
 				mediaType: 'images',
-				attachments: [createMockFile('image.jpg', 'image/jpeg')],
-				mediaAltText: 'Accessible description'
+				attachments: [createMockFile('image.jpg', 'image/jpeg')]
 			};
 
 			const result = updatePostSchema.parse(data);

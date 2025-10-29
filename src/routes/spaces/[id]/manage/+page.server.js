@@ -24,10 +24,30 @@ export const actions = {
 		}
 		const data = await request.formData();
 		const description = data.get('description');
+		const name = data.get('name');
+		const isPublicRaw = data.get('isPublic');
+		const isPublic = isPublicRaw === 'on' || isPublicRaw === 'true';
+		const avatar = /** @type {File | null} */ (data.get('avatar'));
+
+		/** @type {Record<string, any>} */
+		const updates = { description };
+
+		// Only owners can change name and visibility
+		if (role === 'owner') {
+			if (name) updates.name = name;
+			updates.isPublic = isPublic;
+		}
+
+		// Handle avatar upload
+		if (avatar && avatar.size > 0) {
+			updates.avatar = avatar;
+		}
+
 		try {
-			await updateSpace(space.id, { description }, { pb: locals.pb });
+			await updateSpace(space.id, updates, { pb: locals.pb });
 			return { success: true };
 		} catch (e) {
+			console.error('Update space error:', e);
 			return fail(400, { error: 'Failed to update space' });
 		}
 	}
