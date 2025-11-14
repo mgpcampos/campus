@@ -207,7 +207,7 @@ function isNetworkError(err: ErrorLike | undefined): boolean {
 }
 
 function isOffline(): boolean {
-	const nav = typeof globalThis.navigator === 'undefined' ? undefined : globalThis.navigator
+	const nav = globalThis.navigator === undefined ? undefined : globalThis.navigator
 	return Boolean(nav && nav.onLine === false)
 }
 
@@ -281,7 +281,7 @@ export async function notifyError(
 	error: unknown,
 	options: NotifyOptions = {}
 ): Promise<NormalizedErrorResult | undefined> {
-	if (typeof globalThis.window === 'undefined') return undefined
+	if (globalThis.window === undefined) return undefined
 	try {
 		const mod = await import('svelte-sonner')
 		const toastFn = mod.toast

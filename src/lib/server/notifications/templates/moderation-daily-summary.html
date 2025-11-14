@@ -89,6 +89,9 @@
 				font-weight: 600;
 				color: #1f2937;
 			}
+			.button-row {
+				text-align: center;
+			}
 			.status-good {
 				color: #059669;
 			}
@@ -201,9 +204,9 @@
 				</p>
 				{{/if}}
 
-				<center>
+				<div class="button-row">
 					<a href="{{dashboardUrl}}" class="button">View Full Dashboard</a>
-				</center>
+				</div>
 
 				<p style="margin-top: 24px; font-size: 14px; color: #6b7280">
 					<strong>Trend:</strong> {{trend}} compared to yesterday

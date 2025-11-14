@@ -1,5 +1,5 @@
-import { readFileSync } from 'fs'
-import { join } from 'path'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 
 /**
  * Simple template renderer that replaces {{variable}} placeholders
@@ -13,11 +13,11 @@ function renderTemplate(template, variables) {
 	// Replace {{variable}} placeholders
 	for (const [key, value] of Object.entries(variables)) {
 		const regex = new RegExp(`{{${key}}}`, 'g')
-		rendered = rendered.replace(regex, value ?? '')
+		rendered = rendered.replaceAll(regex, value ?? '')
 	}
 
 	// Handle conditional blocks {{#if variable}}...{{/if}}
-	rendered = rendered.replace(/{{#if\s+(\w+)}}([\s\S]*?){{\/if}}/g, (match, key, content) => {
+	rendered = rendered.replaceAll(/{{#if\s+(\w+)}}([\s\S]*?){{\/if}}/g, (match, key, content) => {
 		return variables[key] ? content : ''
 	})
 
@@ -155,19 +155,20 @@ export function renderModerationEscalatedEmail({
  * @returns {string} HTML email
  */
 export function renderModerationDailySummaryEmail(params) {
-	const resolutionTimeClass =
-		params.avgResolutionTime.includes('min') && parseInt(params.avgResolutionTime) < 15
-			? 'status-good'
-			: parseInt(params.avgResolutionTime) < 60
-				? 'status-warning'
-				: 'status-critical'
+	const avgResolutionMinutes = Number.parseInt(params.avgResolutionTime, 10)
+	let resolutionTimeClass = 'status-critical'
+	if (params.avgResolutionTime.includes('min') && avgResolutionMinutes < 15) {
+		resolutionTimeClass = 'status-good'
+	} else if (avgResolutionMinutes < 60) {
+		resolutionTimeClass = 'status-warning'
+	}
 
-	const slaComplianceClass =
-		params.slaCompliance >= 95
-			? 'status-good'
-			: params.slaCompliance >= 90
-				? 'status-warning'
-				: 'status-critical'
+	let slaComplianceClass = 'status-critical'
+	if (params.slaCompliance >= 95) {
+		slaComplianceClass = 'status-good'
+	} else if (params.slaCompliance >= 90) {
+		slaComplianceClass = 'status-warning'
+	}
 
 	return renderEmailTemplate('moderation-daily-summary', {
 		...params,
@@ -202,7 +203,7 @@ export function renderModerationDailySummaryEmail(params) {
  * @param {string} [params.text] - Plain text fallback
  */
 export async function sendEmail({ to, subject, html, text }) {
-	// TODO: Integrate with actual email service
+	// Placeholder integration hook for future email provider wiring
 	// For now, just log
 	console.log('[EMAIL] Would send email:', {
 		to,
@@ -210,24 +211,6 @@ export async function sendEmail({ to, subject, html, text }) {
 		htmlLength: html.length,
 		textLength: text?.length || 0
 	})
-
-	// In production, you would do something like:
-	/*
-	if (process.env.EMAIL_SERVICE === 'sendgrid') {
-		const sgMail = require('@sendgrid/mail');
-		sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-		await sgMail.send({
-			to,
-			from: process.env.FROM_EMAIL,
-			subject,
-			text: text || stripHtml(html),
-			html
-		});
-	} else if (process.env.EMAIL_SERVICE === 'pocketbase') {
-		// Use PocketBase's built-in email if configured
-		// This would require accessing PocketBase's internal email API
-	}
-	*/
 
 	return true
 }

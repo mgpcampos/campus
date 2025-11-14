@@ -12,9 +12,9 @@ function slugify(value) {
 	return value
 		.trim()
 		.toLowerCase()
-		.replace(/[^a-z0-9-]/g, '-')
-		.replace(/-+/g, '-')
-		.replace(/^-|-$/g, '')
+		.replaceAll(/[^a-z0-9-]/g, '-')
+		.replaceAll(/-+/g, '-')
+		.replaceAll(/(?:^-)|(?:-$)/g, '')
 }
 
 /** @type {import('./$types').PageServerLoad} */
@@ -52,7 +52,7 @@ export const actions = {
 		}
 
 		try {
-			const safeSlug = normalizedSlug.replaceAll('"', '\\"')
+			const safeSlug = normalizedSlug.replaceAll('"', String.raw`\"`)
 			await locals.pb.collection('spaces').getFirstListItem(`slug = "${safeSlug}"`)
 			return fail(400, {
 				error: 'That slug is already in use. Pick another one.',

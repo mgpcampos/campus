@@ -45,12 +45,13 @@ export const actions = {
 
 			// Handle authentication errors
 			const errorMessage = getErrorMessage(error)
-			const status =
-				error instanceof ClientResponseError
-					? error.status === 400 || error.status === 404
-						? 401
-						: error.status
-					: 500
+			let status = 500
+			if (error instanceof ClientResponseError) {
+				status = error.status
+				if (status === 400 || status === 404) {
+					status = 401
+				}
+			}
 			return fail(status, {
 				form,
 				error: errorMessage

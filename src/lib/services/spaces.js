@@ -90,7 +90,7 @@ export async function getSpace(identifier, serviceOptions = /** @type {ServiceOp
 		})
 	} catch (error) {
 		if (error instanceof ClientResponseError && error.status === 404) {
-			const safeSlug = identifier.replaceAll('"', '\\"')
+			const safeSlug = identifier.replaceAll('"', String.raw`\"`)
 			return await client.collection('spaces').getFirstListItem(`slug = "${safeSlug}"`, {
 				expand: 'owners,moderators'
 			})

@@ -1,7 +1,7 @@
 import { PUBLIC_POCKETBASE_URL } from '$env/static/public'
 
 const browserBase = (() => {
-	if (typeof globalThis.window === 'undefined') return null
+	if (globalThis.window === undefined) return null
 	return new URL('/pb', globalThis.window.location.origin).toString().replace(/\/$/, '')
 })()
 const BASE_URL = PUBLIC_POCKETBASE_URL || browserBase || 'http://127.0.0.1:8090'

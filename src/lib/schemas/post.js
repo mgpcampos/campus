@@ -47,7 +47,7 @@ const ensureVideoFieldsOmitted = (data, ctx) => {
 	if (data.videoPoster) {
 		addIssue(ctx, ['videoPoster'], 'Video poster is only allowed for video posts')
 	}
-	if (typeof data.videoDuration !== 'undefined') {
+	if (data.videoDuration !== undefined) {
 		addIssue(ctx, ['videoDuration'], 'Video duration is only allowed for video posts')
 	}
 }
@@ -182,7 +182,7 @@ const MEDIA_VALIDATORS = {
 		}
 		validateAttachmentsMime(payload.attachments, VIDEO_MIME_TYPES, ctx, ['attachments'])
 		validatePoster(payload.videoPoster, ctx)
-		if (typeof payload.videoDuration === 'undefined') {
+		if (payload.videoDuration === undefined) {
 			addIssue(ctx, ['videoDuration'], 'Video duration is required for video posts')
 		}
 	}
@@ -226,7 +226,7 @@ const publishedAtSchema = z
 	])
 	.optional()
 	.transform((value) => {
-		if (typeof value === 'undefined') return undefined
+		if (value === undefined) return undefined
 		if (value === null) return null
 		return value
 	})
@@ -303,11 +303,11 @@ export const updatePostSchema = z
 		}
 
 		const mediaFieldsProvided =
-			typeof data.mediaType !== 'undefined' ||
-			typeof data.attachments !== 'undefined' ||
-			typeof data.mediaAltText !== 'undefined' ||
-			typeof data.videoPoster !== 'undefined' ||
-			typeof data.videoDuration !== 'undefined'
+				data.mediaType !== undefined ||
+				data.attachments !== undefined ||
+				data.mediaAltText !== undefined ||
+				data.videoPoster !== undefined ||
+				data.videoDuration !== undefined
 
 		if (!mediaFieldsProvided) {
 			return

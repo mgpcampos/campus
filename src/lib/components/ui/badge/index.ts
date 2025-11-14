@@ -1,11 +1,4 @@
-import Root, { type BadgeProps, type BadgeVariant, badgeVariants } from './badge.svelte'
-
-export {
-	Root,
-	type BadgeProps as Props,
-	//
-	Root as Badge,
-	badgeVariants,
-	type BadgeProps,
-	type BadgeVariant
-}
+export { default as Root, badgeVariants } from './badge.svelte'
+export { default as Badge } from './badge.svelte'
+export type { BadgeProps, BadgeVariant } from './badge.svelte'
+export type { BadgeProps as Props } from './badge.svelte'

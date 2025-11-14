@@ -1,9 +1,9 @@
 const publicEnv = (() => {
-	if (typeof import.meta !== 'undefined' && import.meta.env) {
+	if (import.meta?.env) {
 		return import.meta.env
 	}
-	if (typeof process !== 'undefined' && process.env) {
-		return process.env
+	if (globalThis.process?.env) {
+		return globalThis.process.env
 	}
 	return {}
 })()
@@ -17,7 +17,7 @@ const analyticsSampleRate = (() => {
 
 const inferredPocketBaseUrl = (() => {
 	if (publicEnv.PUBLIC_POCKETBASE_URL) return publicEnv.PUBLIC_POCKETBASE_URL
-	if (typeof globalThis.window !== 'undefined') {
+	if (globalThis.window !== undefined) {
 		return new URL('/pb', globalThis.window.location.origin).toString().replace(/\/$/, '')
 	}
 	return 'http://127.0.0.1:8090'
