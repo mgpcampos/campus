@@ -9,6 +9,7 @@ import type { SuperValidated } from 'sveltekit-superforms'
 import { superForm } from 'sveltekit-superforms/client'
 import type { z } from 'zod'
 import { ariaValidity } from '$lib/actions/ariaValidity'
+import type { FeedPost } from '$lib/components/feed/types'
 import { Button } from '$lib/components/ui/button/index.js'
 import { Label } from '$lib/components/ui/label/index.js'
 import { Textarea } from '$lib/components/ui/textarea/index.js'
@@ -20,7 +21,7 @@ import { createClientFormOptions } from '$lib/validation'
 type PostFormMessage = {
 	type: 'success' | 'error'
 	text: string
-	post?: Record<string, unknown>
+	post?: FeedPost
 }
 type PostFormData = SuperValidated<z.infer<typeof createPostSchema>, PostFormMessage>
 type AttachmentPreview = { file: File; url: string }
@@ -48,7 +49,7 @@ const MEDIA_OPTIONS = [
 
 let { formData, disabled = false } = $props<{ formData: PostFormData; disabled?: boolean }>()
 
-const dispatch = createEventDispatcher<{ postCreated: any }>()
+const dispatch = createEventDispatcher<{ postCreated: FeedPost }>()
 
 const attachments = writable<AttachmentPreview[]>([])
 const uploadError = writable<string | null>(null)
@@ -441,29 +442,32 @@ const ACCEPT_IMAGES = 'image/jpeg,image/png,image/webp,image/gif,image/heic,imag
 				{t('postForm.selectVideo')}
 			</Button>
 			{#if $attachments.length === 1}
-				<div
-					class="flex items-start justify-between gap-4 rounded-md border border-border/60 bg-card/60 px-4 py-3"
-				>
-					<div class="space-y-1">
-						<p class="text-sm font-medium text-foreground">{$attachments[0].file.name}</p>
-						<p class="text-xs text-muted-foreground">
-							{($attachments[0].file.size / (1024 * 1024)).toFixed(1)} MB
-							{#if $videoDurationDisplay}
-								· {$videoDurationDisplay}s
-							{/if}
-						</p>
-					</div>
-					<Button
-						type="button"
-						variant="ghost"
-						size="sm"
-						onclick={() => removeAttachment(0)}
-						disabled={disabled || $submitting}
+				{@const firstAttachment = $attachments[0]}
+				{#if firstAttachment}
+					<div
+						class="flex items-start justify-between gap-4 rounded-md border border-border/60 bg-card/60 px-4 py-3"
 					>
-						<X class="mr-1 h-4 w-4" aria-hidden="true" />
-						Remove
-					</Button>
-				</div>
+						<div class="space-y-1">
+							<p class="text-sm font-medium text-foreground">{firstAttachment.file.name}</p>
+							<p class="text-xs text-muted-foreground">
+								{(firstAttachment.file.size / (1024 * 1024)).toFixed(1)} MB
+								{#if $videoDurationDisplay}
+									· {$videoDurationDisplay}s
+								{/if}
+							</p>
+						</div>
+						<Button
+							type="button"
+							variant="ghost"
+							size="sm"
+							onclick={() => removeAttachment(0)}
+							disabled={disabled || $submitting}
+						>
+							<X class="mr-1 h-4 w-4" aria-hidden="true" />
+							Remove
+						</Button>
+					</div>
+				{/if}
 			{/if}
 			{#if $errors.videoDuration}
 				<p class="text-sm text-red-600">{$errors.videoDuration[0]}</p>

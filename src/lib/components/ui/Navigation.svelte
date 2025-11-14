@@ -1,10 +1,11 @@
 <script lang="ts">
+import type { ComponentType } from 'svelte'
 import { page } from '$app/stores'
 
 interface NavigationItem {
 	href: string
 	label: string
-	icon?: any
+	icon?: ComponentType
 	badge?: string | number
 	disabled?: boolean
 }
@@ -14,7 +15,7 @@ let {
 	orientation = 'horizontal',
 	variant = 'default',
 	class: className = '',
-	onNavigate = () => {}
+	onNavigate = () => undefined
 }: {
 	items: NavigationItem[]
 	orientation?: 'horizontal' | 'vertical'

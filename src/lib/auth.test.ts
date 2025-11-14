@@ -1,22 +1,37 @@
 import { describe, expect, it, vi } from 'vitest'
 import { getCurrentUser, isAuthenticated, requireAuth } from './auth.js'
 
+class RedirectError extends Error {
+	status: number
+	location: string
+
+	constructor(status: number, location: string) {
+		super(`Redirect to ${location}`)
+		this.name = 'RedirectError'
+		this.status = status
+		this.location = location
+	}
+}
+
 // Mock SvelteKit redirect
 vi.mock('@sveltejs/kit', () => ({
 	redirect: vi.fn((status: number, location: string) => {
-		const error = new Error(`Redirect to ${location}`) as any
-		error.status = status
-		throw error
+		throw new RedirectError(status, location)
 	})
 }))
 
+type MockAuthStore = {
+	isValid: boolean
+	model?: unknown
+}
+
 // Helper function to create mock locals with proper typing
-function createMockLocals(authStore: any) {
+function createMockLocals(authStore: MockAuthStore) {
 	return {
 		pb: {
 			authStore
 		}
-	} as any
+	} as unknown as App.Locals
 }
 
 describe('requireAuth', () => {

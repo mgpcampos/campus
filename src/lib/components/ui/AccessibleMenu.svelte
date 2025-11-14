@@ -1,5 +1,5 @@
 <script lang="ts">
-import { onMount } from 'svelte'
+import { onMount, type Snippet } from 'svelte'
 import { FocusManager, trapFocus } from '$lib/utils/accessibility.js'
 import KeyboardNavigation from './KeyboardNavigation.svelte'
 
@@ -7,7 +7,7 @@ let {
 	open = false,
 	trigger,
 	children,
-	onOpenChange = (open: boolean) => {},
+	onOpenChange = (_open: boolean) => undefined,
 	class: className = '',
 	placement = 'bottom-start',
 	closeOnSelect = true,
@@ -15,8 +15,8 @@ let {
 	closeOnOutsideClick = true
 }: {
 	open?: boolean
-	trigger?: any
-	children?: any
+	trigger?: Snippet
+	children?: Snippet
 	onOpenChange?: (open: boolean) => void
 	class?: string
 	placement?:

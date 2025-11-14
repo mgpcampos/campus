@@ -2,8 +2,9 @@
 import { Calendar, ChevronLeft, Link as LinkIcon, Mail, MapPin } from '@lucide/svelte'
 import { page } from '$app/stores'
 import { t } from '$lib/i18n'
+import type { PageData } from './$types'
 
-let { data } = $props()
+const { data } = $props<{ data: PageData }>()
 
 const profile = $derived(data.profile)
 const publications = $derived(data.publications || [])

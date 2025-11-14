@@ -1,7 +1,7 @@
 <script lang="ts">
 import { MessageCircle, Send, Trash2 } from '@lucide/svelte'
 import { formatDistanceToNow } from 'date-fns'
-import type { RecordModel } from 'pocketbase'
+import type { ListResult, RecordModel, RecordSubscription } from 'pocketbase'
 import { createEventDispatcher, onDestroy, onMount } from 'svelte'
 import { toast } from 'svelte-sonner'
 import { Button } from '$lib/components/ui/button/index.js'
@@ -12,16 +12,17 @@ import { currentUser, pb } from '$lib/pocketbase.js'
 import { createComment, deleteComment, getComments } from '$lib/services/comments.js'
 import { canModerateComment } from '$lib/services/permissions.js'
 import { reportContent } from '$lib/services/reports.js'
-import { withErrorToast } from '$lib/utils/errors.js'
+import { withErrorToast } from '$lib/utils/errors.ts'
+import type { CommentsResponse } from '$types/pocketbase'
 
-type CommentRecord = RecordModel & {
-	content: string
-	created: string
-	post?: string
-	expand?: {
-		author?: any
-	}
+type CommentAuthor = RecordModel & {
+	name?: string
+	username?: string
+	email?: string
+	avatar?: string
 }
+
+type CommentRecord = CommentsResponse<{ author?: CommentAuthor }>
 
 export let postId: string
 export let initialCommentCount = 0
@@ -89,7 +90,7 @@ function cleanup() {
 
 async function setupRealtime() {
 	try {
-		const unsub = await pb.collection('comments').subscribe('*', async (event) => {
+		const unsub = await pb.collection('comments').subscribe<CommentRecord>('*', async (event) => {
 			if (event?.record?.post !== postId) return
 			await handleRealtimeUpdate(event)
 		})
@@ -133,10 +134,10 @@ async function loadComments(options: { reset?: boolean } = {}) {
 	loading = true
 
 	try {
-		const result = await withErrorToast(
+		const result = (await withErrorToast(
 			async () => await getComments(postId, { page: targetPage, perPage }),
 			{ context: 'getComments' }
-		)
+		)) as ListResult<CommentRecord> | undefined
 
 		if (!result) {
 			return
@@ -262,7 +263,7 @@ function handleKeydown(event: KeyboardEvent) {
 	}
 }
 
-function getAuthorAvatar(author: any) {
+function getAuthorAvatar(author: CommentAuthor | undefined) {
 	if (author?.avatar) {
 		return pb.files.getURL(author, author.avatar, { thumb: '32x32' })
 	}
@@ -279,7 +280,7 @@ function getCommentLabel(count: number) {
 	return t('feed.commentToggleMany', { count })
 }
 
-async function handleRealtimeUpdate(event: any) {
+async function handleRealtimeUpdate(event: RecordSubscription<CommentRecord>) {
 	if (!event?.record) return
 
 	if (event.action === 'create') {

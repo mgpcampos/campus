@@ -1,5 +1,5 @@
 import { pb } from '../pocketbase.js'
-import { normalizeError } from '../utils/errors.js'
+import { normalizeError } from '../utils/errors.ts'
 import { ensureModerationCase } from './moderation.js'
 import { canModerateComment, canModeratePost } from './permissions.js'
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+import type { Snippet } from 'svelte'
 import { Button } from '$lib/components/ui/button/index.js'
 import * as Card from '$lib/components/ui/card/index.js'
 import LoadingSpinner from './LoadingSpinner.svelte'
@@ -15,7 +16,7 @@ let {
 }: {
 	title?: string
 	description?: string
-	children?: any
+	children?: Snippet
 	actions?: Array<{
 		label: string
 		onClick: () => void

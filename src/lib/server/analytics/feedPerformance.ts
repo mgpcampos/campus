@@ -52,7 +52,7 @@ async function emitEvent(pb: PocketBase, options: EmitOptions) {
 export async function trackFeedPerformance<T>(
 	pb: PocketBase,
 	params: FeedQueryParams,
-	executor: () => Promise<T & { items?: any[]; totalPages?: number }>
+	executor: () => Promise<T & { items?: unknown[]; totalPages?: number }>
 ) {
 	const start = performance.now()
 	try {

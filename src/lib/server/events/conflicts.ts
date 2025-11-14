@@ -36,14 +36,15 @@ export async function hasConflict(
 	const endDate = roundToSeconds(end)
 	const startISO = toUTC(startDate)
 	const endISO = toUTC(endDate)
+	const quote = (value: string) => JSON.stringify(value)
 
 	// Build filter for overlapping events in same scope
 	// Two events overlap if: start1 < end2 AND end1 > start2
-	let filter = `scopeType = {:scopeType} && start < {:candidateEnd} && end > {:candidateStart}`
+	let filter = `scopeType = ${quote(scopeType)} && start < ${quote(endISO)} && end > ${quote(startISO)}`
 
 	// Add scopeId filter if provided (not global events)
 	if (scopeId) {
-		filter += ' && scopeId = {:scopeId}'
+		filter += ` && scopeId = ${quote(scopeId)}`
 	} else {
 		// For global events, ensure scopeId is empty
 		filter += ' && scopeId = ""'
@@ -51,41 +52,15 @@ export async function hasConflict(
 
 	// Exclude the current event if updating
 	if (ignoreId) {
-		filter += ' && id != {:ignoreId}'
+		filter += ` && id != ${quote(ignoreId)}`
 	}
 
 	try {
 		const conflictingEvents = await pb.collection('events').getFullList<EventRecord>({
 			filter,
 			fields: 'id,title,start,end,scopeType,scopeId',
-			$autoCancel: false,
-			// Bind parameters
-			requestKey: null,
-			expand: undefined,
-			sort: undefined,
-			// Use query params for filtering
-			fetch: (url: string, config: RequestInit) => {
-				const urlObj = new URL(url)
-				urlObj.searchParams.set('filter', filter)
-
-				// Replace placeholders with actual values
-				let filterStr = filter
-				filterStr = filterStr.replace('{:scopeType}', `"${scopeType}"`)
-				filterStr = filterStr.replace('{:candidateEnd}', `"${endISO}"`)
-				filterStr = filterStr.replace('{:candidateStart}', `"${startISO}"`)
-
-				if (scopeId) {
-					filterStr = filterStr.replace('{:scopeId}', `"${scopeId}"`)
-				}
-
-				if (ignoreId) {
-					filterStr = filterStr.replace('{:ignoreId}', `"${ignoreId}"`)
-				}
-
-				urlObj.searchParams.set('filter', filterStr)
-				return fetch(urlObj.toString(), config)
-			}
-		} as any)
+			$autoCancel: false
+		})
 
 		return {
 			hasConflict: conflictingEvents.length > 0,

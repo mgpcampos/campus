@@ -43,8 +43,12 @@ describe('Posts Service', () => {
 
 			expect(result).toEqual({ id: 'post123', content: 'clean content' })
 			expect(mockCollection.create).toHaveBeenCalledTimes(1)
-			const formData = mockCollection.create.mock.calls[0][0]
+			const createCall = mockCollection.create.mock.calls[0]
+			const formData = createCall?.[0]
 			expect(formData).toBeInstanceOf(FormData)
+			if (!(formData instanceof FormData)) {
+				throw new Error('Expected FormData payload')
+			}
 			expect(formData.get('content')).toBe('<p>Hello campus</p>')
 			expect(formData.get('mediaType')).toBe('images')
 			expect(formData.get('mediaAltText')).toBe('accessible media')
@@ -81,7 +85,12 @@ describe('Posts Service', () => {
 			// @ts-expect-no-error - mock data intentionally loose
 			await createPost(postData, { emitModerationMetadata })
 
-			const formData = mockCollection.create.mock.calls[0][0]
+			const createCall = mockCollection.create.mock.calls[0]
+			const formData = createCall?.[0]
+			expect(formData).toBeInstanceOf(FormData)
+			if (!(formData instanceof FormData)) {
+				throw new Error('Expected FormData payload')
+			}
 			expect(formData.get('mediaType')).toBe('video')
 			expect(formData.get('videoDuration')).toBe('45')
 			const videoPoster = formData.get('videoPoster')
@@ -165,7 +174,12 @@ describe('Posts Service', () => {
 			const result = await updatePost('post123', updateData)
 
 			expect(mockCollection.update).toHaveBeenCalledTimes(1)
-			const [, payload] = mockCollection.update.mock.calls[0]
+			const updateCall = mockCollection.update.mock.calls[0]
+			const payload = updateCall?.[1]
+			expect(payload).toBeDefined()
+			if (!payload) {
+				throw new Error('Expected update payload')
+			}
 			expect(payload).toMatchObject({
 				content: '<p>Updated <strong>post</strong></p>',
 				mediaAltText: 'sample alt',
@@ -185,12 +199,21 @@ describe('Posts Service', () => {
 				mediaAltText: '',
 				publishedAt: '  '
 			})
-			const [, payload] = mockCollection.update.mock.calls[0]
+			const updateCall = mockCollection.update.mock.calls[0]
+			const payload = updateCall?.[1]
+			expect(payload).toBeDefined()
+			if (!payload) {
+				throw new Error('Expected update payload')
+			}
 			expect(payload).toMatchObject({ content: 'Trim me' })
-			expect(Object.hasOwn(payload, 'mediaAltText')).toBe(true)
-			expect(payload.mediaAltText).toBe('')
-			expect(Object.hasOwn(payload, 'publishedAt')).toBe(true)
-			expect(payload.publishedAt).toBeNull()
+			const typedPayload =
+				/** @type {{ mediaAltText?: string | null; publishedAt?: string | null; [key: string]: unknown }} */ (
+					payload
+				)
+			expect(Object.hasOwn(typedPayload, 'mediaAltText')).toBe(true)
+			expect(typedPayload.mediaAltText).toBe('')
+			expect(Object.hasOwn(typedPayload, 'publishedAt')).toBe(true)
+			expect(typedPayload.publishedAt).toBeNull()
 		})
 	})
 

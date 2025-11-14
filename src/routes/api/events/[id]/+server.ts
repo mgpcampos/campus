@@ -1,6 +1,6 @@
 import { error, json } from '@sveltejs/kit'
 import { hasConflict, validateEventData } from '$lib/server/events/conflicts'
-import { normalizeError, toErrorPayload } from '$lib/utils/errors.js'
+import { normalizeError, toErrorPayload } from '$lib/utils/errors.ts'
 import { toUTC } from '$lib/utils/timezone'
 import type { EventUpdateInput } from '../../../../types/events'
 
@@ -50,7 +50,7 @@ export async function PATCH({ params, request, locals }) {
 		}
 
 		// Build update payload
-		const payload: any = {}
+		const payload: Record<string, unknown> = {}
 
 		if (updateData.title !== undefined) {
 			payload.title = updateData.title
@@ -116,7 +116,7 @@ export async function PATCH({ params, request, locals }) {
 			event: updatedEvent,
 			message: 'Event updated successfully'
 		})
-	} catch (err) {
+	} catch (err: unknown) {
 		const n = normalizeError(err, { context: 'api:updateEvent' })
 		console.error(`Error updating event ${params.id}:`, n.toString())
 		return json({ error: toErrorPayload(n) }, { status: n.status || 500 })
@@ -144,7 +144,7 @@ export async function DELETE({ params, locals }) {
 		return json({
 			message: 'Event deleted successfully'
 		})
-	} catch (err) {
+	} catch (err: unknown) {
 		const n = normalizeError(err, { context: 'api:deleteEvent' })
 		console.error(`Error deleting event ${params.id}:`, n.toString())
 		return json({ error: toErrorPayload(n) }, { status: n.status || 500 })

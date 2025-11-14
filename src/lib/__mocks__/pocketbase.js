@@ -6,9 +6,13 @@ export const currentUser = writable({ id: 'test-user', name: 'Test User', userna
 export const pb = {
 	collection: () => ({
 		getList: async () => ({ items: [] }),
-		/** @param {string} __t @param {(e:any)=>void} __cb */
-		subscribe: async (__t, __cb) => () => {},
-		unsubscribe: () => {},
+		/** @param {string} _topic @param {(event: unknown) => void} _callback */
+		subscribe: async (_topic, _callback) => {
+			void _topic
+			void _callback
+			return () => undefined
+		},
+		unsubscribe: () => undefined,
 		update: async () => ({}),
 		create: async () => ({}),
 		getFirstListItem: async () => ({ id: 'u-mention' })

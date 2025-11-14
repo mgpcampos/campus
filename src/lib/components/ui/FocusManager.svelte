@@ -1,5 +1,5 @@
 <script lang="ts">
-import { onMount } from 'svelte'
+import { onMount, type Snippet } from 'svelte'
 import { FocusManager as FocusManagerClass, trapFocus } from '$lib/utils/accessibility.js'
 
 let {
@@ -12,7 +12,7 @@ let {
 	trap?: boolean
 	restore?: boolean
 	autoFocus?: boolean
-	children?: any
+	children?: Snippet
 	class?: string
 } = $props()
 

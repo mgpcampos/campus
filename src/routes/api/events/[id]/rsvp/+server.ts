@@ -1,5 +1,5 @@
 import { error, json } from '@sveltejs/kit'
-import { normalizeError, toErrorPayload } from '$lib/utils/errors.js'
+import { normalizeError, toErrorPayload } from '$lib/utils/errors.ts'
 import type { ParticipantStatus } from '../../../../../types/events'
 
 /** @type {import('./$types').RequestHandler} */
@@ -26,11 +26,13 @@ export async function POST({ params, request, locals }) {
 
 		let participant
 
-		if (existingParticipants.length > 0) {
+		const [existingParticipant] = existingParticipants
+
+		if (existingParticipant) {
 			// Update existing RSVP
 			participant = await locals.pb
 				.collection('event_participants')
-				.update(existingParticipants[0].id, { status })
+				.update(existingParticipant.id, { status })
 		} else {
 			// Create new RSVP
 			participant = await locals.pb.collection('event_participants').create({
@@ -63,12 +65,13 @@ export async function DELETE({ params, locals }) {
 			filter: `event = "${params.id}" && user = "${locals.user!.id}"`
 		})
 
-		if (existingParticipants.length === 0) {
+		const [existingParticipant] = existingParticipants
+		if (!existingParticipant) {
 			return json({ error: 'No RSVP found' }, { status: 404 })
 		}
 
 		// Delete RSVP
-		await locals.pb.collection('event_participants').delete(existingParticipants[0].id)
+		await locals.pb.collection('event_participants').delete(existingParticipant.id)
 
 		return json({
 			message: 'RSVP removed successfully'

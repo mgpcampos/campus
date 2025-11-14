@@ -2,7 +2,10 @@
  * Server-side utilities and types for academic profiles
  */
 
+import type PocketBase from 'pocketbase'
 import type {
+	ContributionRole,
+	ProfilePublicationRecord,
 	ProfileRecord,
 	PublicationCreateInput,
 	PublicationDedupeResult,
@@ -45,8 +48,14 @@ export function generatePublicationSlugHash(title: string, year?: number): strin
  * @param input - Publication create input
  * @returns Deduplication result indicating if publication exists
  */
+const isNotFoundError = (error: unknown): boolean =>
+	typeof error === 'object' &&
+	error !== null &&
+	'status' in error &&
+	(error as { status?: number }).status === 404
+
 export async function checkPublicationExists(
-	pb: any,
+	pb: PocketBase,
 	input: PublicationCreateInput
 ): Promise<PublicationDedupeResult> {
 	try {
@@ -63,9 +72,9 @@ export async function checkPublicationExists(
 						matchType: 'doi'
 					}
 				}
-			} catch (err: any) {
+			} catch (err: unknown) {
 				// 404 means no match, continue to slug check
-				if (err?.status !== 404) {
+				if (!isNotFoundError(err)) {
 					throw err
 				}
 			}
@@ -84,9 +93,9 @@ export async function checkPublicationExists(
 					matchType: 'slugHash'
 				}
 			}
-		} catch (err: any) {
+		} catch (err: unknown) {
 			// 404 means no match
-			if (err?.status !== 404) {
+			if (!isNotFoundError(err)) {
 				throw err
 			}
 		}
@@ -105,7 +114,7 @@ export async function checkPublicationExists(
  * @returns Created or existing publication record
  */
 export async function createPublicationRecord(
-	pb: any,
+	pb: PocketBase,
 	input: PublicationCreateInput
 ): Promise<PublicationRecord> {
 	// Check for existing publication
@@ -141,22 +150,24 @@ export async function createPublicationRecord(
  * @returns Profile-publication link record
  */
 export async function linkPublicationToProfile(
-	pb: any,
+	pb: PocketBase,
 	profileId: string,
 	publicationId: string,
-	contributionRole: 'author' | 'editor' | 'advisor' = 'author'
-): Promise<any> {
+	contributionRole: ContributionRole = 'author'
+): Promise<ProfilePublicationRecord> {
 	try {
 		// Check if link already exists
 		const existing = await pb
 			.collection('profile_publications')
-			.getFirstListItem(`profile = "${profileId}" && publication = "${publicationId}"`)
+			.getFirstListItem<ProfilePublicationRecord>(
+				`profile = "${profileId}" && publication = "${publicationId}"`
+			)
 
 		return existing
-	} catch (err: any) {
+	} catch (err: unknown) {
 		// 404 means no link exists, create it
-		if (err?.status === 404) {
-			return await pb.collection('profile_publications').create({
+		if (isNotFoundError(err)) {
+			return await pb.collection('profile_publications').create<ProfilePublicationRecord>({
 				profile: profileId,
 				publication: publicationId,
 				contributionRole
@@ -172,15 +183,26 @@ export async function linkPublicationToProfile(
  * @param profileId - Profile ID
  * @returns List of publications with contribution roles
  */
-export async function getProfilePublications(pb: any, profileId: string): Promise<any[]> {
-	const links = await pb.collection('profile_publications').getFullList({
+type PublicationLinkWithExpand = ProfilePublicationRecord & {
+	expand?: {
+		publication?: PublicationRecord
+	}
+}
+
+export async function getProfilePublications(
+	pb: PocketBase,
+	profileId: string
+): Promise<
+	Array<{ publication?: PublicationRecord; contributionRole?: ContributionRole; linkId: string }>
+> {
+	const links = await pb.collection('profile_publications').getFullList<PublicationLinkWithExpand>({
 		filter: `profile = "${profileId}"`,
 		expand: 'publication,publication.material',
 		sort: '-publication.year'
 	})
 
-	return links.map((link: any) => ({
-		...link.expand?.publication,
+	return links.map((link) => ({
+		publication: link.expand?.publication,
 		contributionRole: link.contributionRole,
 		linkId: link.id
 	}))

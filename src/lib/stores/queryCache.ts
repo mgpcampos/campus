@@ -1,7 +1,7 @@
 import { type Readable, readable, writable } from 'svelte/store'
 
 interface CacheRecord<T> {
-	data: T
+	data: T | null
 	updated: number
 	promise?: Promise<T>
 	ttlMs: number
@@ -12,14 +12,14 @@ interface Options<T> {
 	fetcher: () => Promise<T>
 }
 
-const cache = new Map<string, CacheRecord<any>>()
+const cache = new Map<string, CacheRecord<unknown>>()
 
 export function useQuery<T>(
 	key: string,
-	opts: Options<T>
-): Readable<{ data: T | null; loading: boolean; error: any }> {
-	const { ttlMs = 15_000, fetcher, revalidate = true } = opts
-	const state = writable<{ data: T | null; loading: boolean; error: any }>({
+	ops: Options<T>
+): Readable<{ data: T | null; loading: boolean; error: unknown | null }> {
+	const { ttlMs = 15_000, fetcher, revalidate = true } = ops
+	const state = writable<{ data: T | null; loading: boolean; error: unknown | null }>({
 		data: null,
 		loading: true,
 		error: null
@@ -45,7 +45,10 @@ export function useQuery<T>(
 			state.set({ data: rec?.data ?? null, loading: true, error: null })
 			try {
 				await promise
-			} catch {}
+			} catch (error) {
+				// Already surfaced via state updates above; keep console for debugging
+				console.debug('useQuery fetch failure handled', error)
+			}
 		} else {
 			state.set({ data: rec.data, loading: false, error: null })
 		}
@@ -53,7 +56,7 @@ export function useQuery<T>(
 
 	load()
 
-	return readable<{ data: T | null; loading: boolean; error: any }>(undefined, (set) => {
+	return readable<{ data: T | null; loading: boolean; error: unknown | null }>(undefined, (set) => {
 		const unsub = state.subscribe(set)
 		return () => unsub()
 	})

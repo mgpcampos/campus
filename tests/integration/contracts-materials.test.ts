@@ -4,8 +4,46 @@ import { fileURLToPath } from 'node:url'
 import { load } from 'js-yaml'
 import { describe, expect, it } from 'vitest'
 
+type OpenApiSchema = {
+	type?: string
+	enum?: string[]
+	items?: OpenApiSchema
+	$ref?: string
+	properties?: Record<string, OpenApiSchema>
+}
+
+type OpenApiParameter = {
+	name?: string
+	required?: boolean
+	schema?: OpenApiSchema
+}
+
+type OpenApiMediaType = {
+	schema?: OpenApiSchema
+}
+
+type OpenApiResponse = {
+	content?: Record<string, OpenApiMediaType>
+}
+
+type OpenApiRequestBody = {
+	content?: Record<string, OpenApiMediaType>
+}
+
+type OpenApiOperation = {
+	security?: Record<string, unknown>[]
+	requestBody?: OpenApiRequestBody
+	responses?: Record<string, OpenApiResponse>
+	parameters?: OpenApiParameter[]
+}
+
+type OpenApiPathItem = {
+	get?: OpenApiOperation
+	post?: OpenApiOperation
+}
+
 type OpenApiSpec = {
-	paths: Record<string, any>
+	paths: Record<string, OpenApiPathItem>
 }
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -23,29 +61,42 @@ function loadSpec(): OpenApiSpec {
 	return parsed
 }
 
-function findParameter(parameters: any[] | undefined, name: string) {
+function findParameter(parameters: OpenApiParameter[] | undefined, name: string) {
 	return parameters?.find((param) => param?.name === name)
+}
+
+function assertDefined<T>(value: T | null | undefined, message: string): T {
+	expect(value, message).toBeDefined()
+	if (value == null) {
+		throw new Error(message)
+	}
+	return value
 }
 
 describe('Materials contracts', () => {
 	it.skip('POST /materials should accept uploads and metadata', () => {
 		const spec = loadSpec()
-		const post = spec.paths?.['/materials']?.post
-		expect(post, 'POST /materials operation missing').toBeDefined()
+		const post = assertDefined(
+			spec.paths?.['/materials']?.post,
+			'POST /materials operation missing'
+		)
 		expect(post.security?.[0]).toEqual({ bearerAuth: [] })
-		const multipart = post.requestBody?.content?.['multipart/form-data']
-		expect(multipart, 'POST /materials must accept multipart/form-data').toBeDefined()
+		const multipart = assertDefined(
+			post.requestBody?.content?.['multipart/form-data'],
+			'POST /materials must accept multipart/form-data'
+		)
 		expect(multipart.schema?.$ref).toBe('#/components/schemas/MaterialCreateInput')
-		const responseSchema = post.responses?.['201']?.content?.['application/json']?.schema?.$ref
+		const responseSchema = assertDefined(
+			post.responses?.['201']?.content?.['application/json']?.schema?.$ref,
+			'POST /materials response schema missing'
+		)
 		expect(responseSchema).toBe('#/components/schemas/Material')
 	})
 
 	it.skip('GET /materials should filter by tags, format, and contributor', () => {
 		const spec = loadSpec()
-		const get = spec.paths?.['/materials']?.get
-		expect(get, 'GET /materials operation missing').toBeDefined()
-		const { parameters } = get
-		expect(parameters, 'GET /materials parameters missing').toBeDefined()
+		const get = assertDefined(spec.paths?.['/materials']?.get, 'GET /materials operation missing')
+		const parameters = get.parameters ?? []
 
 		// Check search query parameter
 		const qParam = findParameter(parameters, 'q')
@@ -69,22 +120,30 @@ describe('Materials contracts', () => {
 		expect(sortParam?.schema?.enum).toEqual(['relevance', 'recent'])
 
 		// Check response structure
-		const responseSchema = get.responses?.['200']?.content?.['application/json']?.schema
+		const responseSchema = assertDefined(
+			get.responses?.['200']?.content?.['application/json']?.schema,
+			'GET /materials response schema missing'
+		)
 		expect(responseSchema?.properties?.items?.items?.$ref).toBe('#/components/schemas/Material')
 		expect(responseSchema?.properties?.total?.type).toBe('integer')
 	})
 
 	it.skip('GET /materials/{materialId} should enforce visibility rules', () => {
 		const spec = loadSpec()
-		const get = spec.paths?.['/materials/{materialId}']?.get
-		expect(get, 'GET /materials/{materialId} operation missing').toBeDefined()
+		const get = assertDefined(
+			spec.paths?.['/materials/{materialId}']?.get,
+			'GET /materials/{materialId} operation missing'
+		)
 		expect(get.security?.[0]).toEqual({ bearerAuth: [] })
 
 		const pathParam = findParameter(get.parameters, 'materialId')
 		expect(pathParam?.required).toBe(true)
 		expect(pathParam?.schema?.type).toBe('string')
 
-		const responseSchema = get.responses?.['200']?.content?.['application/json']?.schema?.$ref
+		const responseSchema = assertDefined(
+			get.responses?.['200']?.content?.['application/json']?.schema?.$ref,
+			'GET /materials/{materialId} response schema missing'
+		)
 		expect(responseSchema).toBe('#/components/schemas/Material')
 	})
 })

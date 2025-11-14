@@ -102,8 +102,8 @@ async function handleCreate() {
 		department = ''
 		biography = ''
 		await invalidateAll()
-	} catch (err: any) {
-		error = err.message || t('profiles.createFailed')
+	} catch (err: unknown) {
+		error = err instanceof Error ? err.message : t('profiles.createFailed')
 	} finally {
 		creating = false
 	}

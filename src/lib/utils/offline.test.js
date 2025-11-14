@@ -10,7 +10,7 @@ vi.mock('../stores/connection.js', async () => {
 })
 
 // Mock the errors module
-vi.mock('./errors.js', () => ({
+vi.mock('./errors.ts', () => ({
 	normalizeError: vi.fn((error, options) => ({
 		...error,
 		...options,
@@ -97,7 +97,8 @@ describe('OfflineQueue', () => {
 
 		const status = offlineQueue.getStatus()
 		expect(status.pending).toBe(1)
-		expect(offlineQueue.queue[0].id).toBe('test-action')
+		const firstEntry = offlineQueue.queue[0]
+		expect(firstEntry?.id).toBe('test-action')
 	})
 
 	it('should prevent duplicate actions', () => {

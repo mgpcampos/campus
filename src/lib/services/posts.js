@@ -2,7 +2,7 @@
 import { browser } from '$app/environment'
 import { pb } from '../pocketbase.js'
 import { getOrSet, serverCaches } from '../utils/cache.js'
-import { isAuthError, normalizeError, withRetry } from '../utils/errors.js'
+import { isAuthError, normalizeError, withRetry } from '../utils/errors.ts'
 import { sanitizeContent, sanitizePlainText } from '../utils/sanitize.js'
 
 const MIME_EXTENSION_MAP = {
@@ -704,9 +704,10 @@ async function handleApiResponse(response, context) {
 	const message =
 		payload?.error?.message || payload?.message || `Request failed with status ${response.status}`
 	const error = new Error(message)
-	/** @type {any} */
-	error.status = response.status
-	/** @type {any} */
-	error.response = { data: payload }
-	throw normalizeError(error, { context })
+	const enhancedError = /** @type {Error & { status?: number; response?: { data: unknown } }} */ (
+		error
+	)
+	enhancedError.status = response.status
+	enhancedError.response = { data: payload }
+	throw normalizeError(enhancedError, { context })
 }

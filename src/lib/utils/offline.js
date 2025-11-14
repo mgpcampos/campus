@@ -1,6 +1,6 @@
 import { get } from 'svelte/store'
 import { online } from '../stores/connection.js'
-import { normalizeError, withRetry } from './errors.js'
+import { normalizeError, withRetry } from './errors.ts'
 
 /**
  * Wrapper for API calls that handles offline scenarios gracefully

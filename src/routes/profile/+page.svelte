@@ -3,7 +3,7 @@ import { onMount } from 'svelte'
 import { superForm } from 'sveltekit-superforms/client'
 import { t } from '$lib/i18n'
 import { currentUser } from '$lib/pocketbase.js'
-import { getErrorMessage } from '$lib/utils/errors.js'
+import { getErrorMessage } from '$lib/utils/errors.ts'
 import { profileSchema } from '$lib/utils/validation.js'
 import { createClientFormOptions } from '$lib/validation'
 

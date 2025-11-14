@@ -1,8 +1,8 @@
 import { error, json } from '@sveltejs/kit'
 import { getUserEvents, hasConflict, validateEventData } from '$lib/server/events/conflicts'
-import { normalizeError, toErrorPayload } from '$lib/utils/errors.js'
-import { toUTC, validateTimeRange } from '$lib/utils/timezone'
-import type { EventCreateInput } from '../../../types/events'
+import { normalizeError, toErrorPayload } from '$lib/utils/errors.ts'
+import { toUTC } from '$lib/utils/timezone'
+import type { EventCreateInput, ScopeType } from '../../../types/events'
 
 /** @type {import('./$types').RequestHandler} */
 export async function GET({ url, locals }) {
@@ -11,7 +11,7 @@ export async function GET({ url, locals }) {
 	}
 
 	try {
-		const scopeType = url.searchParams.get('scopeType')
+		const scopeTypeParam = url.searchParams.get('scopeType')
 		const scopeId = url.searchParams.get('scopeId')
 		const from = url.searchParams.get('from')
 		const to = url.searchParams.get('to')
@@ -25,7 +25,7 @@ export async function GET({ url, locals }) {
 		const options: {
 			from?: Date
 			to?: Date
-			scopeType?: any
+			scopeType?: ScopeType
 			scopeId?: string
 		} = {}
 
@@ -37,8 +37,11 @@ export async function GET({ url, locals }) {
 			options.to = new Date(to)
 		}
 
-		if (scopeType) {
-			options.scopeType = scopeType as any
+		if (scopeTypeParam) {
+			if (!isScopeType(scopeTypeParam)) {
+				return error(400, 'Invalid scopeType parameter')
+			}
+			options.scopeType = scopeTypeParam
 		}
 
 		if (scopeId) {
@@ -97,7 +100,7 @@ export async function POST({ request, locals }) {
 		}
 
 		// Validate event data with defaults
-		const scopeType = eventData.scopeType || 'global'
+		const scopeType: ScopeType = eventData.scopeType || 'global'
 		validateEventData({
 			title: eventData.title,
 			start: start,
@@ -149,4 +152,8 @@ export async function POST({ request, locals }) {
 		console.error('Error creating event:', n.toString())
 		return json({ error: toErrorPayload(n) }, { status: n.status || 500 })
 	}
+}
+
+function isScopeType(value: string): value is ScopeType {
+	return value === 'global' || value === 'space' || value === 'group' || value === 'course'
 }

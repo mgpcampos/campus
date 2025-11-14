@@ -52,12 +52,6 @@ const validateAttachmentsMime = (files, allowed, ctx, path) => {
 }
 
 /**
- * @param {unknown} value
- * @returns {boolean}
- */
-const ensureAltTextPresent = (value) => typeof value === 'string' && value.trim().length > 0
-
-/**
  * @param {{ scope?: 'global' | 'space' | 'group'; space?: string | undefined; group?: string | undefined }} data
  * @param {RefinementCtx} ctx
  */
@@ -124,7 +118,6 @@ const validateMediaPayload = (data, ctx) => {
 		return
 	}
 	const attachments = data.attachments ?? []
-	const altText = data.mediaAltText ?? ''
 
 	switch (data.mediaType) {
 		case 'text': {

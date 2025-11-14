@@ -1,5 +1,6 @@
 <script lang="ts">
 import { X } from '@lucide/svelte'
+import type { Snippet } from 'svelte'
 import { Button } from '$lib/components/ui/button/index.js'
 import * as Dialog from '$lib/components/ui/dialog/index.js'
 
@@ -8,8 +9,8 @@ let {
 	title = '',
 	description = '',
 	children,
-	onOpenChange = (open: boolean) => {},
-	onClose = () => {},
+	onOpenChange = (_open: boolean) => undefined,
+	onClose = () => undefined,
 	class: className = '',
 	size = 'default',
 	showCloseButton = true,
@@ -19,7 +20,7 @@ let {
 	open?: boolean
 	title?: string
 	description?: string
-	children?: any
+	children?: Snippet
 	onOpenChange?: (open: boolean) => void
 	onClose?: () => void
 	class?: string

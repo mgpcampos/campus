@@ -14,6 +14,13 @@ import {
 	trackSLABreach
 } from '$lib/server/analytics/messagingSla'
 
+function getFirstOrThrow<T>(items: T[], context: string): T {
+	const first = items[0]
+	if (!first) {
+		throw new Error(`Expected at least one result for ${context}`)
+	}
+	return first
+}
 describe('SLA Monitoring', () => {
 	describe('Message Delivery Tracking', () => {
 		it('should track message delivery within SLA', async () => {
@@ -31,7 +38,7 @@ describe('SLA Monitoring', () => {
 
 			expect(events.length).toBeGreaterThan(0)
 
-			const latestEvent = events[0]
+			const latestEvent = getFirstOrThrow(events, 'message_delivery event')
 			const metadata = JSON.parse(latestEvent.metadata)
 
 			expect(metadata.messageId).toBe(messageId)
@@ -53,7 +60,7 @@ describe('SLA Monitoring', () => {
 				sort: '-created'
 			})
 
-			const latestEvent = events[0]
+			const latestEvent = getFirstOrThrow(events, 'message_delivery event')
 			const metadata = JSON.parse(latestEvent.metadata)
 
 			expect(metadata.withinSLA).toBe(false)
@@ -77,7 +84,7 @@ describe('SLA Monitoring', () => {
 
 			expect(events.length).toBeGreaterThan(0)
 
-			const latestEvent = events[0]
+			const latestEvent = getFirstOrThrow(events, 'moderation_case_timing event')
 			const metadata = JSON.parse(latestEvent.metadata)
 
 			expect(metadata.caseId).toBe(caseId)
@@ -100,7 +107,7 @@ describe('SLA Monitoring', () => {
 				sort: '-created'
 			})
 
-			const latestEvent = events[0]
+			const latestEvent = getFirstOrThrow(events, 'moderation_case_timing event')
 			const metadata = JSON.parse(latestEvent.metadata)
 
 			expect(metadata.responseWithinSLA).toBe(false)
@@ -122,7 +129,7 @@ describe('SLA Monitoring', () => {
 				sort: '-created'
 			})
 
-			const latestEvent = events[0]
+			const latestEvent = getFirstOrThrow(events, 'moderation_case_timing event')
 			const metadata = JSON.parse(latestEvent.metadata)
 
 			expect(metadata.resolutionWithinSLA).toBe(false)
@@ -144,7 +151,7 @@ describe('SLA Monitoring', () => {
 				sort: '-created'
 			})
 
-			const latestEvent = events[0]
+			const latestEvent = getFirstOrThrow(events, 'moderation_case_timing event')
 			const metadata = JSON.parse(latestEvent.metadata)
 
 			expect(metadata.responseTimeMinutes).toBeNull()
@@ -200,8 +207,8 @@ describe('SLA Monitoring', () => {
 			// Track multiple messages to test percentile calculation
 			const latencies = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000]
 
-			for (let i = 0; i < latencies.length; i++) {
-				await trackMessageDelivery(`msg_${i}`, 'thread1', latencies[i])
+			for (const [index, latency] of latencies.entries()) {
+				await trackMessageDelivery(`msg_${index}`, 'thread1', latency)
 			}
 
 			const report = await generateDailySLAReport(new Date())
@@ -270,7 +277,7 @@ describe('SLA Monitoring', () => {
 
 			expect(breaches.length).toBeGreaterThan(0)
 
-			const latestBreach = breaches[0]
+			const latestBreach = getFirstOrThrow(breaches, 'sla_breach event')
 			const metadata = JSON.parse(latestBreach.metadata)
 
 			expect(metadata.breachType).toBe('response')

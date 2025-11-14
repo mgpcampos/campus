@@ -4,8 +4,10 @@ import { Button } from '$lib/components/ui/button/index.js'
 import * as Card from '$lib/components/ui/card/index.js'
 import * as Tabs from '$lib/components/ui/tabs/index.js'
 import { t } from '$lib/i18n'
+import type { EventRecord } from '../../types/events'
+import type { PageData } from './$types'
 
-let { data }: { data: any } = $props()
+const { data } = $props<{ data: PageData }>()
 
 function formatDate(dateString: string) {
 	const date = new Date(dateString)
@@ -38,7 +40,9 @@ function getEventDuration(start: string, end: string) {
 	return `${diffMins}m`
 }
 
-function getScopeLabel(event: any): string {
+type ScopedEvent = Pick<EventRecord, 'scopeType'>
+
+function getScopeLabel(event: ScopedEvent): string {
 	switch (event.scopeType) {
 		case 'global':
 			return t('events.campusWide')

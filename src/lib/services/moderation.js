@@ -1,5 +1,5 @@
 import { pb } from '../pocketbase.js'
-import { normalizeError } from '../utils/errors.js'
+import { normalizeError } from '../utils/errors.ts'
 import { canModerateComment, canModeratePost } from './permissions.js'
 
 const ACTIVE_CASE_FILTER = 'state != "resolved"'
@@ -26,7 +26,7 @@ function isNotFoundError(error) {
 function normalizeEvidence(evidence) {
 	if (!evidence) return []
 	if (Array.isArray(evidence)) {
-		return evidence.map((entry) => normalizeEvidence(entry)[0]).filter(Boolean)
+		return evidence.flatMap((entry) => normalizeEvidence(entry))
 	}
 	if (typeof evidence === 'object') {
 		return [

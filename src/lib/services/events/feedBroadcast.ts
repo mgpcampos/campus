@@ -60,11 +60,14 @@ export async function broadcastEventUpdate(
 	pb: PocketBase,
 	event: EventRecord,
 	updaterId: string,
-	changes: Record<string, any>
+	changes: Record<string, unknown>
 ): Promise<void> {
 	try {
 		const changesList = Object.entries(changes)
-			.map(([key, value]) => `- ${key}: ${value}`)
+			.map(([key, value]) => {
+				const formatted = typeof value === 'string' ? value : JSON.stringify(value)
+				return `- ${key}: ${formatted ?? ''}`
+			})
 			.join('\n')
 
 		const postContent = `🔄 **Event Updated**\n\n**${event.title}**\n\nChanges:\n${changesList}`

@@ -41,7 +41,8 @@ export async function PUT({ params, locals, request }) {
 		return json(updatedComment)
 	} catch (err) {
 		if (err instanceof z.ZodError) {
-			throw error(400, err.errors[0].message)
+			const firstMessage = err.errors[0]?.message || 'Invalid comment payload'
+			throw error(400, firstMessage)
 		}
 		if (/** @type {any} */ (err)?.status) {
 			throw /** @type {any} */ (err)

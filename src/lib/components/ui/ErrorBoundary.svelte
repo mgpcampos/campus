@@ -2,11 +2,11 @@
 import { AlertTriangle, RefreshCw } from '@lucide/svelte'
 import { Button } from '$lib/components/ui/button/index.js'
 import * as Card from '$lib/components/ui/card/index.js'
-import { normalizeError } from '$lib/utils/errors.js'
+import { normalizeError } from '$lib/utils/errors.ts'
 import LiveRegion from './LiveRegion.svelte'
 
 const props = $props<{
-	error?: any | null
+	error?: unknown | null
 	retry?: () => void
 	class?: string
 	showDetails?: boolean

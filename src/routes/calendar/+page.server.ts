@@ -2,7 +2,7 @@ import { error, fail } from '@sveltejs/kit'
 import { setError, setMessage, superValidate } from 'sveltekit-superforms/server'
 import { z } from 'zod'
 import { hasConflict, validateEventData } from '$lib/server/events/conflicts'
-import { normalizeError } from '$lib/utils/errors.js'
+import { normalizeError } from '$lib/utils/errors.ts'
 import { toUTC, validateTimeRange } from '$lib/utils/timezone'
 import { withZod } from '$lib/validation'
 import type { EventRecord } from '../../types/events'
@@ -153,9 +153,10 @@ export const actions: Actions = {
 				filter: `event = "${eventId}" && user = "${locals.user!.id}"`
 			})
 
-			if (existingParticipants.length > 0) {
+			const [existingParticipant] = existingParticipants
+			if (existingParticipant) {
 				// Update existing RSVP
-				await locals.pb.collection('event_participants').update(existingParticipants[0].id, {
+				await locals.pb.collection('event_participants').update(existingParticipant.id, {
 					status
 				})
 			} else {

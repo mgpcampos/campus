@@ -10,6 +10,7 @@ import type {
 	MessageStatus,
 	ModerationCaseRecord,
 	ModerationCaseState,
+	ModerationEvidence,
 	ModerationStatus
 } from '$types/messaging'
 
@@ -213,11 +214,11 @@ export type MessagePermissionChecker = (
 export type ModerationCaseCreator = (
 	sourceType: 'post' | 'comment' | 'message',
 	sourceId: string,
-	evidence: any[]
+	evidence: ModerationEvidence[]
 ) => Promise<ModerationCaseRecord>
 
 export type NotificationDispatcher = (
 	type: string,
-	payload: any,
+	payload: unknown,
 	recipientIds: string[]
 ) => Promise<void>

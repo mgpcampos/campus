@@ -1,7 +1,8 @@
 import { error, json } from '@sveltejs/kit'
 import type { ProfileUpdateInput } from '$lib/../types/profiles.js'
 import { getProfilePublications } from '$lib/server/profiles/publications.js'
-import { normalizeError, toErrorPayload } from '$lib/utils/errors.js'
+import { normalizeError, toErrorPayload } from '$lib/utils/errors.ts'
+import { getPocketBaseStatus } from '$lib/utils/pocketbase'
 
 /** @type {import('./$types').RequestHandler} */
 export async function GET({ params, locals }) {
@@ -26,8 +27,8 @@ export async function GET({ params, locals }) {
 				publications
 			}
 		})
-	} catch (err: any) {
-		if (err?.status === 404) {
+	} catch (err: unknown) {
+		if (getPocketBaseStatus(err) === 404) {
 			return error(404, 'Profile not found')
 		}
 
@@ -99,8 +100,8 @@ export async function PATCH({ params, request, locals }) {
 			profile,
 			message: 'Profile updated successfully'
 		})
-	} catch (err: any) {
-		if (err?.status === 404) {
+	} catch (err: unknown) {
+		if (getPocketBaseStatus(err) === 404) {
 			return error(404, 'Profile not found')
 		}
 
@@ -132,8 +133,8 @@ export async function DELETE({ params, locals }) {
 		return json({
 			message: 'Profile deleted successfully'
 		})
-	} catch (err: any) {
-		if (err?.status === 404) {
+	} catch (err: unknown) {
+		if (getPocketBaseStatus(err) === 404) {
 			return error(404, 'Profile not found')
 		}
 

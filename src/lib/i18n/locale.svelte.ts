@@ -69,7 +69,7 @@ export function normalizeLocale(locale: string | null | undefined): Locale {
 	if (lower === 'pt' || lower.startsWith('pt-br')) return 'pt-BR'
 
 	const fallbackMatch = availableLanguages.find((lang) => {
-		const [language] = lang.code.split('-')
+		const [language = ''] = lang.code.split('-')
 		const lowerLanguage = language.toLowerCase()
 		return lower === lowerLanguage || lower.startsWith(`${lowerLanguage}-`)
 	})
@@ -132,13 +132,13 @@ export function setLocale(locale: Locale | string): void {
 /**
  * Get a nested value from an object using dot notation
  */
-function getNestedValue(obj: any, path: string): any {
+function getNestedValue(obj: Record<string, unknown> | undefined, path: string): unknown {
 	const keys = path.split('.')
-	let result = obj
+	let result: unknown = obj
 
 	for (const key of keys) {
 		if (result && typeof result === 'object' && key in result) {
-			result = result[key]
+			result = (result as Record<string, unknown>)[key]
 		} else {
 			return undefined
 		}

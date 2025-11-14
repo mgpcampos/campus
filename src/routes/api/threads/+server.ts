@@ -1,6 +1,6 @@
 import { error, json } from '@sveltejs/kit'
 import { threadCreateSchema, threadListSchema } from '$lib/schemas/messaging.js'
-import { normalizeError, toErrorPayload } from '$lib/utils/errors.js'
+import { normalizeError, toErrorPayload } from '$lib/utils/errors.ts'
 
 /**
  * GET /api/threads

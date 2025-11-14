@@ -8,7 +8,7 @@ const mockForm = {
 		space: undefined,
 		group: undefined,
 		mediaType: 'text' as const,
-		attachments: [] as any[],
+		attachments: [] as File[],
 		mediaAltText: '',
 		videoPoster: undefined,
 		videoDuration: undefined,
@@ -37,6 +37,11 @@ vi.mock('$lib/services/moderation.js', () => ({
 }))
 
 const { actions } = await import('./+page.server')
+const defaultAction = actions?.default
+
+if (!defaultAction) {
+	throw new Error('Feed page action is undefined')
+}
 
 describe('feed actions', () => {
 	beforeEach(() => {
@@ -66,12 +71,15 @@ describe('feed actions', () => {
 			body: new FormData()
 		})
 
-		await actions.default({
+		type DefaultActionEvent = Parameters<typeof defaultAction>[0]
+		const locals = {
+			pb: { collection, authStore: { isValid: true } }
+		} as unknown as DefaultActionEvent['locals']
+
+		await defaultAction({
 			request,
-			locals: {
-				pb: { collection, authStore: { isValid: true } }
-			} as any
-		} as unknown as Parameters<(typeof actions)['default']>[0])
+			locals
+		} as DefaultActionEvent)
 
 		expect(createPostMock).toHaveBeenCalledWith(
 			expect.objectContaining({ content: 'Test post', mediaType: 'text' }),

@@ -1,6 +1,7 @@
 import { error, json } from '@sveltejs/kit'
 import type { ProfileCreateInput } from '$lib/../types/profiles.js'
-import { normalizeError, toErrorPayload } from '$lib/utils/errors.js'
+import { normalizeError, toErrorPayload } from '$lib/utils/errors.ts'
+import { getPocketBaseStatus } from '$lib/utils/pocketbase'
 
 /** @type {import('./$types').RequestHandler} */
 export async function GET({ url, locals }) {
@@ -98,9 +99,9 @@ export async function POST({ request, locals }) {
 			if (existing) {
 				return error(409, 'Profile already exists for this user')
 			}
-		} catch (err: any) {
+		} catch (err) {
 			// 404 is expected if no profile exists
-			if (err?.status !== 404) {
+			if (getPocketBaseStatus(err) !== 404) {
 				throw err
 			}
 		}

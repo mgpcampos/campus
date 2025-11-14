@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import ErrorBoundary from './ErrorBoundary.svelte'
 
 // Mock the errors utility
-vi.mock('$lib/utils/errors.js', () => ({
+vi.mock('$lib/utils/errors.ts', () => ({
 	normalizeError: vi.fn((error) => ({
 		__normalized: true,
 		type: 'SERVER',

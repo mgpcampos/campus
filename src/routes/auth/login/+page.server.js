@@ -1,7 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit'
 import { ClientResponseError } from 'pocketbase'
 import { superValidate } from 'sveltekit-superforms/server'
-import { getErrorMessage } from '$lib/utils/errors.js'
+import { getErrorMessage } from '$lib/utils/errors.ts'
 import { loginSchema } from '$lib/utils/validation.js'
 import { withZod } from '$lib/validation'
 

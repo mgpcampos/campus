@@ -1,6 +1,6 @@
 import { error, json } from '@sveltejs/kit'
 import { materialCreateSchema, materialSearchSchema } from '$lib/schemas/material.js'
-import { normalizeError, toErrorPayload } from '$lib/utils/errors.js'
+import { normalizeError, toErrorPayload } from '$lib/utils/errors.ts'
 
 /** @type {import('./$types').RequestHandler} */
 export async function GET({ url, locals }) {

@@ -3,12 +3,14 @@
 <script lang="ts">
 import { MessageSquare, User } from '@lucide/svelte'
 import Feed from '$lib/components/feed/Feed.svelte'
+import type { FeedPost } from '$lib/components/feed/types'
 import PostForm from '$lib/components/forms/PostForm.svelte'
 import { Button } from '$lib/components/ui/button/index.js'
 import { t } from '$lib/i18n'
 import { currentUser, pb } from '$lib/pocketbase.js'
+import type { PageData } from './$types'
 
-let { data } = $props()
+const { data } = $props<{ data: PageData }>()
 
 let feedComponent: InstanceType<typeof Feed> | null = null
 
@@ -38,7 +40,7 @@ function changeTimeframe(event: Event) {
 	timeframeHours = Number.parseInt((event.target as HTMLSelectElement).value, 10)
 }
 
-function handlePostCreated(event: CustomEvent<any>) {
+function handlePostCreated(event: CustomEvent<FeedPost>) {
 	const newPost = event.detail
 	if (feedComponent && typeof feedComponent.addPost === 'function') {
 		feedComponent.addPost(newPost)

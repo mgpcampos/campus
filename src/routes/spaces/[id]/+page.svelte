@@ -2,6 +2,7 @@
 
 <script lang="ts">
 import { Globe, Lock, Settings, Users } from 'lucide-svelte'
+import type { FeedPostList } from '$lib/components/feed/types.js'
 import { Badge } from '$lib/components/ui/badge/index.js'
 import { Button } from '$lib/components/ui/button/index.js'
 import * as Card from '$lib/components/ui/card/index.js'
@@ -10,7 +11,7 @@ import type { PageProps } from './$types'
 
 let { data }: PageProps = $props()
 let { space, memberCount, membershipRole, member, postsRestricted = false } = data
-const posts = data.posts as { items: Array<any> }
+const posts = data.posts as FeedPostList
 
 let joining = $state(false)
 

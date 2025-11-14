@@ -1,7 +1,10 @@
 {
 	"$schema": "https://biomejs.dev/schemas/2.3.5/schema.json",
 	"vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
-	"files": { "ignoreUnknown": false },
+	"files": {
+		"ignoreUnknown": false,
+		"includes": ["**", "!src/lib/server/notifications/templates/**/*"]
+	},
 	"formatter": {
 		"enabled": true,
 		"formatWithErrors": false,
@@ -21,7 +24,10 @@
 			"!**/yarn.lock",
 			"!**/bun.lock",
 			"!**/bun.lockb",
-			"!./static/"
+			"!./static/",
+			"!.vite-inspect.json",
+			"!src/lib/server/notifications/templates",
+			"!src/lib/server/notifications/templates/**"
 		]
 	},
 	"linter": {
@@ -124,10 +130,8 @@
 			"**/.env.test",
 			"!**/vite.config.js.timestamp-*",
 			"!**/vite.config.ts.timestamp-*",
-			"!**/playwright-report",
 			"!**/test-results",
 			"!e2e",
-			"!**/.playwright-mcp",
 			"!**/pb_data",
 			"!**/pb_hooks",
 			"!**/pb_migrations",
@@ -135,7 +139,10 @@
 			"!**/pocketbase-types.ts",
 			"!**/tmp_pb",
 			"!**/docs",
-			"!scripts"
+			"!scripts",
+			"!.vite-inspect.json",
+			"!src/lib/server/notifications/templates",
+			"!src/lib/server/notifications/templates/**"
 		]
 	},
 	"javascript": {
@@ -328,7 +335,12 @@
 			"javascript": { "globals": [] },
 			"linter": {
 				"rules": {
-					"correctness": { "noInnerDeclarations": "off", "noSelfAssign": "off" }
+					"correctness": {
+						"noInnerDeclarations": "off",
+						"noSelfAssign": "off",
+						"noUndeclaredVariables": "off",
+						"noUnusedVariables": "off"
+					}
 				}
 			}
 		},

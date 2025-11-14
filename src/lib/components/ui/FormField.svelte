@@ -20,9 +20,9 @@ let {
 	maxLength,
 	class: className = '',
 	inputClass = '',
-	onInput = () => {},
-	onBlur = () => {},
-	onFocus = () => {}
+	onInput = () => undefined,
+	onBlur = () => undefined,
+	onFocus = () => undefined
 }: {
 	type?: 'text' | 'email' | 'password' | 'textarea' | 'number' | 'tel' | 'url'
 	name: string

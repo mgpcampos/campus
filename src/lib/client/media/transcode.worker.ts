@@ -83,7 +83,7 @@ async function handleConfigure(message: TranscodeConfigureMessage) {
 			post({ type: 'unsupported', jobId: message.jobId, reason: 'codec' })
 			return
 		}
-	} catch (error) {
+	} catch (_error) {
 		post({ type: 'unsupported', jobId: message.jobId, reason: 'codec' })
 		return
 	}
@@ -154,7 +154,7 @@ async function handleConfigure(message: TranscodeConfigureMessage) {
 				await output.finalize().catch(() => undefined)
 				return
 			}
-		} catch (error) {
+		} catch (_error) {
 			post({ type: 'unsupported', jobId: message.jobId, reason: 'codec' })
 			videoEncoder.close()
 			await output.finalize().catch(() => undefined)
@@ -252,11 +252,11 @@ async function finalizeJob(jobId: string) {
 				error: 'No buffer produced by output'
 			})
 		}
-	} catch (error) {
+	} catch (_error) {
 		post({
 			type: 'error',
 			jobId,
-			error: error instanceof Error ? error.message : String(error)
+			error: _error instanceof Error ? _error.message : String(_error)
 		})
 	} finally {
 		job.videoEncoder.close()

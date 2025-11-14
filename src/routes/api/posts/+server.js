@@ -3,7 +3,7 @@ import { createPostSchema, postQuerySchema } from '$lib/schemas/post.js'
 import { trackFeedPerformance } from '$lib/server/analytics/feedPerformance'
 import { recordPostModerationSignal } from '$lib/services/moderation.js'
 import { createPost, getPosts } from '$lib/services/posts.js'
-import { normalizeError, toErrorPayload } from '$lib/utils/errors.js'
+import { normalizeError, toErrorPayload } from '$lib/utils/errors.ts'
 import { validatePostMedia } from '$lib/utils/media.js'
 
 /** @type {import('./$types').RequestHandler} */

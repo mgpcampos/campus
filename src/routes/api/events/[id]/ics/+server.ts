@@ -1,5 +1,5 @@
 import { error } from '@sveltejs/kit'
-import { normalizeError } from '$lib/utils/errors.js'
+import { normalizeError } from '$lib/utils/errors.ts'
 import type { EventLocation, EventRecord } from '../../../../../types/events'
 
 /**

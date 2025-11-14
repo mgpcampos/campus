@@ -311,7 +311,7 @@ export function trackMaterialDownload(materialId: string, metadata?: Record<stri
 
 export function initAnalytics() {
 	if (!browser || initialized || !analytics.enabled) {
-		return () => {}
+		return () => undefined
 	}
 
 	initialized = true

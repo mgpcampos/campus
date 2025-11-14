@@ -1,15 +1,17 @@
 <script lang="ts">
-import { Loader2 } from '@lucide/svelte'
 import { onMount } from 'svelte'
 import ImageAttachment from '$lib/components/media/ImageAttachment.svelte'
 import { Button } from '$lib/components/ui/button/index.js'
 import * as Card from '$lib/components/ui/card/index.js'
 import SkeletonLoader from '$lib/components/ui/SkeletonLoader.svelte'
 import { currentUser, pb } from '$lib/pocketbase.js'
+import type { PostsResponse } from '$types/pocketbase'
+
+type PostWithAttachments = PostsResponse & { attachments: string[] }
 
 let loading = true
 let error: string | null = null
-let posts: any[] = []
+let posts: PostWithAttachments[] = []
 
 onMount(async () => {
 	if (!$currentUser) {
@@ -18,21 +20,27 @@ onMount(async () => {
 	}
 	try {
 		// Fetch posts by current user that have attachments
-		const result = await pb.collection('posts').getList(1, 50, {
+		const result = await pb.collection('posts').getList<PostsResponse>(1, 50, {
 			filter: `author = "${$currentUser.id}" && attachments != ''`,
 			sort: '-created'
 		})
 		// Normalize attachments: PocketBase returns string for single file, array for multiple
 		posts = result.items
-			.filter((p) => p.attachments)
-			.map((p) => ({
-				...p,
-				attachments: Array.isArray(p.attachments) ? p.attachments : [p.attachments]
-			}))
-			.filter((p) => p.attachments.length > 0)
-	} catch (e: any) {
+			.map((item) => {
+				const rawAttachments = item.attachments as string[] | string | undefined
+				const normalized = Array.isArray(rawAttachments)
+					? rawAttachments
+					: rawAttachments
+						? [rawAttachments]
+						: []
+				return normalized.length > 0
+					? ({ ...item, attachments: normalized } satisfies PostWithAttachments)
+					: null
+			})
+			.filter((record): record is PostWithAttachments => Boolean(record))
+	} catch (caught) {
 		error = 'Failed to load uploads'
-		console.error(e)
+		console.error(caught)
 	} finally {
 		loading = false
 	}

@@ -1,4 +1,5 @@
 <script lang="ts">
+import type { ComponentType } from 'svelte'
 import { Button } from '$lib/components/ui/button/index.js'
 
 let {
@@ -7,10 +8,10 @@ let {
 	description,
 	actionText = '',
 	actionHref = '',
-	onAction = () => {},
+	onAction = () => undefined,
 	class: className = ''
 }: {
-	icon?: any
+	icon?: ComponentType
 	title: string
 	description: string
 	actionText?: string

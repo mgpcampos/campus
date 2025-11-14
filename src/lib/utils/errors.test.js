@@ -7,7 +7,7 @@ import {
 	normalizeError,
 	notifyError,
 	withRetry
-} from './errors.js'
+} from './errors.ts'
 
 vi.mock('svelte-sonner', () => {
 	return {
@@ -181,7 +181,9 @@ describe('withRetry', () => {
 
 describe('notifyError', () => {
 	it('invokes toast with userMessage and logs', async () => {
-		const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+		const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {
+			// Swallow console noise during test assertions
+		})
 		const { toast } = await import('svelte-sonner')
 		const err = new Error('Network issue while fetching')
 		await notifyError(err, { context: 'fetch.test', showDev: true })

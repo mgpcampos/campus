@@ -1,4 +1,6 @@
 declare module 'js-yaml' {
-	export function load(str: string, opts?: any): any
-	export function dump(obj: any, opts?: any): string
+	type LoadOptions = Record<string, unknown>
+	type DumpOptions = Record<string, unknown>
+	export function load(str: string, opts?: LoadOptions): unknown
+	export function dump(obj: unknown, opts?: DumpOptions): string
 }

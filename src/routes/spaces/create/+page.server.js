@@ -2,7 +2,7 @@ import { fail, redirect } from '@sveltejs/kit'
 import { ClientResponseError } from 'pocketbase'
 import { requireAuth } from '$lib/auth.js'
 import { createSpace } from '$lib/services/spaces.js'
-import { toErrorPayload } from '$lib/utils/errors.js'
+import { toErrorPayload } from '$lib/utils/errors.ts'
 
 /**
  * Normalize a slug to a URL-safe format.

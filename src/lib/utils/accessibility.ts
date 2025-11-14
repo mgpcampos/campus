@@ -10,11 +10,16 @@ export function trapFocus(container: HTMLElement): () => void {
 		'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
 	) as NodeListOf<HTMLElement>
 
-	const firstElement = focusableElements[0]
-	const lastElement = focusableElements[focusableElements.length - 1]
+	if (focusableElements.length === 0) {
+		return () => undefined
+	}
+
+	const firstElement = focusableElements[0]!
+	const lastElement = focusableElements[focusableElements.length - 1]!
 
 	function handleKeydown(event: KeyboardEvent) {
 		if (event.key !== 'Tab') return
+		if (!firstElement || !lastElement) return
 
 		if (event.shiftKey) {
 			if (document.activeElement === firstElement) {
@@ -32,7 +37,7 @@ export function trapFocus(container: HTMLElement): () => void {
 	container.addEventListener('keydown', handleKeydown)
 
 	// Focus the first element
-	firstElement?.focus()
+	firstElement.focus()
 
 	// Return cleanup function
 	return () => {
@@ -66,6 +71,9 @@ export function createRovingTabindex(
 	selector: string = '[role="option"], [role="menuitem"], [role="tab"]'
 ): () => void {
 	const items = container.querySelectorAll(selector) as NodeListOf<HTMLElement>
+	if (items.length === 0) {
+		return () => undefined
+	}
 	let currentIndex = 0
 
 	// Set initial tabindex
@@ -74,10 +82,13 @@ export function createRovingTabindex(
 	})
 
 	function updateTabindex(newIndex: number) {
-		items[currentIndex].tabIndex = -1
+		const currentItem = items[currentIndex]
+		const nextItem = items[newIndex]
+		if (!currentItem || !nextItem) return
+		currentItem.tabIndex = -1
 		currentIndex = newIndex
-		items[currentIndex].tabIndex = 0
-		items[currentIndex].focus()
+		nextItem.tabIndex = 0
+		nextItem.focus()
 	}
 
 	function handleKeydown(event: KeyboardEvent) {
@@ -144,11 +155,17 @@ export function announce(message: string, priority: 'polite' | 'assertive' = 'po
  */
 export function isFocusable(element: HTMLElement): boolean {
 	if (element.tabIndex < 0) return false
-	if ('disabled' in element && (element as any).disabled) return false
+	if (isDisableable(element) && element.disabled) return false
 	if (element.hidden) return false
 
 	const style = window.getComputedStyle(element)
 	if (style.display === 'none' || style.visibility === 'hidden') return false
 
 	return true
+}
+
+type DisableableElement = HTMLElement & { disabled?: boolean }
+
+function isDisableable(element: HTMLElement): element is DisableableElement {
+	return 'disabled' in element
 }

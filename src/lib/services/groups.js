@@ -1,5 +1,5 @@
 import { pb } from '../pocketbase.js'
-import { normalizeError } from '../utils/errors.js'
+import { normalizeError } from '../utils/errors.ts'
 
 /**
  * @typedef {{ pb?: import('pocketbase').default }} ServiceOptions
@@ -211,8 +211,9 @@ export async function leaveGroup(groupId, serviceOptions = /** @type {ServiceOpt
 		const list = await client.collection('group_members').getList(1, 1, {
 			filter: `group = "${groupId}" && user = "${client.authStore.model.id}"`
 		})
-		if (list.items.length === 0) return false
-		await client.collection('group_members').delete(list.items[0].id)
+		const membership = list.items[0]
+		if (!membership) return false
+		await client.collection('group_members').delete(membership.id)
 		return true
 	} catch (error) {
 		console.error('Error leaving group:', error)

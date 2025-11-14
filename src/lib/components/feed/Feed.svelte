@@ -12,10 +12,11 @@ import {
 	realtimeStatus,
 	subscribeFeed
 } from '$lib/services/realtime.js'
-import { notifyError, withErrorToast } from '$lib/utils/errors.js'
+import { getUserMessage, notifyError, withErrorToast } from '$lib/utils/errors.ts'
 import PostCard from './PostCard.svelte'
+import type { FeedPost, FeedPostList, FeedScope } from './types.js'
 
-export let scope = 'global'
+export let scope: FeedScope = 'global'
 export let space: string | null = null
 export let group: string | null = null
 export let refreshTrigger = 0 // External trigger for refresh
@@ -25,7 +26,7 @@ export let timeframeHours: number = 48
 
 const dispatch = createEventDispatcher()
 
-let posts: any[] = []
+let posts: FeedPost[] = []
 let loading = false
 let loadingMore = false
 let hasMore = true
@@ -96,30 +97,30 @@ async function loadPosts(page = 1, append = false) {
 	}
 
 	try {
-		const result = await getPosts({
+		const result = (await getPosts({
 			page,
 			perPage,
-			scope: scope as any,
+			scope,
 			space: space ?? undefined,
 			group: group ?? undefined,
 			q: q || undefined,
 			sort,
 			timeframeHours
-		})
+		})) as FeedPostList
 
 		if (append) {
-			posts = [...posts, ...(result as any).items]
+			posts = [...posts, ...result.items]
 		} else {
-			posts = (result as any).items
+			posts = result.items
 			// Sync with feedPosts store for realtime updates
 			feedPosts.set(posts)
 		}
 
-		hasMore = (result as any).page < (result as any).totalPages
-		currentPage = (result as any).page
+		hasMore = result.page < result.totalPages
+		currentPage = result.page
 	} catch (err) {
 		const normalized = await notifyError(err, { context: 'loadPosts' })
-		error = normalized.userMessage
+		error = normalized?.userMessage ?? getUserMessage(err)
 	} finally {
 		loading = false
 		loadingMore = false
@@ -164,7 +165,7 @@ function handleComment(postId: string) {
 	dispatch('comment', { postId })
 }
 
-function handleEdit(post: any) {
+function handleEdit(post: FeedPost) {
 	dispatch('edit', { post })
 }
 
@@ -193,7 +194,7 @@ async function handleDelete(postId: string) {
 }
 
 // Public method to add new post to feed
-export function addPost(newPost: any) {
+export function addPost(newPost: FeedPost) {
 	posts = [newPost, ...posts]
 }
 </script>

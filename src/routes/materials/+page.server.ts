@@ -2,7 +2,7 @@ import { error, fail } from '@sveltejs/kit'
 import { superValidate } from 'sveltekit-superforms/server'
 import { materialCreateSchema, materialSearchSchema } from '$lib/schemas/material.js'
 import type { MaterialWithUploader } from '$lib/types/materials'
-import { normalizeError } from '$lib/utils/errors.js'
+import { normalizeError } from '$lib/utils/errors.ts'
 import { withZod } from '$lib/validation/index.js'
 import type { Actions, PageServerLoad } from './$types'
 

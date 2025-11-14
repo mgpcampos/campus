@@ -1,7 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit'
 import { ClientResponseError } from 'pocketbase'
 import { superValidate } from 'sveltekit-superforms/server'
-import { getErrorMessage } from '$lib/utils/errors.js'
+import { getErrorMessage } from '$lib/utils/errors.ts'
 import { registerSchema } from '$lib/utils/validation.js'
 import { withZod } from '$lib/validation'
 
@@ -35,7 +35,7 @@ export const actions = {
 				name: form.data.name
 			}
 
-			const user = await locals.pb.collection('users').create(userData)
+			const _user = await locals.pb.collection('users').create(userData)
 
 			// Automatically log in the user after registration
 			await locals.pb.collection('users').authWithPassword(form.data.email, form.data.password)

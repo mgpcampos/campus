@@ -1,5 +1,5 @@
 import { pb } from '../pocketbase.js'
-import { normalizeError } from '../utils/errors.js'
+import { normalizeError } from '../utils/errors.ts'
 
 /**
  * @typedef {{ pb?: import('pocketbase').default }} ServiceOptions
@@ -42,8 +42,9 @@ export async function leaveSpace(spaceId, serviceOptions = /** @type {ServiceOpt
 		const list = await client.collection('space_members').getList(1, 1, {
 			filter: `space = "${spaceId}" && user = "${client.authStore.model.id}"`
 		})
-		if (list.items.length === 0) return false
-		await client.collection('space_members').delete(list.items[0].id)
+		const membership = list.items[0]
+		if (!membership) return false
+		await client.collection('space_members').delete(membership.id)
 		return true
 	} catch (error) {
 		console.error('Error leaving space:', error)

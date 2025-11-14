@@ -1,4 +1,5 @@
 <script lang="ts">
+import type { SubmitFunction } from '@sveltejs/kit'
 import { onMount } from 'svelte'
 import { enhance } from '$app/forms'
 import { invalidateAll } from '$app/navigation'
@@ -56,8 +57,9 @@ function isCreator(event: EventRecord): boolean {
 }
 
 // Handle form submission
-function handleCreateSubmit() {
-	return async ({ result }: any) => {
+const handleCreateSubmit: SubmitFunction = () => {
+	isSubmitting = true
+	return async ({ result }) => {
 		if (result.type === 'success') {
 			showCreateModal = false
 			liveRegionMessage = t('calendar.eventCreated')
@@ -72,14 +74,17 @@ function handleCreateSubmit() {
 	}
 }
 
-function handleDeleteSubmit(eventTitle: string) {
-	return async ({ result }: any) => {
-		if (result.type === 'success') {
-			selectedEvent = null
-			liveRegionMessage = t('calendar.eventDeleted', { title: eventTitle })
-			await invalidateAll()
+function handleDeleteSubmit(eventTitle: string): SubmitFunction {
+	return () => {
+		isSubmitting = true
+		return async ({ result }) => {
+			if (result.type === 'success') {
+				selectedEvent = null
+				liveRegionMessage = t('calendar.eventDeleted', { title: eventTitle })
+				await invalidateAll()
+			}
+			isSubmitting = false
 		}
-		isSubmitting = false
 	}
 }
 
@@ -213,7 +218,7 @@ $: groupedEvents = groupEventsByDate(data.events)
 											<form
 												method="POST"
 												action="?/deleteEvent"
-												use:enhance={() => handleDeleteSubmit(event.title)}
+												use:enhance={handleDeleteSubmit(event.title)}
 											>
 												<input type="hidden" name="eventId" value={event.id} />
 												<button

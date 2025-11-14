@@ -1,5 +1,6 @@
 <script lang="ts">
 import { formatDistanceToNow } from 'date-fns'
+import type { Match as LinkifyMatch } from 'linkify-it'
 import linkifyIt from 'linkify-it'
 import { Edit, Heart, MessageCircle, MoreHorizontal, Trash2 } from 'lucide-svelte'
 import { createEventDispatcher, onMount } from 'svelte'
@@ -9,28 +10,39 @@ import { Button } from '$lib/components/ui/button/index.js'
 import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js'
 import { currentUser, pb } from '$lib/pocketbase.js'
 import { hasUserLikedPost, toggleLike } from '$lib/services/likes.js'
+import { canModeratePost } from '$lib/services/permissions.js'
+import { reportContent } from '$lib/services/reports.js'
+import type { FeedAuthor, FeedPost } from './types.js'
+
+type CommentSectionModule = typeof import('./CommentSection.svelte')
+type CommentSectionComponent = CommentSectionModule['default']
 
 // Lazy loaded comment section to reduce initial bundle size
-let CommentSectionPromise: Promise<any> | null = null
-let CommentSectionModule: any = null
+let commentSectionPromise: Promise<CommentSectionModule> | null = null
+let commentSectionComponent: CommentSectionComponent | null = null
 async function loadCommentSection() {
-	if (!CommentSectionPromise) {
-		CommentSectionPromise = import('./CommentSection.svelte').then((m) => {
-			CommentSectionModule = m.default
-			return m
+	if (!commentSectionPromise) {
+		commentSectionPromise = import('./CommentSection.svelte').then((module) => {
+			commentSectionComponent = module.default
+			return module
 		})
 	}
-	return CommentSectionPromise
+	return commentSectionPromise
 }
 
 import { toast } from 'svelte-sonner'
 import { t } from '$lib/i18n'
-import { notifyError } from '$lib/utils/errors.js'
+import { notifyError } from '$lib/utils/errors.ts'
 
-export let post: any
+export let post: FeedPost
 export let showActions = true
 
-const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher<{
+	like: { postId: string; liked: boolean; likeCount: number }
+	comment: { postId: string }
+	edit: { post: FeedPost }
+	delete: { postId: string }
+}>()
 const linkify = new linkifyIt()
 
 let isLiked = false
@@ -38,12 +50,11 @@ let likeCount = post.likeCount || 0
 let commentCount = post.commentCount || 0
 let likePending = false
 
-$: author = post.expand?.author
-$: isOwner = $currentUser && author && $currentUser.id === author.id
+let author: FeedAuthor | undefined
+let isOwner = false
+$: author = post.expand?.author as FeedAuthor | undefined
+$: isOwner = Boolean($currentUser && author && $currentUser.id === author.id)
 let canModerate = false
-
-import { canModeratePost } from '$lib/services/permissions.js'
-import { reportContent } from '$lib/services/reports.js'
 
 onMount(async () => {
 	if ($currentUser) {
@@ -60,7 +71,7 @@ $: canInteract = $currentUser !== null
 $: canDelete = Boolean(isOwner || canModerate)
 
 onMount(() => {
-	let unsubscribeFn = () => {}
+	let unsubscribeFn: () => void = () => undefined
 	;(async () => {
 		if ($currentUser) {
 			try {
@@ -78,10 +89,14 @@ onMount(() => {
 		unsubscribeFn = () => {
 			try {
 				unsub()
-			} catch {}
+			} catch {
+				// ignore unsubscribe errors
+			}
 			try {
 				pb.collection('posts').unsubscribe(post.id)
-			} catch {}
+			} catch {
+				// ignore unsubscribe errors
+			}
 		}
 	})()
 	if (showActions) {
@@ -97,7 +112,7 @@ function linkifyContent(content: string) {
 	let result = content
 	let offset = 0
 
-	matches.forEach((match: any) => {
+	matches.forEach((match: LinkifyMatch) => {
 		const before = result.slice(0, match.index + offset)
 		const after = result.slice(match.lastIndex + offset)
 		const link = `<a href="${match.url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">${match.text}</a>`
@@ -151,7 +166,7 @@ function handleDelete() {
 	}
 }
 
-function handleCommentCountChanged(event: CustomEvent) {
+function handleCommentCountChanged(event: CustomEvent<{ count: number }>) {
 	commentCount = event.detail.count
 }
 
@@ -162,8 +177,8 @@ function getFileUrl(filename: string) {
 // Normalize attachments to always be an array
 // PocketBase returns a string for single file, array for multiple
 $: attachments = (() => {
-	if (!post.attachments) return []
-	if (Array.isArray(post.attachments)) return post.attachments
+	if (!post.attachments) return [] as string[]
+	if (Array.isArray(post.attachments)) return post.attachments as string[]
 	return [post.attachments]
 })()
 
@@ -283,14 +298,17 @@ $: isImagePost = mediaType === 'images' || (!isVideoPost && attachments.length >
 
 				<!-- Media attachments -->
 				{#if isVideoPost && attachments.length > 0}
-					<div class="mt-3">
-						<VideoAttachment
-							{post}
-							videoFile={attachments[0]}
-							posterFile={post.videoPoster}
-							altText={post.mediaAltText || ''}
-						/>
-					</div>
+					{@const primaryVideo = attachments[0]}
+					{#if primaryVideo}
+						<div class="mt-3">
+							<VideoAttachment
+								{post}
+								videoFile={primaryVideo}
+								posterFile={post.videoPoster || ''}
+								altText={post.mediaAltText || ''}
+							/>
+						</div>
+					{/if}
 				{:else if isImagePost && attachments.length > 0}
 					<div
 						class="mt-3 grid gap-2 overflow-hidden rounded-lg {attachments.length === 1
@@ -357,10 +375,10 @@ $: isImagePost = mediaType === 'images' || (!isVideoPost && attachments.length >
 					</div>
 
 					<!-- Comment Section (lazy) -->
-					{#if CommentSectionModule}
+					{#if commentSectionComponent}
 						<div class="mt-4">
 							<svelte:component
-								this={CommentSectionModule}
+								this={commentSectionComponent}
 								postId={post.id}
 								initialCommentCount={commentCount}
 								on:commentCountChanged={handleCommentCountChanged}

@@ -5,11 +5,17 @@ import { t } from '$lib/i18n'
 import { createPostSchema } from '$lib/schemas/post.js'
 import { recordPostModerationSignal } from '$lib/services/moderation.js'
 import { createPost } from '$lib/services/posts.js'
-import { getUserMessage, normalizeError } from '$lib/utils/errors.js'
+import { getUserMessage, normalizeError } from '$lib/utils/errors.ts'
 import { withZod } from '$lib/validation'
 import type { Actions, PageServerLoad } from './$types'
 
 type CreatePostInput = z.infer<typeof createPostSchema>
+
+type MessageOptions = NonNullable<Parameters<typeof message>[2]>
+type MessageStatus = NonNullable<MessageOptions['status']>
+
+const isMessageStatus = (value: unknown): value is MessageStatus =>
+	typeof value === 'number' && value >= 400 && value <= 599
 
 const createDefaultFormState = () =>
 	withFiles({
@@ -105,13 +111,14 @@ export const actions: Actions = {
 			)
 		} catch (error) {
 			const normalized = normalizeError(error, { context: 'feed:createPost' })
+			const status = normalized.status ?? 500
 			return message(
 				form,
 				{
 					type: 'error',
 					text: getUserMessage(normalized)
 				},
-				{ status: normalized.status ?? 500 }
+				isMessageStatus(status) ? { status } : undefined
 			)
 		}
 	}

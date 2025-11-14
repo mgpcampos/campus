@@ -1,28 +1,34 @@
 <script lang="ts">
 import { ChevronRight, Home } from '@lucide/svelte'
+import type { ComponentType } from 'svelte'
 
 interface BreadcrumbItem {
 	label: string
 	href?: string
-	icon?: any
+	icon?: ComponentType
 	current?: boolean
 }
 
 let {
 	items = [],
-	separator = ChevronRight,
+	separator = ChevronRight as unknown as ComponentType,
 	showHome = true,
 	homeHref = '/',
 	class: className = ''
 }: {
 	items: BreadcrumbItem[]
-	separator?: any
+	separator?: ComponentType
 	showHome?: boolean
 	homeHref?: string
 	class?: string
 } = $props()
 
-const allItems = showHome ? [{ label: 'Home', href: homeHref, icon: Home }, ...items] : items
+const homeItem: BreadcrumbItem = {
+	label: 'Home',
+	href: homeHref,
+	icon: Home as unknown as ComponentType
+}
+const allItems: BreadcrumbItem[] = showHome ? [homeItem, ...items] : items
 </script>
 
 <nav aria-label="Breadcrumb" class="flex {className}">

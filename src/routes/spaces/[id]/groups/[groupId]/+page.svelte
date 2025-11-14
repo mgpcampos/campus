@@ -3,20 +3,39 @@
 <script lang="ts">
 import { t } from '$lib/i18n/index.js'
 
-type GroupRecord = Record<string, any>
-type GroupPost = Record<string, any>
+type GroupRecord = {
+	name?: string
+	description?: string
+	expand?: {
+		space?: {
+			name?: string
+		}
+	}
+} & Record<string, unknown>
 
-let { data }: { data: Record<string, any> } = $props()
-const group = $derived.by<GroupRecord | undefined>(() => data?.group as GroupRecord | undefined)
+type GroupPost = {
+	created?: string
+	content?: string
+} & Record<string, unknown>
+
+type GroupPageData = {
+	group?: GroupRecord
+	memberCount?: number | null
+	member?: boolean
+	posts?: { items?: GroupPost[] }
+}
+
+let { data }: { data: GroupPageData } = $props()
+const group = $derived.by<GroupRecord | undefined>(() => data?.group)
 const memberCount = $derived.by<number | null>(() =>
-	typeof data?.memberCount === 'number' ? (data.memberCount as number) : null
+	typeof data?.memberCount === 'number' ? data.memberCount : null
 )
 const member = $derived.by<boolean>(() => Boolean(data?.member))
 const postsItems = $derived.by<GroupPost[]>(() =>
-	Array.isArray(data?.posts?.items) ? (data.posts.items as GroupPost[]) : []
+	Array.isArray(data?.posts?.items) ? data.posts.items : []
 )
 const spaceName = $derived.by<string | null>(() => {
-	const expandedSpace = (group?.expand as { space?: { name?: string } } | undefined)?.space
+	const expandedSpace = group?.expand?.space
 	return expandedSpace?.name ?? null
 })
 const groupName = $derived.by<string>(() => group?.name ?? 'Group')
@@ -74,7 +93,9 @@ async function action(name: string) {
 	<ul class="space-y-3">
 		{#each postsItems as post}
 			<li class="rounded border p-3">
-				<div class="text-sm text-gray-500">{new Date(post.created).toLocaleString()}</div>
+				<div class="text-sm text-gray-500">
+					{new Date(post.created ?? Date.now()).toLocaleString()}
+				</div>
 				<div>{post.content}</div>
 			</li>
 		{/each}

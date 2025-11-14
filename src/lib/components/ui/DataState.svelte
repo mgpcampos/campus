@@ -1,4 +1,5 @@
 <script lang="ts">
+import type { ComponentType, Snippet } from 'svelte'
 import EmptyState from './EmptyState.svelte'
 import ErrorBoundary from './ErrorBoundary.svelte'
 import SkeletonLoader from './SkeletonLoader.svelte'
@@ -9,29 +10,29 @@ let {
 	data = null,
 	loadingVariant = 'default',
 	loadingCount = 3,
-	emptyIcon = null,
+	emptyIcon = undefined,
 	emptyTitle = 'No data found',
 	emptyDescription = 'There is nothing here yet.',
 	emptyAction = '',
 	emptyActionHref = '',
-	onEmptyAction = () => {},
-	onRetry = () => {},
+	onEmptyAction = () => undefined,
+	onRetry = () => undefined,
 	children,
 	class: className = ''
 }: {
 	loading?: boolean
-	error?: any | null
-	data?: any
+	error?: unknown | null
+	data?: unknown
 	loadingVariant?: 'default' | 'card' | 'post' | 'profile' | 'list'
 	loadingCount?: number
-	emptyIcon?: any
+	emptyIcon?: ComponentType
 	emptyTitle?: string
 	emptyDescription?: string
 	emptyAction?: string
 	emptyActionHref?: string
 	onEmptyAction?: () => void
 	onRetry?: () => void
-	children?: any
+	children?: Snippet
 	class?: string
 } = $props()
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-import { onMount } from 'svelte'
+import { onMount, type Snippet } from 'svelte'
 import { createRovingTabindex } from '$lib/utils/accessibility.js'
 
 let {
@@ -15,7 +15,7 @@ let {
 	direction?: 'horizontal' | 'vertical' | 'both'
 	wrap?: boolean
 	class?: string
-	children?: any
+	children?: Snippet
 } = $props()
 
 let containerElement: HTMLElement

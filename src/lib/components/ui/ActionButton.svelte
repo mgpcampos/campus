@@ -1,4 +1,5 @@
 <script lang="ts">
+import type { ComponentType, Snippet } from 'svelte'
 import { Button } from '$lib/components/ui/button/index.js'
 import LoadingSpinner from './LoadingSpinner.svelte'
 
@@ -9,7 +10,7 @@ let {
 	disabled = false,
 	href,
 	type = 'button',
-	onclick = () => {},
+	onclick = () => undefined,
 	children,
 	icon,
 	iconPosition = 'left',
@@ -24,8 +25,8 @@ let {
 	href?: string
 	type?: 'button' | 'submit' | 'reset'
 	onclick?: (event: MouseEvent) => void
-	children?: any
-	icon?: any
+	children?: Snippet
+	icon?: ComponentType
 	iconPosition?: 'left' | 'right'
 	class?: string
 	loadingText?: string

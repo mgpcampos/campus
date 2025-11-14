@@ -113,7 +113,8 @@ export async function POST({ params, locals, request }) {
 		return json(expandedComment, { status: 201 })
 	} catch (err) {
 		if (err instanceof z.ZodError) {
-			throw error(400, err.errors[0].message)
+			const firstMessage = err.errors[0]?.message || 'Invalid comment payload'
+			throw error(400, firstMessage)
 		}
 		console.error('Error creating comment:', err instanceof Error ? err.message : err)
 		throw error(500, 'Failed to create comment')

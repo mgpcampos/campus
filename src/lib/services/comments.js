@@ -1,6 +1,6 @@
 // Using relative import to avoid alias resolution issues in Vitest
 import { pb } from '../pocketbase.js'
-import { normalizeError } from '../utils/errors.js'
+import { normalizeError } from '../utils/errors.ts'
 
 /**
  * @typedef {import('pocketbase').RecordModel} RecordModel

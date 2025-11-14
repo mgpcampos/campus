@@ -14,7 +14,9 @@ type DeserializeOutput = Record<string, unknown> | null
 
 type Enhance = (form: HTMLFormElement, opts?: Record<string, unknown>) => void
 
-export const applyAction: ApplyAction = vi.fn(async () => {})
+export const applyAction: ApplyAction = vi.fn(async () => {
+	// No-op mock implementation for tests
+})
 export const deserialize: (input: DeserializeInput) => DeserializeOutput = vi.fn((input) => {
 	if (input instanceof FormData) {
 		return Object.fromEntries(input.entries())

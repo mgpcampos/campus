@@ -3,7 +3,7 @@ import { superForm } from 'sveltekit-superforms/client'
 import { goto } from '$app/navigation'
 import { ariaValidity } from '$lib/actions/ariaValidity'
 import { t } from '$lib/i18n'
-import { getErrorMessage } from '$lib/utils/errors.js'
+import { getErrorMessage } from '$lib/utils/errors.ts'
 import { registerSchema } from '$lib/utils/validation.js'
 import { createClientFormOptions } from '$lib/validation'
 

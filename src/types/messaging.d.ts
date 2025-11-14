@@ -76,7 +76,7 @@ export interface ModerationCaseRecord {
 
 export interface ModerationEvidence {
 	type: string
-	value: any
+	value: unknown
 	capturedAt?: string
 }
 

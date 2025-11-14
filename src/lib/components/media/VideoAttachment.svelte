@@ -1,7 +1,8 @@
 <script lang="ts">
+import type { RecordModel } from 'pocketbase'
 import { pb } from '$lib/pocketbase.js'
 
-export let post: any
+export let post: RecordModel
 export let videoFile: string
 export let posterFile: string | undefined = undefined
 export let altText: string = ''

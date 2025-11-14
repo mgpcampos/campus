@@ -1,7 +1,18 @@
 import { error, json } from '@sveltejs/kit'
-import type { PublicationCreateInput } from '$lib/../types/profiles.js'
+import type {
+	ProfilePublicationRecord,
+	PublicationCreateInput,
+	PublicationRecord
+} from '$lib/../types/profiles.js'
 import { addPublicationToProfile } from '$lib/server/profiles/publications.js'
-import { normalizeError, toErrorPayload } from '$lib/utils/errors.js'
+import { normalizeError, toErrorPayload } from '$lib/utils/errors.ts'
+import { getPocketBaseStatus } from '$lib/utils/pocketbase'
+
+type PublicationLinkWithExpand = ProfilePublicationRecord & {
+	expand?: {
+		publication?: PublicationRecord
+	}
+}
 
 /** @type {import('./$types').RequestHandler} */
 export async function POST({ params, request, locals }) {
@@ -61,8 +72,8 @@ export async function POST({ params, request, locals }) {
 			},
 			{ status: 201 }
 		)
-	} catch (err: any) {
-		if (err?.status === 404) {
+	} catch (err: unknown) {
+		if (getPocketBaseStatus(err) === 404) {
 			return error(404, 'Profile not found')
 		}
 
@@ -85,13 +96,15 @@ export async function GET({ params, locals }) {
 		await locals.pb.collection('profiles').getOne(profileId)
 
 		// Get all publications for this profile
-		const links = await locals.pb.collection('profile_publications').getFullList({
-			filter: `profile = "${profileId}"`,
-			expand: 'publication,publication.material',
-			sort: '-publication.year,-created'
-		})
+		const links = await locals.pb
+			.collection('profile_publications')
+			.getFullList<PublicationLinkWithExpand>({
+				filter: `profile = "${profileId}"`,
+				expand: 'publication,publication.material',
+				sort: '-publication.year,-created'
+			})
 
-		const publications = links.map((link: any) => ({
+		const publications = links.map((link) => ({
 			...link.expand?.publication,
 			contributionRole: link.contributionRole,
 			linkId: link.id,
@@ -102,8 +115,8 @@ export async function GET({ params, locals }) {
 			publications,
 			total: publications.length
 		})
-	} catch (err: any) {
-		if (err?.status === 404) {
+	} catch (err: unknown) {
+		if (getPocketBaseStatus(err) === 404) {
 			return error(404, 'Profile not found')
 		}
 

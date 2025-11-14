@@ -107,7 +107,8 @@ describe('Post Interactions Integration', () => {
 
 		const commentsResult = await getComments(postId)
 		expect(commentsResult.items).toHaveLength(1)
-		expect(commentsResult.items[0].content).toBe(commentContent)
+		const firstComment = commentsResult.items[0]
+		expect(firstComment?.content).toBe(commentContent)
 
 		// Verify all interactions were called correctly
 		expect(mockLikesCollection.create).toHaveBeenCalledWith({

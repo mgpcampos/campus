@@ -24,7 +24,7 @@ export const load: PageLoad = async ({ fetch, params }) => {
 			throw new Error('Failed to load messages')
 		}
 
-		const messagesData = await messagesResponse.json()
+		const _messagesData = await messagesResponse.json()
 
 		return {
 			thread: threadData.thread,

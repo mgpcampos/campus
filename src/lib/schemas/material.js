@@ -5,48 +5,6 @@ import { fileLikeSchema } from './helpers.js'
  * @typedef {import('zod').RefinementCtx} RefinementCtx
  */
 
-const MAX_FILE_SIZE = 104857600 // 100MB
-const MAX_TAGS = 10
-
-const DOCUMENT_MIME_TYPES = [
-	'application/pdf',
-	'application/msword',
-	'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-	'application/vnd.ms-powerpoint',
-	'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-	'application/vnd.ms-excel',
-	'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-	'text/csv',
-	'application/zip'
-]
-
-const VIDEO_MIME_TYPES = ['video/mp4', 'video/webm']
-
-const ALL_ALLOWED_MIME_TYPES = [...DOCUMENT_MIME_TYPES, ...VIDEO_MIME_TYPES]
-
-/**
- * @param {unknown} file
- * @returns {string}
- */
-const getFileMimeType = (file) => {
-	if (!file || typeof file !== 'object') return ''
-	const type = Reflect.get(file, 'type')
-	if (typeof type === 'string' && type.length > 0) return type
-	const mimeType = Reflect.get(file, 'mimeType')
-	if (typeof mimeType === 'string' && mimeType.length > 0) return mimeType
-	return ''
-}
-
-/**
- * @param {unknown} file
- * @returns {number}
- */
-const getFileSize = (file) => {
-	if (!file || typeof file !== 'object') return 0
-	const size = Reflect.get(file, 'size')
-	return typeof size === 'number' ? size : 0
-}
-
 /**
  * Simplified schema for creating a new material - just title, description, and file
  */

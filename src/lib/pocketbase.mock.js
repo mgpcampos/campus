@@ -3,6 +3,8 @@ import { writable } from 'svelte/store'
 
 export const currentUser = writable(/** @type {import('pocketbase').RecordModel | null} */ (null))
 
+const noop = () => undefined
+
 const authStore = {
 	/** @type {string | null} */
 	token: null,
@@ -45,8 +47,8 @@ export const pb = {
 	authStore,
 	collection: () => ({
 		getList: async () => ({ items: [] }),
-		subscribe: async () => () => {},
-		unsubscribe: () => {},
+		subscribe: async () => noop,
+		unsubscribe: noop,
 		update: async () => ({}),
 		create: async () => ({}),
 		getFirstListItem: async () => ({ id: 'u-mention' })

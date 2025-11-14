@@ -1,5 +1,6 @@
+import type PocketBase from 'pocketbase'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { ConflictCheckParams } from './conflicts'
+import type { ScopeType } from '../../../types/events'
 import { getUserEvents, hasConflict, validateEventData } from './conflicts'
 
 // Mock PocketBase
@@ -17,6 +18,8 @@ const mockPocketBase = () => {
 		_mockCollection: mockCollection
 	}
 }
+
+type MockPocketBase = ReturnType<typeof mockPocketBase>
 
 describe('conflicts module', () => {
 	describe('validateEventData', () => {
@@ -103,7 +106,7 @@ describe('conflicts module', () => {
 					title: 'Test Event',
 					start,
 					end,
-					scopeType: 'invalid' as any,
+					scopeType: 'invalid' as unknown as ScopeType,
 					scopeId: 'space123'
 				})
 			}).toThrow('Invalid scopeType: invalid')
@@ -111,7 +114,7 @@ describe('conflicts module', () => {
 	})
 
 	describe('hasConflict', () => {
-		let pb: any
+		let pb: MockPocketBase
 
 		beforeEach(() => {
 			pb = mockPocketBase()
@@ -129,7 +132,7 @@ describe('conflicts module', () => {
 				}
 			])
 
-			const result = await hasConflict(pb as any, {
+			const result = await hasConflict(pb as unknown as PocketBase, {
 				scopeType: 'space',
 				scopeId: 'space123',
 				start: new Date('2025-10-10T11:00:00Z'),
@@ -143,7 +146,7 @@ describe('conflicts module', () => {
 		it('should not detect conflicts for non-overlapping events', async () => {
 			pb._mockCollection.getFullList.mockResolvedValue([])
 
-			const result = await hasConflict(pb as any, {
+			const result = await hasConflict(pb as unknown as PocketBase, {
 				scopeType: 'space',
 				scopeId: 'space123',
 				start: new Date('2025-10-10T14:00:00Z'),
@@ -157,7 +160,7 @@ describe('conflicts module', () => {
 		it('should ignore event being updated', async () => {
 			pb._mockCollection.getFullList.mockResolvedValue([])
 
-			const result = await hasConflict(pb as any, {
+			const result = await hasConflict(pb as unknown as PocketBase, {
 				scopeType: 'space',
 				scopeId: 'space123',
 				start: new Date('2025-10-10T10:00:00Z'),
@@ -170,7 +173,7 @@ describe('conflicts module', () => {
 
 		it('should reject invalid time range', async () => {
 			await expect(
-				hasConflict(pb as any, {
+				hasConflict(pb as unknown as PocketBase, {
 					scopeType: 'space',
 					scopeId: 'space123',
 					start: new Date('2025-10-10T12:00:00Z'),
@@ -181,7 +184,7 @@ describe('conflicts module', () => {
 	})
 
 	describe('getUserEvents', () => {
-		let pb: any
+		let pb: MockPocketBase
 
 		beforeEach(() => {
 			pb = mockPocketBase()
@@ -202,7 +205,7 @@ describe('conflicts module', () => {
 
 			pb._mockCollection.getFullList.mockResolvedValue(mockEvents)
 
-			const events = await getUserEvents(pb as any, 'user123')
+			const events = await getUserEvents(pb as unknown as PocketBase, 'user123')
 
 			expect(events).toEqual(mockEvents)
 			expect(pb._mockCollection.getFullList).toHaveBeenCalled()
@@ -211,7 +214,7 @@ describe('conflicts module', () => {
 		it('should filter events by date range', async () => {
 			pb._mockCollection.getFullList.mockResolvedValue([])
 
-			await getUserEvents(pb as any, 'user123', {
+			await getUserEvents(pb as unknown as PocketBase, 'user123', {
 				from: new Date('2025-10-01T00:00:00Z'),
 				to: new Date('2025-10-31T23:59:59Z')
 			})
@@ -222,7 +225,7 @@ describe('conflicts module', () => {
 		it('should filter events by scope', async () => {
 			pb._mockCollection.getFullList.mockResolvedValue([])
 
-			await getUserEvents(pb as any, 'user123', {
+			await getUserEvents(pb as unknown as PocketBase, 'user123', {
 				scopeType: 'space',
 				scopeId: 'space123'
 			})

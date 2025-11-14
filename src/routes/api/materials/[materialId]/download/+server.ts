@@ -1,5 +1,5 @@
 import { error } from '@sveltejs/kit'
-import { normalizeError } from '$lib/utils/errors.js'
+import { normalizeError } from '$lib/utils/errors.ts'
 import type { RequestHandler } from './$types'
 
 export const GET: RequestHandler = async ({ params, locals, url }) => {

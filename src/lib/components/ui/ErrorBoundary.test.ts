@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/svelte'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { normalizeError } from '$lib/utils/errors.js'
+import { normalizeError } from '$lib/utils/errors.ts'
 import ErrorBoundary from './ErrorBoundary.svelte'
 
 describe('ErrorBoundary', () => {
@@ -51,7 +51,7 @@ describe('ErrorBoundary', () => {
 			render(ErrorBoundary, {
 				props: {
 					error: offlineErr,
-					retry: () => {},
+					retry: () => undefined,
 					showDetails: false
 				}
 			})

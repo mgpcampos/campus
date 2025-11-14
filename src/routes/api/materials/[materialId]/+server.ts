@@ -1,5 +1,5 @@
 import { error, json } from '@sveltejs/kit'
-import { normalizeError, toErrorPayload } from '$lib/utils/errors.js'
+import { normalizeError, toErrorPayload } from '$lib/utils/errors.ts'
 
 /** @type {import('./$types').RequestHandler} */
 export async function GET({ params, locals }) {

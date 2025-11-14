@@ -1,6 +1,7 @@
 <script lang="ts">
 import { LoaderCircle, Save, User } from '@lucide/svelte'
 import { toast } from 'svelte-sonner'
+import type { SuperValidated } from 'sveltekit-superforms'
 import { superForm } from 'sveltekit-superforms'
 import { z } from 'zod'
 import { Button } from '$lib/components/ui/button/index.js'
@@ -9,7 +10,7 @@ import { Input } from '$lib/components/ui/input/index.js'
 import { Label } from '$lib/components/ui/label/index.js'
 import { Textarea } from '$lib/components/ui/textarea/index.js'
 import { fileLikeSchema } from '$lib/schemas/helpers.js'
-import { notifyError } from '$lib/utils/errors.js'
+import { notifyError } from '$lib/utils/errors.ts'
 import { createClientFormOptions } from '$lib/validation'
 
 // Profile form schema
@@ -28,7 +29,7 @@ let {
 	data,
 	class: className = ''
 }: {
-	data: any
+	data: SuperValidated<z.infer<typeof profileSchema>>
 	class?: string
 } = $props()
 

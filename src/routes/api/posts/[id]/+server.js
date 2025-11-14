@@ -1,7 +1,7 @@
 import { error, json } from '@sveltejs/kit'
 import { updatePostSchema } from '$lib/schemas/post.js'
 import { deletePost, getPost, updatePost } from '$lib/services/posts.js'
-import { normalizeError, toErrorPayload } from '$lib/utils/errors.js'
+import { normalizeError, toErrorPayload } from '$lib/utils/errors.ts'
 
 /** @type {import('./$types').RequestHandler} */
 export async function GET({ params, locals }) {

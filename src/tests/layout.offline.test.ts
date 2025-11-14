@@ -37,7 +37,7 @@ describe('Layout offline banner', () => {
 				props: {
 					data: { user: null, sessionToken: null },
 					// @ts-expect-error fake snippet for testing
-					children: () => {}
+					children: () => undefined
 				}
 			})
 			const banner = await screen.findByText(
@@ -56,7 +56,7 @@ describe('Layout offline banner', () => {
 				props: {
 					data: { user: null, sessionToken: null },
 					// @ts-expect-error fake snippet for testing
-					children: () => {}
+					children: () => undefined
 				}
 			})
 			const bannerQuery = screen.queryByText(

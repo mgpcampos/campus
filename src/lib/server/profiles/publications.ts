@@ -3,6 +3,7 @@
  * Enforces DOI/title uniqueness per research decisions
  */
 
+import type PocketBase from 'pocketbase'
 import {
 	checkPublicationExists,
 	createPublicationRecord,
@@ -28,19 +29,21 @@ export {
  * @param input - Publication details
  * @returns The publication record and link information
  */
+type PublicationInput = {
+	title: string
+	doi?: string
+	year?: number
+	venue?: string
+	abstract?: string
+	authors?: Array<{ name: string; affiliation?: string }>
+	materialId?: string
+	contributionRole?: 'author' | 'editor' | 'advisor'
+}
+
 export async function addPublicationToProfile(
-	pb: any,
+	pb: PocketBase,
 	profileId: string,
-	input: {
-		title: string
-		doi?: string
-		year?: number
-		venue?: string
-		abstract?: string
-		authors?: Array<{ name: string; affiliation?: string }>
-		materialId?: string
-		contributionRole?: 'author' | 'editor' | 'advisor'
-	}
+	input: PublicationInput
 ) {
 	// Create or find existing publication record
 	const publication = await createPublicationRecord(pb, input)
@@ -68,7 +71,7 @@ export async function addPublicationToProfile(
  * @param publicationId - Publication ID to remove
  */
 export async function removePublicationFromProfile(
-	pb: any,
+	pb: PocketBase,
 	profileId: string,
 	publicationId: string
 ): Promise<void> {
@@ -80,9 +83,13 @@ export async function removePublicationFromProfile(
 		if (link) {
 			await pb.collection('profile_publications').delete(link.id)
 		}
-	} catch (err: any) {
+	} catch (err: unknown) {
+		const status =
+			typeof err === 'object' && err && 'status' in err
+				? (err as { status?: number }).status
+				: undefined
 		// If 404, publication wasn't linked anyway
-		if (err?.status !== 404) {
+		if (status !== 404) {
 			throw err
 		}
 	}
@@ -98,18 +105,9 @@ export async function removePublicationFromProfile(
  * @returns Summary of import results
  */
 export async function bulkImportPublications(
-	pb: any,
+	pb: PocketBase,
 	profileId: string,
-	publications: Array<{
-		title: string
-		doi?: string
-		year?: number
-		venue?: string
-		abstract?: string
-		authors?: Array<{ name: string; affiliation?: string }>
-		materialId?: string
-		contributionRole?: 'author' | 'editor' | 'advisor'
-	}>
+	publications: PublicationInput[]
 ) {
 	const results = {
 		imported: 0,
@@ -126,10 +124,11 @@ export async function bulkImportPublications(
 			} else {
 				results.skipped++
 			}
-		} catch (error: any) {
+		} catch (error: unknown) {
+			const message = error instanceof Error ? error.message : 'Unknown error'
 			results.errors.push({
 				title: pub.title,
-				error: error?.message || 'Unknown error'
+				error: message
 			})
 		}
 	}
@@ -146,7 +145,7 @@ export async function bulkImportPublications(
  * @returns List of matching publications with profile information
  */
 export async function searchPublications(
-	pb: any,
+	pb: PocketBase,
 	query: string,
 	filters?: {
 		year?: number
