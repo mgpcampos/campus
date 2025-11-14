@@ -26,6 +26,29 @@ type ErrorLike = {
 	[key: string]: unknown
 }
 
+const CLASSIFICATION_PRESETS = {
+	UNKNOWN: { type: 'UNKNOWN', code: 'unknown_error', retryable: false },
+	VALIDATION: { type: 'VALIDATION', code: 'validation_error', retryable: false },
+	AUTH: { type: 'AUTH', code: 'auth_required', retryable: false },
+	PERMISSION: { type: 'PERMISSION', code: 'forbidden', retryable: false },
+	NOT_FOUND: { type: 'NOT_FOUND', code: 'resource_not_found', retryable: false },
+	CONFLICT: { type: 'CONFLICT', code: 'conflict', retryable: false },
+	RATE_LIMIT: { type: 'RATE_LIMIT', code: 'rate_limited', retryable: true },
+	OFFLINE: { type: 'OFFLINE', code: 'offline', retryable: true },
+	NETWORK: { type: 'NETWORK', code: 'network_error', retryable: true },
+	SERVER: { type: 'SERVER', code: 'server_error', retryable: true }
+} as const
+
+type ClassificationDetail = (typeof CLASSIFICATION_PRESETS)[keyof typeof CLASSIFICATION_PRESETS]
+
+const STATUS_CLASSIFICATIONS: Record<number, keyof typeof CLASSIFICATION_PRESETS> = {
+	401: 'AUTH',
+	403: 'PERMISSION',
+	404: 'NOT_FOUND',
+	409: 'CONFLICT',
+	429: 'RATE_LIMIT'
+}
+
 export type ClassifiedError = {
 	type: string
 	code: string
@@ -107,48 +130,8 @@ export function isAuthError(error: unknown): boolean {
 export function classifyError(error: unknown): ClassifiedError {
 	const err = asErrorLike(error)
 	const status = err?.status ?? err?.response?.status
-	const offline = typeof navigator !== 'undefined' && !navigator.onLine
-	let type = 'UNKNOWN'
-	let code = 'unknown_error'
-	let retryable = false
-
-	if (err?.response?.data?.data || err?.name === 'ZodError') {
-		type = 'VALIDATION'
-		code = 'validation_error'
-		retryable = false
-	} else if (status === 401) {
-		type = 'AUTH'
-		code = 'auth_required'
-		retryable = false
-	} else if (status === 403) {
-		type = 'PERMISSION'
-		code = 'forbidden'
-		retryable = false
-	} else if (status === 404) {
-		type = 'NOT_FOUND'
-		code = 'resource_not_found'
-		retryable = false
-	} else if (status === 409) {
-		type = 'CONFLICT'
-		code = 'conflict'
-		retryable = false
-	} else if (status === 429) {
-		type = 'RATE_LIMIT'
-		code = 'rate_limited'
-		retryable = true
-	} else if (offline) {
-		type = 'OFFLINE'
-		code = 'offline'
-		retryable = true
-	} else if (typeof err?.message === 'string' && err.message.toLowerCase().includes('network')) {
-		type = 'NETWORK'
-		code = 'network_error'
-		retryable = true
-	} else if (typeof status === 'number' && status >= 500 && status <= 599) {
-		type = 'SERVER'
-		code = 'server_error'
-		retryable = true
-	}
+	const classification = determineClassification(err, status)
+	const { type, code, retryable } = classification
 
 	const userMessageMap: Record<string, string> = {
 		validation_error: 'Please correct the highlighted fields.',
@@ -174,6 +157,58 @@ export function classifyError(error: unknown): ClassifiedError {
 		devMessage,
 		cause: error
 	}
+}
+
+function determineClassification(
+	err: ErrorLike | undefined,
+	status: number | undefined
+): ClassificationDetail {
+	if (hasValidationIssues(err)) {
+		return CLASSIFICATION_PRESETS.VALIDATION
+	}
+
+	const statusClassification = getStatusClassification(status)
+	if (statusClassification) {
+		return statusClassification
+	}
+
+	if (isOffline()) {
+		return CLASSIFICATION_PRESETS.OFFLINE
+	}
+
+	if (isNetworkError(err)) {
+		return CLASSIFICATION_PRESETS.NETWORK
+	}
+
+	if (isServerError(status)) {
+		return CLASSIFICATION_PRESETS.SERVER
+	}
+
+	return CLASSIFICATION_PRESETS.UNKNOWN
+}
+
+function hasValidationIssues(err: ErrorLike | undefined): boolean {
+	return Boolean(err?.response?.data?.data || err?.name === 'ZodError')
+}
+
+function getStatusClassification(status: number | undefined): ClassificationDetail | undefined {
+	if (typeof status !== 'number') return undefined
+	const presetKey = STATUS_CLASSIFICATIONS[status]
+	return presetKey ? CLASSIFICATION_PRESETS[presetKey] : undefined
+}
+
+function isServerError(status: number | undefined): boolean {
+	return typeof status === 'number' && status >= 500 && status <= 599
+}
+
+function isNetworkError(err: ErrorLike | undefined): boolean {
+	if (typeof err?.message !== 'string') return false
+	return err.message.toLowerCase().includes('network')
+}
+
+function isOffline(): boolean {
+	const nav = typeof globalThis.navigator === 'undefined' ? undefined : globalThis.navigator
+	return Boolean(nav && nav.onLine === false)
 }
 
 export function logError(meta: unknown): void {
@@ -246,7 +281,7 @@ export async function notifyError(
 	error: unknown,
 	options: NotifyOptions = {}
 ): Promise<NormalizedErrorResult | undefined> {
-	if (typeof window === 'undefined') return undefined
+	if (typeof globalThis.window === 'undefined') return undefined
 	try {
 		const mod = await import('svelte-sonner')
 		const toastFn = mod.toast

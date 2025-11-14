@@ -1,4 +1,4 @@
-import type { MessageWithDetails, ThreadWithMessages } from '$types/messaging'
+import type { ThreadWithMessages } from '$types/messaging'
 import type { PageLoad } from './$types'
 
 export const load: PageLoad = async ({ fetch, params }) => {

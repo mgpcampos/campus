@@ -1,9 +1,9 @@
 import { error, fail } from '@sveltejs/kit'
-import { setError, setMessage, superValidate } from 'sveltekit-superforms/server'
+import { superValidate } from 'sveltekit-superforms/server'
 import { z } from 'zod'
-import { hasConflict, validateEventData } from '$lib/server/events/conflicts'
+import { validateEventData } from '$lib/server/events/conflicts'
 import { normalizeError } from '$lib/utils/errors.ts'
-import { toUTC, validateTimeRange } from '$lib/utils/timezone'
+import { toUTC } from '$lib/utils/timezone'
 import { withZod } from '$lib/validation'
 import type { EventRecord } from '../../types/events'
 import type { Actions, PageServerLoad } from './$types'
@@ -12,7 +12,7 @@ import type { Actions, PageServerLoad } from './$types'
 const eventCreateSchema = z.object({
 	title: z.string().min(1, 'Title is required').max(200),
 	description: z.string().optional(),
-	date: z.string().refine((val) => !isNaN(Date.parse(val)), 'Invalid date')
+	date: z.string().refine((val) => !Number.isNaN(Date.parse(val)), 'Invalid date')
 })
 
 type EventCreateData = z.infer<typeof eventCreateSchema>

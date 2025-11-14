@@ -5,9 +5,9 @@ import { PUBLIC_POCKETBASE_URL } from '$env/static/public'
 
 // Single PocketBase instance for client runtime only. On server we always use event.locals.pb
 const defaultOrigin =
-	typeof window === 'undefined'
+	typeof globalThis.window === 'undefined'
 		? 'http://127.0.0.1:8090'
-		: new URL('/pb', window.location.origin).toString().replace(/\/$/, '')
+		: new URL('/pb', globalThis.window.location.origin).toString().replace(/\/$/, '')
 export const pb = new PocketBase(PUBLIC_POCKETBASE_URL || defaultOrigin)
 
 // Writable store tracking current authenticated user model

@@ -17,8 +17,8 @@ const analyticsSampleRate = (() => {
 
 const inferredPocketBaseUrl = (() => {
 	if (publicEnv.PUBLIC_POCKETBASE_URL) return publicEnv.PUBLIC_POCKETBASE_URL
-	if (typeof window !== 'undefined') {
-		return new URL('/pb', window.location.origin).toString().replace(/\/$/, '')
+	if (typeof globalThis.window !== 'undefined') {
+		return new URL('/pb', globalThis.window.location.origin).toString().replace(/\/$/, '')
 	}
 	return 'http://127.0.0.1:8090'
 })()

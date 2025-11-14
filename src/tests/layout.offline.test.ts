@@ -9,22 +9,26 @@ vi.mock('$lib/pocketbase.js', async () => {
 
 // Helper to override navigator.onLine
 function setOnline(value: boolean) {
-	const desc = Object.getOwnPropertyDescriptor(global.navigator, 'onLine')
+	const nav = globalThis.navigator
+	if (!nav) {
+		return () => undefined
+	}
+	const desc = Object.getOwnPropertyDescriptor(nav, 'onLine')
 	if (desc && desc.configurable) {
-		Object.defineProperty(global.navigator, 'onLine', { configurable: true, value })
+		Object.defineProperty(nav, 'onLine', { configurable: true, value })
 	} else {
 		// Fallback define if not present/configurable
 		try {
-			Object.defineProperty(global.navigator, 'onLine', { configurable: true, value })
+			Object.defineProperty(nav, 'onLine', { configurable: true, value })
 		} catch {
 			// ignore if cannot redefine
 		}
 	}
 	return () => {
 		if (desc) {
-			Object.defineProperty(global.navigator, 'onLine', desc)
+			Object.defineProperty(nav, 'onLine', desc)
 		} else {
-			Object.defineProperty(global.navigator, 'onLine', { configurable: true, value: true })
+			Object.defineProperty(nav, 'onLine', { configurable: true, value: true })
 		}
 	}
 }

@@ -47,7 +47,7 @@ describe('Posts Service', () => {
 			const formData = createCall?.[0]
 			expect(formData).toBeInstanceOf(FormData)
 			if (!(formData instanceof FormData)) {
-				throw new Error('Expected FormData payload')
+				throw new TypeError('Expected FormData payload')
 			}
 			expect(formData.get('content')).toBe('<p>Hello campus</p>')
 			expect(formData.get('mediaType')).toBe('images')
@@ -89,7 +89,7 @@ describe('Posts Service', () => {
 			const formData = createCall?.[0]
 			expect(formData).toBeInstanceOf(FormData)
 			if (!(formData instanceof FormData)) {
-				throw new Error('Expected FormData payload')
+				throw new TypeError('Expected FormData payload')
 			}
 			expect(formData.get('mediaType')).toBe('video')
 			expect(formData.get('videoDuration')).toBe('45')
@@ -178,7 +178,7 @@ describe('Posts Service', () => {
 			const payload = updateCall?.[1]
 			expect(payload).toBeDefined()
 			if (!payload) {
-				throw new Error('Expected update payload')
+				throw new TypeError('Expected update payload')
 			}
 			expect(payload).toMatchObject({
 				content: '<p>Updated <strong>post</strong></p>',
@@ -203,7 +203,7 @@ describe('Posts Service', () => {
 			const payload = updateCall?.[1]
 			expect(payload).toBeDefined()
 			if (!payload) {
-				throw new Error('Expected update payload')
+				throw new TypeError('Expected update payload')
 			}
 			expect(payload).toMatchObject({ content: 'Trim me' })
 			const typedPayload =

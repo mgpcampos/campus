@@ -35,7 +35,7 @@ export const actions = {
 				name: form.data.name
 			}
 
-			const _user = await locals.pb.collection('users').create(userData)
+			await locals.pb.collection('users').create(userData)
 
 			// Automatically log in the user after registration
 			await locals.pb.collection('users').authWithPassword(form.data.email, form.data.password)

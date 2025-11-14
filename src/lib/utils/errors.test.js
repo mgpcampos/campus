@@ -117,8 +117,9 @@ describe('classifyError & normalizeError', () => {
 	})
 
 	it('classifies OFFLINE when navigator.onLine is false', () => {
-		const original = Object.getOwnPropertyDescriptor(global.navigator, 'onLine')
-		Object.defineProperty(global.navigator, 'onLine', { configurable: true, value: false })
+		const nav = globalThis.navigator
+		const original = Object.getOwnPropertyDescriptor(nav, 'onLine')
+		Object.defineProperty(nav, 'onLine', { configurable: true, value: false })
 		try {
 			const c = classifyError({ message: 'Some generic error' })
 			expect(c.type).toBe('OFFLINE')
@@ -127,9 +128,9 @@ describe('classifyError & normalizeError', () => {
 		} finally {
 			// restore (best effort)
 			if (original) {
-				Object.defineProperty(global.navigator, 'onLine', original)
+				Object.defineProperty(nav, 'onLine', original)
 			} else {
-				Object.defineProperty(global.navigator, 'onLine', { configurable: true, value: true })
+				Object.defineProperty(nav, 'onLine', { configurable: true, value: true })
 			}
 		}
 	})

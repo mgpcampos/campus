@@ -154,7 +154,8 @@ async function handleConfigure(message: TranscodeConfigureMessage) {
 				await output.finalize().catch(() => undefined)
 				return
 			}
-		} catch (_error) {
+		} catch (error) {
+			console.error('[transcode] audio encoder unsupported', error)
 			post({ type: 'unsupported', jobId: message.jobId, reason: 'codec' })
 			videoEncoder.close()
 			await output.finalize().catch(() => undefined)

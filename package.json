@@ -7,15 +7,13 @@
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
-		"biome:check": "bunx biome check --write",
-		"format": "bunx biome format --write",
-		"lint": "bunx biome lint --write",
+		"biome:check": "biome check --write",
+		"format": "biome format --write",
+		"lint": "biome lint --write",
 		"prepare": "svelte-kit sync || echo ''",
 		"svelte:check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"svelte:check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"test": "vitest run && bun run test:unit -- --run",
-		"test:watch": "vitest",
-		"test:unit": "vitest"
+		"test": "vitest run && bun run test:unit -- --run"
 	},
 	"dependencies": {
 		"@lucide/svelte": "^0.546.0",

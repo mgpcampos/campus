@@ -8,8 +8,6 @@ export const pb = {
 		getList: async () => ({ items: [] }),
 		/** @param {string} _topic @param {(event: unknown) => void} _callback */
 		subscribe: async (_topic, _callback) => {
-			void _topic
-			void _callback
 			return () => undefined
 		},
 		unsubscribe: () => undefined,

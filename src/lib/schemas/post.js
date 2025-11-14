@@ -5,6 +5,13 @@ import { fileArraySchema, fileLikeSchema } from './helpers.js'
 /**
  * @typedef {import('zod').RefinementCtx} RefinementCtx
  * @typedef {{ type?: string; mimeType?: string }} MimeLike
+ * @typedef {{
+ * 	mediaType?: 'text' | 'images' | 'video'
+ * 	attachments?: MimeLike[]
+ * 	mediaAltText?: string
+ * 	videoPoster?: MimeLike
+ * 	videoDuration?: number
+ * }} MediaPayload
  */
 
 const MAX_ATTACHMENTS = 10
@@ -18,6 +25,44 @@ const IMAGE_MIME_TYPES = [
 ]
 const VIDEO_MIME_TYPES = ['video/mp4']
 const POSTER_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']
+
+/**
+ * @param {RefinementCtx} ctx
+ * @param {Array<string | number>} path
+ * @param {string} message
+ */
+const addIssue = (ctx, path, message) => {
+	ctx.addIssue({
+		code: z.ZodIssueCode.custom,
+		message,
+		path
+	})
+}
+
+/**
+ * @param {{ videoPoster?: MimeLike; videoDuration?: number }} data
+ * @param {RefinementCtx} ctx
+ */
+const ensureVideoFieldsOmitted = (data, ctx) => {
+	if (data.videoPoster) {
+		addIssue(ctx, ['videoPoster'], 'Video poster is only allowed for video posts')
+	}
+	if (typeof data.videoDuration !== 'undefined') {
+		addIssue(ctx, ['videoDuration'], 'Video duration is only allowed for video posts')
+	}
+}
+
+/**
+ * @param {MimeLike | undefined} poster
+ * @param {RefinementCtx} ctx
+ */
+const validatePoster = (poster, ctx) => {
+	if (!poster) return
+	const mime = getMimeType(poster)
+	if (!POSTER_MIME_TYPES.includes(mime)) {
+		addIssue(ctx, ['videoPoster'], `${mime || 'unknown'} is not supported for video posters`)
+	}
+}
 
 /**
  * @param {MimeLike | undefined} file
@@ -113,98 +158,50 @@ const validateScope = (data, ctx) => {
  * @param {{ mediaType?: 'text' | 'images' | 'video'; attachments?: MimeLike[]; mediaAltText?: string; videoPoster?: MimeLike; videoDuration?: number }} data
  * @param {RefinementCtx} ctx
  */
+/** @type {Record<'text' | 'images' | 'video', (payload: Required<Pick<MediaPayload, 'mediaType' | 'attachments'>> & MediaPayload, ctx: RefinementCtx) => void>} */
+const MEDIA_VALIDATORS = {
+	text: (payload, ctx) => {
+		if (payload.attachments.length > 0) {
+			addIssue(ctx, ['attachments'], 'Text posts cannot include attachments')
+		}
+		ensureVideoFieldsOmitted(payload, ctx)
+	},
+	images: (payload, ctx) => {
+		if (payload.attachments.length === 0) {
+			addIssue(ctx, ['attachments'], 'Image posts require at least one attachment')
+		}
+		if (payload.attachments.length > MAX_ATTACHMENTS) {
+			addIssue(ctx, ['attachments'], `Maximum ${MAX_ATTACHMENTS} images allowed`)
+		}
+		validateAttachmentsMime(payload.attachments, IMAGE_MIME_TYPES, ctx, ['attachments'])
+		ensureVideoFieldsOmitted(payload, ctx)
+	},
+	video: (payload, ctx) => {
+		if (payload.attachments.length !== 1) {
+			addIssue(ctx, ['attachments'], 'Video posts require exactly one video attachment')
+		}
+		validateAttachmentsMime(payload.attachments, VIDEO_MIME_TYPES, ctx, ['attachments'])
+		validatePoster(payload.videoPoster, ctx)
+		if (typeof payload.videoDuration === 'undefined') {
+			addIssue(ctx, ['videoDuration'], 'Video duration is required for video posts')
+		}
+	}
+}
+
+/**
+ * @param {MediaPayload} data
+ * @param {RefinementCtx} ctx
+ */
 const validateMediaPayload = (data, ctx) => {
 	if (!data.mediaType) {
 		return
 	}
-	const attachments = data.attachments ?? []
-
-	switch (data.mediaType) {
-		case 'text': {
-			if (attachments.length > 0) {
-				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
-					message: 'Text posts cannot include attachments',
-					path: ['attachments']
-				})
-			}
-			if (data.videoPoster) {
-				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
-					message: 'Video poster is only allowed for video posts',
-					path: ['videoPoster']
-				})
-			}
-			if (typeof data.videoDuration !== 'undefined') {
-				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
-					message: 'Video duration is only allowed for video posts',
-					path: ['videoDuration']
-				})
-			}
-			break
-		}
-		case 'images': {
-			if (attachments.length === 0) {
-				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
-					message: 'Image posts require at least one attachment',
-					path: ['attachments']
-				})
-			}
-			if (attachments.length > MAX_ATTACHMENTS) {
-				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
-					message: `Maximum ${MAX_ATTACHMENTS} images allowed`,
-					path: ['attachments']
-				})
-			}
-			validateAttachmentsMime(attachments, IMAGE_MIME_TYPES, ctx, ['attachments'])
-			if (data.videoPoster) {
-				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
-					message: 'Video poster is only allowed for video posts',
-					path: ['videoPoster']
-				})
-			}
-			if (typeof data.videoDuration !== 'undefined') {
-				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
-					message: 'Video duration is only allowed for video posts',
-					path: ['videoDuration']
-				})
-			}
-			break
-		}
-		case 'video': {
-			if (attachments.length !== 1) {
-				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
-					message: 'Video posts require exactly one video attachment',
-					path: ['attachments']
-				})
-			}
-			validateAttachmentsMime(attachments, VIDEO_MIME_TYPES, ctx, ['attachments'])
-			if (data.videoPoster) {
-				const mime = getMimeType(data.videoPoster)
-				if (!POSTER_MIME_TYPES.includes(mime)) {
-					ctx.addIssue({
-						code: z.ZodIssueCode.custom,
-						message: `${mime || 'unknown'} is not supported for video posters`,
-						path: ['videoPoster']
-					})
-				}
-			}
-			if (typeof data.videoDuration === 'undefined') {
-				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
-					message: 'Video duration is required for video posts',
-					path: ['videoDuration']
-				})
-			}
-			break
-		}
+	const payload = {
+		...data,
+		attachments: data.attachments ?? []
 	}
+	const validator = MEDIA_VALIDATORS[data.mediaType]
+	validator?.(payload, ctx)
 }
 
 const publishedAtSchema = z

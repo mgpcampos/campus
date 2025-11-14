@@ -44,8 +44,9 @@ describe('ErrorBoundary', () => {
 
 	it('handles offline classified error messaging', () => {
 		// Force offline classification
-		const original = Object.getOwnPropertyDescriptor(global.navigator, 'onLine')
-		Object.defineProperty(global.navigator, 'onLine', { configurable: true, value: false })
+		const nav = globalThis.navigator
+		const original = Object.getOwnPropertyDescriptor(nav, 'onLine')
+		Object.defineProperty(nav, 'onLine', { configurable: true, value: false })
 		try {
 			const offlineErr = normalizeError(new Error('Request failed'), { context: 'offline.test' })
 			render(ErrorBoundary, {
@@ -58,9 +59,9 @@ describe('ErrorBoundary', () => {
 			expect(screen.getByText(/You appear to be offline|Offline/)).toBeTruthy()
 		} finally {
 			if (original) {
-				Object.defineProperty(global.navigator, 'onLine', original)
+				Object.defineProperty(nav, 'onLine', original)
 			} else {
-				Object.defineProperty(global.navigator, 'onLine', { configurable: true, value: true })
+				Object.defineProperty(nav, 'onLine', { configurable: true, value: true })
 			}
 		}
 	})

@@ -20,6 +20,10 @@ type PerformanceEventTiming = PerformanceEntry & {
 	name: string
 }
 
+const swallow = <T>(promise: Promise<T>): void => {
+	promise.catch(() => undefined)
+}
+
 export type AnalyticsEventType = 'page' | 'event' | 'vital'
 
 export interface AnalyticsEvent {
@@ -116,7 +120,7 @@ class AnalyticsQueue {
 		if (this.flushTimer) return
 		this.flushTimer = setTimeout(() => {
 			this.flushTimer = null
-			void this.flush()
+			swallow(this.flush())
 		}, this.flushInterval)
 	}
 }
@@ -174,7 +178,7 @@ function enqueue(event: AnalyticsEvent) {
 
 function handleVisibilityChange() {
 	if (document.visibilityState === 'hidden') {
-		void analyticsQueue.flush(true)
+		swallow(analyticsQueue.flush(true))
 	}
 }
 
@@ -329,13 +333,13 @@ export function initAnalytics() {
 	if (browser) {
 		document.addEventListener('visibilitychange', handleVisibilityChange)
 		window.addEventListener('beforeunload', () => {
-			void analyticsQueue.flush(true)
+			swallow(analyticsQueue.flush(true))
 		})
 	}
 
 	return () => {
 		analyticsQueue.clear()
-		void analyticsQueue.flush(true)
+		swallow(analyticsQueue.flush(true))
 		if (browser) {
 			document.removeEventListener('visibilitychange', handleVisibilityChange)
 		}
