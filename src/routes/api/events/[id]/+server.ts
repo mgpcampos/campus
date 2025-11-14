@@ -1,44 +1,44 @@
-import { json, error } from '@sveltejs/kit';
-import { hasConflict, validateEventData } from '$lib/server/events/conflicts';
-import { toUTC } from '$lib/utils/timezone';
-import { normalizeError, toErrorPayload } from '$lib/utils/errors.js';
-import type { EventUpdateInput } from '../../../../types/events';
+import { error, json } from '@sveltejs/kit'
+import { hasConflict, validateEventData } from '$lib/server/events/conflicts'
+import { normalizeError, toErrorPayload } from '$lib/utils/errors.js'
+import { toUTC } from '$lib/utils/timezone'
+import type { EventUpdateInput } from '../../../../types/events'
 
 /** @type {import('./$types').RequestHandler} */
 export async function GET({ params, locals }) {
 	if (!locals.pb.authStore.isValid) {
-		return error(401, 'Authentication required');
+		return error(401, 'Authentication required')
 	}
 
 	try {
 		const event = await locals.pb
 			.collection('events')
-			.getOne(params.id, { expand: 'event_participants_via_event,createdBy' });
+			.getOne(params.id, { expand: 'event_participants_via_event,createdBy' })
 
-		return json({ event });
+		return json({ event })
 	} catch (err) {
-		const n = normalizeError(err, { context: 'api:getEvent' });
-		console.error(`Error fetching event ${params.id}:`, n.toString());
-		return json({ error: toErrorPayload(n) }, { status: n.status || 404 });
+		const n = normalizeError(err, { context: 'api:getEvent' })
+		console.error(`Error fetching event ${params.id}:`, n.toString())
+		return json({ error: toErrorPayload(n) }, { status: n.status || 404 })
 	}
 }
 
 /** @type {import('./$types').RequestHandler} */
 export async function PATCH({ params, request, locals }) {
 	if (!locals.pb.authStore.isValid) {
-		return error(401, 'Authentication required');
+		return error(401, 'Authentication required')
 	}
 
 	try {
 		// Fetch existing event
-		const existingEvent = await locals.pb.collection('events').getOne(params.id);
+		const existingEvent = await locals.pb.collection('events').getOne(params.id)
 
 		// Check ownership
 		if (existingEvent.createdBy !== locals.user!.id) {
-			return error(403, 'You do not have permission to update this event');
+			return error(403, 'You do not have permission to update this event')
 		}
 
-		const body = await request.json();
+		const body = await request.json()
 
 		const updateData: EventUpdateInput = {
 			title: body.title,
@@ -47,31 +47,31 @@ export async function PATCH({ params, request, locals }) {
 			end: body.end,
 			location: body.location,
 			reminderLeadMinutes: body.reminderLeadMinutes
-		};
+		}
 
 		// Build update payload
-		const payload: any = {};
+		const payload: any = {}
 
 		if (updateData.title !== undefined) {
-			payload.title = updateData.title;
+			payload.title = updateData.title
 		}
 
 		if (updateData.description !== undefined) {
-			payload.description = updateData.description;
+			payload.description = updateData.description
 		}
 
 		if (updateData.reminderLeadMinutes !== undefined) {
-			payload.reminderLeadMinutes = updateData.reminderLeadMinutes;
+			payload.reminderLeadMinutes = updateData.reminderLeadMinutes
 		}
 
 		if (updateData.location !== undefined) {
-			payload.location = JSON.stringify(updateData.location);
+			payload.location = JSON.stringify(updateData.location)
 		}
 
 		// Handle time updates with conflict checking
 		if (updateData.start || updateData.end) {
-			const newStart = updateData.start || existingEvent.start;
-			const newEnd = updateData.end || existingEvent.end;
+			const newStart = updateData.start || existingEvent.start
+			const newEnd = updateData.end || existingEvent.end
 
 			// Validate time range
 			validateEventData({
@@ -79,7 +79,7 @@ export async function PATCH({ params, request, locals }) {
 				end: newEnd,
 				scopeType: existingEvent.scopeType,
 				scopeId: existingEvent.scopeId
-			});
+			})
 
 			// Check for conflicts (ignore current event)
 			const conflictCheck = await hasConflict(locals.pb, {
@@ -88,7 +88,7 @@ export async function PATCH({ params, request, locals }) {
 				start: newStart,
 				end: newEnd,
 				ignoreId: params.id
-			});
+			})
 
 			if (conflictCheck.hasConflict) {
 				return json(
@@ -97,56 +97,56 @@ export async function PATCH({ params, request, locals }) {
 						conflicts: conflictCheck.conflictingEvents
 					},
 					{ status: 409 }
-				);
+				)
 			}
 
 			if (updateData.start) {
-				payload.start = toUTC(updateData.start);
+				payload.start = toUTC(updateData.start)
 			}
 
 			if (updateData.end) {
-				payload.end = toUTC(updateData.end);
+				payload.end = toUTC(updateData.end)
 			}
 		}
 
 		// Update event
-		const updatedEvent = await locals.pb.collection('events').update(params.id, payload);
+		const updatedEvent = await locals.pb.collection('events').update(params.id, payload)
 
 		return json({
 			event: updatedEvent,
 			message: 'Event updated successfully'
-		});
+		})
 	} catch (err) {
-		const n = normalizeError(err, { context: 'api:updateEvent' });
-		console.error(`Error updating event ${params.id}:`, n.toString());
-		return json({ error: toErrorPayload(n) }, { status: n.status || 500 });
+		const n = normalizeError(err, { context: 'api:updateEvent' })
+		console.error(`Error updating event ${params.id}:`, n.toString())
+		return json({ error: toErrorPayload(n) }, { status: n.status || 500 })
 	}
 }
 
 /** @type {import('./$types').RequestHandler} */
 export async function DELETE({ params, locals }) {
 	if (!locals.pb.authStore.isValid) {
-		return error(401, 'Authentication required');
+		return error(401, 'Authentication required')
 	}
 
 	try {
 		// Fetch existing event
-		const existingEvent = await locals.pb.collection('events').getOne(params.id);
+		const existingEvent = await locals.pb.collection('events').getOne(params.id)
 
 		// Check ownership
 		if (existingEvent.createdBy !== locals.user!.id) {
-			return error(403, 'You do not have permission to delete this event');
+			return error(403, 'You do not have permission to delete this event')
 		}
 
 		// Delete event (cascades to participants due to PocketBase settings)
-		await locals.pb.collection('events').delete(params.id);
+		await locals.pb.collection('events').delete(params.id)
 
 		return json({
 			message: 'Event deleted successfully'
-		});
+		})
 	} catch (err) {
-		const n = normalizeError(err, { context: 'api:deleteEvent' });
-		console.error(`Error deleting event ${params.id}:`, n.toString());
-		return json({ error: toErrorPayload(n) }, { status: n.status || 500 });
+		const n = normalizeError(err, { context: 'api:deleteEvent' })
+		console.error(`Error deleting event ${params.id}:`, n.toString())
+		return json({ error: toErrorPayload(n) }, { status: n.status || 500 })
 	}
 }

@@ -1,71 +1,71 @@
-import { json, error } from '@sveltejs/kit';
+import { error, json } from '@sveltejs/kit'
+import { z } from 'zod'
 import {
 	createNotification,
 	extractMentions,
 	resolveUsernames
-} from '$lib/services/notifications.js';
-import { z } from 'zod';
-import { sanitizeContent } from '$lib/utils/sanitize.js';
+} from '$lib/services/notifications.js'
+import { sanitizeContent } from '$lib/utils/sanitize.js'
 
 const commentSchema = z.object({
 	content: z.string().min(1, 'Comment content is required').max(1000, 'Comment too long')
-});
+})
 
 function getUserId(/** @type {any} */ locals) {
-	return locals?.pb?.authStore?.model?.id || null;
+	return locals?.pb?.authStore?.model?.id || null
 }
 
 /** @type {import('./$types').RequestHandler} */
 export async function GET({ params, locals, url }) {
 	if (!locals.pb.authStore.isValid) {
-		throw error(401, 'Authentication required');
+		throw error(401, 'Authentication required')
 	}
 
-	const postId = params.id;
-	const page = parseInt(url.searchParams.get('page') || '1');
-	const perPage = Math.min(parseInt(url.searchParams.get('perPage') || '50'), 100);
+	const postId = params.id
+	const page = parseInt(url.searchParams.get('page') || '1')
+	const perPage = Math.min(parseInt(url.searchParams.get('perPage') || '50'), 100)
 
 	try {
 		const comments = await locals.pb.collection('comments').getList(page, perPage, {
 			filter: `post = "${postId}"`,
 			sort: 'created',
 			expand: 'author'
-		});
+		})
 
-		return json(comments);
+		return json(comments)
 	} catch (err) {
-		console.error('Error getting comments:', err instanceof Error ? err.message : err);
-		throw error(500, 'Failed to get comments');
+		console.error('Error getting comments:', err instanceof Error ? err.message : err)
+		throw error(500, 'Failed to get comments')
 	}
 }
 
 /** @type {import('./$types').RequestHandler} */
 export async function POST({ params, locals, request }) {
 	if (!locals.pb.authStore.isValid) {
-		throw error(401, 'Authentication required');
+		throw error(401, 'Authentication required')
 	}
 
-	const postId = params.id;
-	const userId = getUserId(locals);
-	if (!userId) throw error(401, 'Authentication required');
+	const postId = params.id
+	const userId = getUserId(locals)
+	if (!userId) throw error(401, 'Authentication required')
 
 	try {
-		const body = await request.json();
-		const { content } = commentSchema.parse(body);
+		const body = await request.json()
+		const { content } = commentSchema.parse(body)
 
-		const safeContent = sanitizeContent(content);
+		const safeContent = sanitizeContent(content)
 
 		// Create the comment
 		const comment = await locals.pb.collection('comments').create({
 			post: postId,
 			author: userId,
 			content: safeContent
-		});
+		})
 
 		// Update post comment count & fetch author for notification
-		const post = await locals.pb.collection('posts').getOne(postId);
-		const newCommentCount = (post.commentCount || 0) + 1;
-		await locals.pb.collection('posts').update(postId, { commentCount: newCommentCount });
+		const post = await locals.pb.collection('posts').getOne(postId)
+		const newCommentCount = (post.commentCount || 0) + 1
+		await locals.pb.collection('posts').update(postId, { commentCount: newCommentCount })
 
 		// Comment notification (avoid self notify)
 		try {
@@ -76,46 +76,46 @@ export async function POST({ params, locals, request }) {
 					type: 'comment',
 					post: postId,
 					comment: comment.id
-				});
+				})
 			}
 		} catch (e) {
-			console.warn('comment notification failed', e);
+			console.warn('comment notification failed', e)
 		}
 
 		// Mention notifications
 		try {
-			const mentions = extractMentions(safeContent);
+			const mentions = extractMentions(safeContent)
 			if (mentions.length) {
-				const resolved = await resolveUsernames(mentions);
-				const uniqueUserIds = new Set(Object.values(resolved));
+				const resolved = await resolveUsernames(mentions)
+				const uniqueUserIds = new Set(Object.values(resolved))
 				for (const mentionedId of uniqueUserIds) {
-					if (!mentionedId || mentionedId === userId) continue;
+					if (!mentionedId || mentionedId === userId) continue
 					// Avoid duplicate with comment notification to post author; still allow if someone else
-					if (mentionedId === post.author && post.author !== userId) continue;
+					if (mentionedId === post.author && post.author !== userId) continue
 					await createNotification({
 						user: mentionedId,
 						actor: userId,
 						type: 'mention',
 						post: postId,
 						comment: comment.id
-					});
+					})
 				}
 			}
 		} catch (e) {
-			console.warn('mention notifications failed', e);
+			console.warn('mention notifications failed', e)
 		}
 
 		// Return comment with expanded author
 		const expandedComment = await locals.pb.collection('comments').getOne(comment.id, {
 			expand: 'author'
-		});
+		})
 
-		return json(expandedComment, { status: 201 });
+		return json(expandedComment, { status: 201 })
 	} catch (err) {
 		if (err instanceof z.ZodError) {
-			throw error(400, err.errors[0].message);
+			throw error(400, err.errors[0].message)
 		}
-		console.error('Error creating comment:', err instanceof Error ? err.message : err);
-		throw error(500, 'Failed to create comment');
+		console.error('Error creating comment:', err instanceof Error ? err.message : err)
+		throw error(500, 'Failed to create comment')
 	}
 }

@@ -4,12 +4,12 @@
  */
 
 import {
-	generatePublicationSlugHash,
 	checkPublicationExists,
 	createPublicationRecord,
-	linkPublicationToProfile,
-	getProfilePublications
-} from './types.js';
+	generatePublicationSlugHash,
+	getProfilePublications,
+	linkPublicationToProfile
+} from './types.js'
 
 export {
 	generatePublicationSlugHash,
@@ -17,7 +17,7 @@ export {
 	createPublicationRecord,
 	linkPublicationToProfile,
 	getProfilePublications
-};
+}
 
 /**
  * Add a publication to a profile with full deduplication logic
@@ -32,18 +32,18 @@ export async function addPublicationToProfile(
 	pb: any,
 	profileId: string,
 	input: {
-		title: string;
-		doi?: string;
-		year?: number;
-		venue?: string;
-		abstract?: string;
-		authors?: Array<{ name: string; affiliation?: string }>;
-		materialId?: string;
-		contributionRole?: 'author' | 'editor' | 'advisor';
+		title: string
+		doi?: string
+		year?: number
+		venue?: string
+		abstract?: string
+		authors?: Array<{ name: string; affiliation?: string }>
+		materialId?: string
+		contributionRole?: 'author' | 'editor' | 'advisor'
 	}
 ) {
 	// Create or find existing publication record
-	const publication = await createPublicationRecord(pb, input);
+	const publication = await createPublicationRecord(pb, input)
 
 	// Link to profile
 	const link = await linkPublicationToProfile(
@@ -51,13 +51,13 @@ export async function addPublicationToProfile(
 		profileId,
 		publication.id,
 		input.contributionRole || 'author'
-	);
+	)
 
 	return {
 		publication,
 		link,
 		wasNewPublication: !link.created || link.created === link.updated
-	};
+	}
 }
 
 /**
@@ -75,15 +75,15 @@ export async function removePublicationFromProfile(
 	try {
 		const link = await pb
 			.collection('profile_publications')
-			.getFirstListItem(`profile = "${profileId}" && publication = "${publicationId}"`);
+			.getFirstListItem(`profile = "${profileId}" && publication = "${publicationId}"`)
 
 		if (link) {
-			await pb.collection('profile_publications').delete(link.id);
+			await pb.collection('profile_publications').delete(link.id)
 		}
 	} catch (err: any) {
 		// If 404, publication wasn't linked anyway
 		if (err?.status !== 404) {
-			throw err;
+			throw err
 		}
 	}
 }
@@ -101,40 +101,40 @@ export async function bulkImportPublications(
 	pb: any,
 	profileId: string,
 	publications: Array<{
-		title: string;
-		doi?: string;
-		year?: number;
-		venue?: string;
-		abstract?: string;
-		authors?: Array<{ name: string; affiliation?: string }>;
-		materialId?: string;
-		contributionRole?: 'author' | 'editor' | 'advisor';
+		title: string
+		doi?: string
+		year?: number
+		venue?: string
+		abstract?: string
+		authors?: Array<{ name: string; affiliation?: string }>
+		materialId?: string
+		contributionRole?: 'author' | 'editor' | 'advisor'
 	}>
 ) {
 	const results = {
 		imported: 0,
 		skipped: 0,
 		errors: [] as Array<{ title: string; error: string }>
-	};
+	}
 
 	for (const pub of publications) {
 		try {
-			const result = await addPublicationToProfile(pb, profileId, pub);
+			const result = await addPublicationToProfile(pb, profileId, pub)
 
 			if (result.wasNewPublication) {
-				results.imported++;
+				results.imported++
 			} else {
-				results.skipped++;
+				results.skipped++
 			}
 		} catch (error: any) {
 			results.errors.push({
 				title: pub.title,
 				error: error?.message || 'Unknown error'
-			});
+			})
 		}
 	}
 
-	return results;
+	return results
 }
 
 /**
@@ -149,32 +149,32 @@ export async function searchPublications(
 	pb: any,
 	query: string,
 	filters?: {
-		year?: number;
-		yearMin?: number;
-		yearMax?: number;
-		venue?: string;
+		year?: number
+		yearMin?: number
+		yearMax?: number
+		venue?: string
 	}
 ) {
-	let filter = `title ~ "${query}" || abstract ~ "${query}"`;
+	let filter = `title ~ "${query}" || abstract ~ "${query}"`
 
 	if (filters?.year) {
-		filter += ` && year = ${filters.year}`;
+		filter += ` && year = ${filters.year}`
 	}
 	if (filters?.yearMin) {
-		filter += ` && year >= ${filters.yearMin}`;
+		filter += ` && year >= ${filters.yearMin}`
 	}
 	if (filters?.yearMax) {
-		filter += ` && year <= ${filters.yearMax}`;
+		filter += ` && year <= ${filters.yearMax}`
 	}
 	if (filters?.venue) {
-		filter += ` && venue ~ "${filters.venue}"`;
+		filter += ` && venue ~ "${filters.venue}"`
 	}
 
 	const publications = await pb.collection('publication_records').getList(1, 50, {
 		filter,
 		sort: '-year,-created',
 		expand: 'profile_publications_via_publication.profile,material'
-	});
+	})
 
-	return publications;
+	return publications
 }

@@ -4,8 +4,8 @@
  * Implements FR-007 requirement
  */
 
-import type PocketBase from 'pocketbase';
-import type { EventRecord } from '../../../types/events';
+import type PocketBase from 'pocketbase'
+import type { EventRecord } from '../../../types/events'
 
 /**
  * Creates a feed post announcing an event creation
@@ -20,14 +20,14 @@ export async function broadcastEventCreation(
 ): Promise<void> {
 	try {
 		// Format event details for feed post
-		const startDate = new Date(event.start).toLocaleString();
-		const endDate = new Date(event.end).toLocaleString();
+		const startDate = new Date(event.start).toLocaleString()
+		const endDate = new Date(event.end).toLocaleString()
 
 		const postContent = `📅 **New Event Created**\n\n**${event.title}**\n\n${
 			event.description || ''
 		}\n\n🕒 ${startDate} - ${endDate}\n\n${
 			event.scopeType !== 'global' ? `Scope: ${event.scopeType}` : 'Global Event'
-		}`;
+		}`
 
 		// Create feed post
 		await pb.collection('posts').create({
@@ -42,9 +42,9 @@ export async function broadcastEventCreation(
 				eventId: event.id,
 				action: 'created'
 			})
-		});
+		})
 	} catch (error) {
-		console.error('Failed to broadcast event creation to feed:', error);
+		console.error('Failed to broadcast event creation to feed:', error)
 		// Don't throw - broadcasting is non-critical
 	}
 }
@@ -65,9 +65,9 @@ export async function broadcastEventUpdate(
 	try {
 		const changesList = Object.entries(changes)
 			.map(([key, value]) => `- ${key}: ${value}`)
-			.join('\n');
+			.join('\n')
 
-		const postContent = `🔄 **Event Updated**\n\n**${event.title}**\n\nChanges:\n${changesList}`;
+		const postContent = `🔄 **Event Updated**\n\n**${event.title}**\n\nChanges:\n${changesList}`
 
 		await pb.collection('posts').create({
 			author: updaterId,
@@ -81,9 +81,9 @@ export async function broadcastEventUpdate(
 				eventId: event.id,
 				action: 'updated'
 			})
-		});
+		})
 	} catch (error) {
-		console.error('Failed to broadcast event update to feed:', error);
+		console.error('Failed to broadcast event update to feed:', error)
 	}
 }
 
@@ -99,7 +99,7 @@ export async function broadcastEventCancellation(
 	cancellerId: string
 ): Promise<void> {
 	try {
-		const postContent = `❌ **Event Cancelled**\n\n**${event.title}**\n\nThis event has been cancelled.`;
+		const postContent = `❌ **Event Cancelled**\n\n**${event.title}**\n\nThis event has been cancelled.`
 
 		await pb.collection('posts').create({
 			author: cancellerId,
@@ -113,9 +113,9 @@ export async function broadcastEventCancellation(
 				eventId: event.id,
 				action: 'cancelled'
 			})
-		});
+		})
 	} catch (error) {
-		console.error('Failed to broadcast event cancellation to feed:', error);
+		console.error('Failed to broadcast event cancellation to feed:', error)
 	}
 }
 
@@ -126,9 +126,9 @@ export async function broadcastEventCancellation(
  */
 export async function broadcastEventReminder(pb: PocketBase, event: EventRecord): Promise<void> {
 	try {
-		const startDate = new Date(event.start).toLocaleString();
+		const startDate = new Date(event.start).toLocaleString()
 
-		const postContent = `⏰ **Upcoming Event Reminder**\n\n**${event.title}**\n\nStarts at: ${startDate}\n\nDon't forget to attend!`;
+		const postContent = `⏰ **Upcoming Event Reminder**\n\n**${event.title}**\n\nStarts at: ${startDate}\n\nDon't forget to attend!`
 
 		await pb.collection('posts').create({
 			author: event.createdBy,
@@ -142,8 +142,8 @@ export async function broadcastEventReminder(pb: PocketBase, event: EventRecord)
 				eventId: event.id,
 				action: 'reminder'
 			})
-		});
+		})
 	} catch (error) {
-		console.error('Failed to broadcast event reminder to feed:', error);
+		console.error('Failed to broadcast event reminder to feed:', error)
 	}
 }

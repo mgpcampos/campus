@@ -1,9 +1,9 @@
-import { materialCreateSchema, materialSearchSchema } from '$lib/schemas/material.js';
+import { materialCreateSchema, materialSearchSchema } from '$lib/schemas/material.js'
 
 /**
  * Re-export schemas for use with sveltekit-superforms
  */
-export { materialCreateSchema, materialSearchSchema };
+export { materialCreateSchema, materialSearchSchema }
 
 /**
  * Default values for material creation form
@@ -15,7 +15,7 @@ export const materialCreateDefaults = {
 	tags: [],
 	format: 'document',
 	visibility: 'institution'
-};
+}
 
 /**
  * Default values for material search form
@@ -26,4 +26,4 @@ export const materialSearchDefaults = {
 	sort: 'relevance',
 	page: 1,
 	perPage: 20
-};
+}

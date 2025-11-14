@@ -8,8 +8,8 @@
  * @returns ISO 8601 string in UTC
  */
 export function toUTC(date: Date | string): string {
-	const d = typeof date === 'string' ? new Date(date) : date;
-	return d.toISOString();
+	const d = typeof date === 'string' ? new Date(date) : date
+	return d.toISOString()
 }
 
 /**
@@ -18,7 +18,7 @@ export function toUTC(date: Date | string): string {
  * @returns Date object
  */
 export function fromUTC(timestamp: string): Date {
-	return new Date(timestamp);
+	return new Date(timestamp)
 }
 
 /**
@@ -28,9 +28,9 @@ export function fromUTC(timestamp: string): Date {
  * @returns true if start < end
  */
 export function validateTimeRange(start: Date | string, end: Date | string): boolean {
-	const startDate = typeof start === 'string' ? new Date(start) : start;
-	const endDate = typeof end === 'string' ? new Date(end) : end;
-	return startDate < endDate;
+	const startDate = typeof start === 'string' ? new Date(start) : start
+	const endDate = typeof end === 'string' ? new Date(end) : end
+	return startDate < endDate
 }
 
 /**
@@ -43,7 +43,7 @@ export function formatLocalDate(
 	date: Date | string,
 	options: Intl.DateTimeFormatOptions = {}
 ): string {
-	const d = typeof date === 'string' ? new Date(date) : date;
+	const d = typeof date === 'string' ? new Date(date) : date
 	const defaultOptions: Intl.DateTimeFormatOptions = {
 		year: 'numeric',
 		month: 'short',
@@ -51,8 +51,8 @@ export function formatLocalDate(
 		hour: '2-digit',
 		minute: '2-digit',
 		...options
-	};
-	return new Intl.DateTimeFormat('en-US', defaultOptions).format(d);
+	}
+	return new Intl.DateTimeFormat('en-US', defaultOptions).format(d)
 }
 
 /**
@@ -62,10 +62,10 @@ export function formatLocalDate(
  * @returns Formatted date range string
  */
 export function formatDateRange(start: Date | string, end: Date | string): string {
-	const startDate = typeof start === 'string' ? new Date(start) : start;
-	const endDate = typeof end === 'string' ? new Date(end) : end;
+	const startDate = typeof start === 'string' ? new Date(start) : start
+	const endDate = typeof end === 'string' ? new Date(end) : end
 
-	const sameDay = startDate.toDateString() === endDate.toDateString();
+	const sameDay = startDate.toDateString() === endDate.toDateString()
 
 	if (sameDay) {
 		return `${formatLocalDate(startDate, {
@@ -76,10 +76,10 @@ export function formatDateRange(start: Date | string, end: Date | string): strin
 		})} - ${formatLocalDate(endDate, {
 			hour: '2-digit',
 			minute: '2-digit'
-		})}`;
+		})}`
 	}
 
-	return `${formatLocalDate(startDate)} - ${formatLocalDate(endDate)}`;
+	return `${formatLocalDate(startDate)} - ${formatLocalDate(endDate)}`
 }
 
 /**
@@ -89,9 +89,9 @@ export function formatDateRange(start: Date | string, end: Date | string): strin
  * @returns New date with minutes added
  */
 export function addMinutes(date: Date | string, minutes: number): Date {
-	const d = typeof date === 'string' ? new Date(date) : new Date(date);
-	d.setMinutes(d.getMinutes() + minutes);
-	return d;
+	const d = typeof date === 'string' ? new Date(date) : new Date(date)
+	d.setMinutes(d.getMinutes() + minutes)
+	return d
 }
 
 /**
@@ -101,7 +101,7 @@ export function addMinutes(date: Date | string, minutes: number): Date {
  * @returns New date with minutes subtracted
  */
 export function subtractMinutes(date: Date | string, minutes: number): Date {
-	return addMinutes(date, -minutes);
+	return addMinutes(date, -minutes)
 }
 
 /**
@@ -111,9 +111,9 @@ export function subtractMinutes(date: Date | string, minutes: number): Date {
  * @returns Duration in minutes
  */
 export function getDurationMinutes(start: Date | string, end: Date | string): number {
-	const startDate = typeof start === 'string' ? new Date(start) : start;
-	const endDate = typeof end === 'string' ? new Date(end) : end;
-	return Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60));
+	const startDate = typeof start === 'string' ? new Date(start) : start
+	const endDate = typeof end === 'string' ? new Date(end) : end
+	return Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60))
 }
 
 /**
@@ -122,9 +122,9 @@ export function getDurationMinutes(start: Date | string, end: Date | string): nu
  * @returns Date with milliseconds set to 0
  */
 export function roundToSeconds(date: Date | string): Date {
-	const d = typeof date === 'string' ? new Date(date) : new Date(date);
-	d.setMilliseconds(0);
-	return d;
+	const d = typeof date === 'string' ? new Date(date) : new Date(date)
+	d.setMilliseconds(0)
+	return d
 }
 
 /**
@@ -133,8 +133,8 @@ export function roundToSeconds(date: Date | string): Date {
  * @returns true if date is in the past
  */
 export function isPast(date: Date | string): boolean {
-	const d = typeof date === 'string' ? new Date(date) : date;
-	return d < new Date();
+	const d = typeof date === 'string' ? new Date(date) : date
+	return d < new Date()
 }
 
 /**
@@ -143,5 +143,5 @@ export function isPast(date: Date | string): boolean {
  * @returns true if date is in the future
  */
 export function isFuture(date: Date | string): boolean {
-	return !isPast(date);
+	return !isPast(date)
 }

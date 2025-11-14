@@ -1,44 +1,44 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button/index.js';
-	import LoadingSpinner from './LoadingSpinner.svelte';
+import { Button } from '$lib/components/ui/button/index.js'
+import LoadingSpinner from './LoadingSpinner.svelte'
 
-	let {
-		variant = 'default',
-		size = 'default',
-		loading = false,
-		disabled = false,
-		href,
-		type = 'button',
-		onclick = () => {},
-		children,
-		icon,
-		iconPosition = 'left',
-		class: className = '',
-		loadingText = 'Loading...',
-		ariaLabel
-	}: {
-		variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
-		size?: 'default' | 'sm' | 'lg' | 'icon';
-		loading?: boolean;
-		disabled?: boolean;
-		href?: string;
-		type?: 'button' | 'submit' | 'reset';
-		onclick?: (event: MouseEvent) => void;
-		children?: any;
-		icon?: any;
-		iconPosition?: 'left' | 'right';
-		class?: string;
-		loadingText?: string;
-		ariaLabel?: string;
-	} = $props();
+let {
+	variant = 'default',
+	size = 'default',
+	loading = false,
+	disabled = false,
+	href,
+	type = 'button',
+	onclick = () => {},
+	children,
+	icon,
+	iconPosition = 'left',
+	class: className = '',
+	loadingText = 'Loading...',
+	ariaLabel
+}: {
+	variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link'
+	size?: 'default' | 'sm' | 'lg' | 'icon'
+	loading?: boolean
+	disabled?: boolean
+	href?: string
+	type?: 'button' | 'submit' | 'reset'
+	onclick?: (event: MouseEvent) => void
+	children?: any
+	icon?: any
+	iconPosition?: 'left' | 'right'
+	class?: string
+	loadingText?: string
+	ariaLabel?: string
+} = $props()
 
-	function handleClick(event: MouseEvent) {
-		if (!loading && !disabled) {
-			onclick(event);
-		}
+function handleClick(event: MouseEvent) {
+	if (!loading && !disabled) {
+		onclick(event)
 	}
+}
 
-	const isDisabled = disabled || loading;
+const isDisabled = disabled || loading
 </script>
 
 <Button

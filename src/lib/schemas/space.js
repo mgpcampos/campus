@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod'
 
 export const createSpaceSchema = z.object({
 	name: z.string().min(2).max(100),
@@ -9,6 +9,6 @@ export const createSpaceSchema = z.object({
 		.max(100),
 	description: z.string().max(1000).optional().default(''),
 	isPublic: z.boolean().default(true)
-});
+})
 
-export const updateSpaceSchema = createSpaceSchema.partial();
+export const updateSpaceSchema = createSpaceSchema.partial()

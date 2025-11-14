@@ -1,38 +1,38 @@
 <svelte:options runes />
 
 <script lang="ts">
-	import { t } from '$lib/i18n';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Badge } from '$lib/components/ui/badge/index.js';
-	import * as Card from '$lib/components/ui/card/index.js';
-	import { Users, Settings, Globe, Lock } from 'lucide-svelte';
-	import type { PageProps } from './$types';
+import { Globe, Lock, Settings, Users } from 'lucide-svelte'
+import { Badge } from '$lib/components/ui/badge/index.js'
+import { Button } from '$lib/components/ui/button/index.js'
+import * as Card from '$lib/components/ui/card/index.js'
+import { t } from '$lib/i18n'
+import type { PageProps } from './$types'
 
-	let { data }: PageProps = $props();
-	let { space, memberCount, membershipRole, member, postsRestricted = false } = data;
-	const posts = data.posts as { items: Array<any> };
+let { data }: PageProps = $props()
+let { space, memberCount, membershipRole, member, postsRestricted = false } = data
+const posts = data.posts as { items: Array<any> }
 
-	let joining = $state(false);
+let joining = $state(false)
 
-	async function join(e: SubmitEvent) {
-		e.preventDefault();
-		joining = true;
-		const fd = new FormData();
-		const res = await fetch('?/join', { method: 'POST', body: fd });
-		if (res.ok) location.reload();
-		joining = false;
-	}
+async function join(e: SubmitEvent) {
+	e.preventDefault()
+	joining = true
+	const fd = new FormData()
+	const res = await fetch('?/join', { method: 'POST', body: fd })
+	if (res.ok) location.reload()
+	joining = false
+}
 
-	async function leave(e: SubmitEvent) {
-		e.preventDefault();
-		joining = true;
-		const fd = new FormData();
-		const res = await fetch('?/leave', { method: 'POST', body: fd });
-		if (res.ok) location.reload();
-		joining = false;
-	}
+async function leave(e: SubmitEvent) {
+	e.preventDefault()
+	joining = true
+	const fd = new FormData()
+	const res = await fetch('?/leave', { method: 'POST', body: fd })
+	if (res.ok) location.reload()
+	joining = false
+}
 
-	let avatarUrl = $derived(space.avatar ? `/api/files/spaces/${space.id}/${space.avatar}` : null);
+let avatarUrl = $derived(space.avatar ? `/api/files/spaces/${space.id}/${space.avatar}` : null)
 </script>
 
 <svelte:head>

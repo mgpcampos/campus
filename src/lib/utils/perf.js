@@ -1,7 +1,7 @@
 // Lightweight performance instrumentation utilities.
 // Replace console.* with a structured logger in production deployments.
 
-const SLOW_THRESHOLD_MS = 200; // adjust as needed
+const SLOW_THRESHOLD_MS = 200 // adjust as needed
 
 /** Wrap an async function to measure duration */
 /**
@@ -11,13 +11,13 @@ const SLOW_THRESHOLD_MS = 200; // adjust as needed
  * @returns {Promise<T>}
  */
 export async function timed(label, fn) {
-	const start = performance.now();
+	const start = performance.now()
 	try {
-		return await fn();
+		return await fn()
 	} finally {
-		const dur = performance.now() - start;
+		const dur = performance.now() - start
 		if (dur > SLOW_THRESHOLD_MS) {
-			console.warn(`[perf] slow operation '${label}' ${dur.toFixed(1)}ms`);
+			console.warn(`[perf] slow operation '${label}' ${dur.toFixed(1)}ms`)
 		}
 	}
 }
@@ -28,5 +28,5 @@ export async function timed(label, fn) {
  * @param {string} key
  */
 export function logCacheMiss(cacheName, key) {
-	console.debug(`[cache] miss ${cacheName} -> ${key}`);
+	console.debug(`[cache] miss ${cacheName} -> ${key}`)
 }

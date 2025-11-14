@@ -1,4 +1,4 @@
-import { error, redirect } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit'
 
 /**
  * Middleware to protect routes that require authentication
@@ -11,11 +11,11 @@ export function requireAuth(locals, returnUrl = null) {
 	if (!locals.pb.authStore.isValid) {
 		const loginUrl = returnUrl
 			? `/auth/login?returnUrl=${encodeURIComponent(returnUrl)}`
-			: '/auth/login';
-		throw redirect(302, loginUrl);
+			: '/auth/login'
+		throw redirect(302, loginUrl)
 	}
 
-	return locals.pb.authStore.model;
+	return locals.pb.authStore.model
 }
 
 /**
@@ -24,7 +24,7 @@ export function requireAuth(locals, returnUrl = null) {
  * @returns {boolean} - True if authenticated
  */
 export function isAuthenticated(locals) {
-	return locals.pb.authStore.isValid;
+	return locals.pb.authStore.isValid
 }
 
 /**
@@ -33,7 +33,7 @@ export function isAuthenticated(locals) {
  * @returns {any} - User object or null
  */
 export function getCurrentUser(locals) {
-	return locals.pb.authStore.isValid ? locals.pb.authStore.model : null;
+	return locals.pb.authStore.isValid ? locals.pb.authStore.model : null
 }
 
 /**
@@ -41,9 +41,9 @@ export function getCurrentUser(locals) {
  * @param {App.Locals} locals
  */
 export function requireAdmin(locals) {
-	const user = requireAuth(locals);
+	const user = requireAuth(locals)
 	if (!user?.isAdmin) {
-		throw error(403, 'Admins only');
+		throw error(403, 'Admins only')
 	}
-	return user;
+	return user
 }

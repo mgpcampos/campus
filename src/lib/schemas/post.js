@@ -1,13 +1,13 @@
-import { z } from 'zod';
-import { fileArraySchema, fileLikeSchema } from './helpers.js';
-import { t } from '$lib/i18n';
+import { z } from 'zod'
+import { t } from '$lib/i18n'
+import { fileArraySchema, fileLikeSchema } from './helpers.js'
 
 /**
  * @typedef {import('zod').RefinementCtx} RefinementCtx
  * @typedef {{ type?: string; mimeType?: string }} MimeLike
  */
 
-const MAX_ATTACHMENTS = 10;
+const MAX_ATTACHMENTS = 10
 const IMAGE_MIME_TYPES = [
 	'image/jpeg',
 	'image/png',
@@ -15,22 +15,22 @@ const IMAGE_MIME_TYPES = [
 	'image/gif',
 	'image/heic',
 	'image/heif'
-];
-const VIDEO_MIME_TYPES = ['video/mp4'];
-const POSTER_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
+]
+const VIDEO_MIME_TYPES = ['video/mp4']
+const POSTER_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']
 
 /**
  * @param {MimeLike | undefined} file
  * @returns {string}
  */
 const getMimeType = (file) => {
-	if (!file || typeof file !== 'object') return '';
-	const directType = Reflect.get(file, 'type');
-	if (typeof directType === 'string' && directType.length > 0) return directType;
-	const fallbackType = Reflect.get(file, 'mimeType');
-	if (typeof fallbackType === 'string' && fallbackType.length > 0) return fallbackType;
-	return '';
-};
+	if (!file || typeof file !== 'object') return ''
+	const directType = Reflect.get(file, 'type')
+	if (typeof directType === 'string' && directType.length > 0) return directType
+	const fallbackType = Reflect.get(file, 'mimeType')
+	if (typeof fallbackType === 'string' && fallbackType.length > 0) return fallbackType
+	return ''
+}
 
 /**
  * @param {MimeLike[]} files
@@ -40,43 +40,43 @@ const getMimeType = (file) => {
  */
 const validateAttachmentsMime = (files, allowed, ctx, path) => {
 	files.forEach((file, index) => {
-		const mime = getMimeType(file);
+		const mime = getMimeType(file)
 		if (!allowed.includes(mime)) {
 			ctx.addIssue({
 				code: z.ZodIssueCode.custom,
 				message: `${mime || 'unknown'} is not supported for this media type`,
 				path: [...path, index]
-			});
+			})
 		}
-	});
-};
+	})
+}
 
 /**
  * @param {unknown} value
  * @returns {boolean}
  */
-const ensureAltTextPresent = (value) => typeof value === 'string' && value.trim().length > 0;
+const ensureAltTextPresent = (value) => typeof value === 'string' && value.trim().length > 0
 
 /**
  * @param {{ scope?: 'global' | 'space' | 'group'; space?: string | undefined; group?: string | undefined }} data
  * @param {RefinementCtx} ctx
  */
 const validateScope = (data, ctx) => {
-	if (!data.scope) return;
+	if (!data.scope) return
 	if (data.scope === 'space') {
 		if (!data.space) {
 			ctx.addIssue({
 				code: z.ZodIssueCode.custom,
 				message: 'space is required when scope is set to space',
 				path: ['space']
-			});
+			})
 		}
 		if (data.group) {
 			ctx.addIssue({
 				code: z.ZodIssueCode.custom,
 				message: 'group cannot be provided when scope is space',
 				path: ['group']
-			});
+			})
 		}
 	}
 
@@ -86,14 +86,14 @@ const validateScope = (data, ctx) => {
 				code: z.ZodIssueCode.custom,
 				message: 'group is required when scope is set to group',
 				path: ['group']
-			});
+			})
 		}
 		if (data.space) {
 			ctx.addIssue({
 				code: z.ZodIssueCode.custom,
 				message: 'space cannot be provided when scope is group',
 				path: ['space']
-			});
+			})
 		}
 	}
 
@@ -103,17 +103,17 @@ const validateScope = (data, ctx) => {
 				code: z.ZodIssueCode.custom,
 				message: 'space is not allowed when scope is global',
 				path: ['space']
-			});
+			})
 		}
 		if (data.group) {
 			ctx.addIssue({
 				code: z.ZodIssueCode.custom,
 				message: 'group is not allowed when scope is global',
 				path: ['group']
-			});
+			})
 		}
 	}
-};
+}
 
 /**
  * @param {{ mediaType?: 'text' | 'images' | 'video'; attachments?: MimeLike[]; mediaAltText?: string; videoPoster?: MimeLike; videoDuration?: number }} data
@@ -121,10 +121,10 @@ const validateScope = (data, ctx) => {
  */
 const validateMediaPayload = (data, ctx) => {
 	if (!data.mediaType) {
-		return;
+		return
 	}
-	const attachments = data.attachments ?? [];
-	const altText = data.mediaAltText ?? '';
+	const attachments = data.attachments ?? []
+	const altText = data.mediaAltText ?? ''
 
 	switch (data.mediaType) {
 		case 'text': {
@@ -133,23 +133,23 @@ const validateMediaPayload = (data, ctx) => {
 					code: z.ZodIssueCode.custom,
 					message: 'Text posts cannot include attachments',
 					path: ['attachments']
-				});
+				})
 			}
 			if (data.videoPoster) {
 				ctx.addIssue({
 					code: z.ZodIssueCode.custom,
 					message: 'Video poster is only allowed for video posts',
 					path: ['videoPoster']
-				});
+				})
 			}
 			if (typeof data.videoDuration !== 'undefined') {
 				ctx.addIssue({
 					code: z.ZodIssueCode.custom,
 					message: 'Video duration is only allowed for video posts',
 					path: ['videoDuration']
-				});
+				})
 			}
-			break;
+			break
 		}
 		case 'images': {
 			if (attachments.length === 0) {
@@ -157,31 +157,31 @@ const validateMediaPayload = (data, ctx) => {
 					code: z.ZodIssueCode.custom,
 					message: 'Image posts require at least one attachment',
 					path: ['attachments']
-				});
+				})
 			}
 			if (attachments.length > MAX_ATTACHMENTS) {
 				ctx.addIssue({
 					code: z.ZodIssueCode.custom,
 					message: `Maximum ${MAX_ATTACHMENTS} images allowed`,
 					path: ['attachments']
-				});
+				})
 			}
-			validateAttachmentsMime(attachments, IMAGE_MIME_TYPES, ctx, ['attachments']);
+			validateAttachmentsMime(attachments, IMAGE_MIME_TYPES, ctx, ['attachments'])
 			if (data.videoPoster) {
 				ctx.addIssue({
 					code: z.ZodIssueCode.custom,
 					message: 'Video poster is only allowed for video posts',
 					path: ['videoPoster']
-				});
+				})
 			}
 			if (typeof data.videoDuration !== 'undefined') {
 				ctx.addIssue({
 					code: z.ZodIssueCode.custom,
 					message: 'Video duration is only allowed for video posts',
 					path: ['videoDuration']
-				});
+				})
 			}
-			break;
+			break
 		}
 		case 'video': {
 			if (attachments.length !== 1) {
@@ -189,17 +189,17 @@ const validateMediaPayload = (data, ctx) => {
 					code: z.ZodIssueCode.custom,
 					message: 'Video posts require exactly one video attachment',
 					path: ['attachments']
-				});
+				})
 			}
-			validateAttachmentsMime(attachments, VIDEO_MIME_TYPES, ctx, ['attachments']);
+			validateAttachmentsMime(attachments, VIDEO_MIME_TYPES, ctx, ['attachments'])
 			if (data.videoPoster) {
-				const mime = getMimeType(data.videoPoster);
+				const mime = getMimeType(data.videoPoster)
 				if (!POSTER_MIME_TYPES.includes(mime)) {
 					ctx.addIssue({
 						code: z.ZodIssueCode.custom,
 						message: `${mime || 'unknown'} is not supported for video posters`,
 						path: ['videoPoster']
-					});
+					})
 				}
 			}
 			if (typeof data.videoDuration === 'undefined') {
@@ -207,12 +207,12 @@ const validateMediaPayload = (data, ctx) => {
 					code: z.ZodIssueCode.custom,
 					message: 'Video duration is required for video posts',
 					path: ['videoDuration']
-				});
+				})
 			}
-			break;
+			break
 		}
 	}
-};
+}
 
 const publishedAtSchema = z
 	.union([
@@ -220,26 +220,26 @@ const publishedAtSchema = z
 			.string()
 			.transform((value) => value.trim())
 			.transform((value, ctx) => {
-				if (!value) return null;
-				const parsed = Date.parse(value);
+				if (!value) return null
+				const parsed = Date.parse(value)
 				if (Number.isNaN(parsed)) {
 					ctx.addIssue({
 						code: z.ZodIssueCode.custom,
 						message: 'publishedAt must be a valid ISO 8601 date-time'
-					});
-					return z.NEVER;
+					})
+					return z.NEVER
 				}
-				return new Date(parsed).toISOString();
+				return new Date(parsed).toISOString()
 			}),
 		z.coerce.date().transform((value) => value.toISOString()),
 		z.literal(null)
 	])
 	.optional()
 	.transform((value) => {
-		if (typeof value === 'undefined') return undefined;
-		if (value === null) return null;
-		return value;
-	});
+		if (typeof value === 'undefined') return undefined
+		if (value === null) return null
+		return value
+	})
 
 /**
  * Schema for creating a new post
@@ -269,9 +269,9 @@ export const createPostSchema = z
 		publishedAt: publishedAtSchema
 	})
 	.superRefine((data, ctx) => {
-		validateScope(data, ctx);
-		validateMediaPayload(data, ctx);
-	});
+		validateScope(data, ctx)
+		validateMediaPayload(data, ctx)
+	})
 
 /**
  * Schema for updating a post
@@ -309,7 +309,7 @@ export const updatePostSchema = z
 	})
 	.superRefine((data, ctx) => {
 		if (data.scope) {
-			validateScope(data, ctx);
+			validateScope(data, ctx)
 		}
 
 		const mediaFieldsProvided =
@@ -317,10 +317,10 @@ export const updatePostSchema = z
 			typeof data.attachments !== 'undefined' ||
 			typeof data.mediaAltText !== 'undefined' ||
 			typeof data.videoPoster !== 'undefined' ||
-			typeof data.videoDuration !== 'undefined';
+			typeof data.videoDuration !== 'undefined'
 
 		if (!mediaFieldsProvided) {
-			return;
+			return
 		}
 
 		if (!data.mediaType) {
@@ -328,17 +328,17 @@ export const updatePostSchema = z
 				code: z.ZodIssueCode.custom,
 				message: 'mediaType is required when updating media fields',
 				path: ['mediaType']
-			});
-			return;
+			})
+			return
 		}
 
 		const payload = {
 			...data,
 			attachments: data.attachments ?? []
-		};
+		}
 
-		validateMediaPayload(payload, ctx);
-	});
+		validateMediaPayload(payload, ctx)
+	})
 
 /**
  * Schema for post query parameters
@@ -362,4 +362,4 @@ export const postQuerySchema = z.object({
 	 * Timeframe (in hours) for trending calculation (default 48h)
 	 */
 	timeframeHours: z.coerce.number().min(1).max(168).default(48).optional()
-});
+})

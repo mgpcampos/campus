@@ -1,63 +1,63 @@
 <script lang="ts">
-	import { Label } from '$lib/components/ui/label/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Textarea } from '$lib/components/ui/textarea/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { AlertCircle, Eye, EyeOff } from '@lucide/svelte';
+import { AlertCircle, Eye, EyeOff } from '@lucide/svelte'
+import { Button } from '$lib/components/ui/button/index.js'
+import { Input } from '$lib/components/ui/input/index.js'
+import { Label } from '$lib/components/ui/label/index.js'
+import { Textarea } from '$lib/components/ui/textarea/index.js'
 
-	let {
-		type = 'text',
-		name,
-		label,
-		value = '',
-		placeholder = '',
-		required = false,
-		disabled = false,
-		readonly = false,
-		error = '',
-		helpText = '',
-		rows = 3,
-		maxLength,
-		class: className = '',
-		inputClass = '',
-		onInput = () => {},
-		onBlur = () => {},
-		onFocus = () => {}
-	}: {
-		type?: 'text' | 'email' | 'password' | 'textarea' | 'number' | 'tel' | 'url';
-		name: string;
-		label: string;
-		value?: string | number;
-		placeholder?: string;
-		required?: boolean;
-		disabled?: boolean;
-		readonly?: boolean;
-		error?: string;
-		helpText?: string;
-		rows?: number;
-		maxLength?: number;
-		class?: string;
-		inputClass?: string;
-		onInput?: (event: Event) => void;
-		onBlur?: (event: Event) => void;
-		onFocus?: (event: Event) => void;
-	} = $props();
+let {
+	type = 'text',
+	name,
+	label,
+	value = '',
+	placeholder = '',
+	required = false,
+	disabled = false,
+	readonly = false,
+	error = '',
+	helpText = '',
+	rows = 3,
+	maxLength,
+	class: className = '',
+	inputClass = '',
+	onInput = () => {},
+	onBlur = () => {},
+	onFocus = () => {}
+}: {
+	type?: 'text' | 'email' | 'password' | 'textarea' | 'number' | 'tel' | 'url'
+	name: string
+	label: string
+	value?: string | number
+	placeholder?: string
+	required?: boolean
+	disabled?: boolean
+	readonly?: boolean
+	error?: string
+	helpText?: string
+	rows?: number
+	maxLength?: number
+	class?: string
+	inputClass?: string
+	onInput?: (event: Event) => void
+	onBlur?: (event: Event) => void
+	onFocus?: (event: Event) => void
+} = $props()
 
-	let showPassword = $state(false);
+let showPassword = $state(false)
 
-	function togglePasswordVisibility() {
-		showPassword = !showPassword;
-	}
+function togglePasswordVisibility() {
+	showPassword = !showPassword
+}
 
-	function handleInput(event: Event) {
-		const target = event.target as HTMLInputElement | HTMLTextAreaElement;
-		value = target.value;
-		onInput(event);
-	}
+function handleInput(event: Event) {
+	const target = event.target as HTMLInputElement | HTMLTextAreaElement
+	value = target.value
+	onInput(event)
+}
 
-	const inputId = `${name}-input`;
-	const errorId = `${name}-error`;
-	const helpId = `${name}-help`;
+const inputId = `${name}-input`
+const errorId = `${name}-error`
+const helpId = `${name}-help`
 </script>
 
 <div class="space-y-2 {className}">

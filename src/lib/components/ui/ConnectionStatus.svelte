@@ -1,26 +1,26 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { online } from '$lib/stores/connection.js';
-	import { offlineQueue } from '$lib/utils/offline.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { RefreshCw, Wifi, WifiOff } from '@lucide/svelte';
+import { RefreshCw, Wifi, WifiOff } from '@lucide/svelte'
+import { onMount } from 'svelte'
+import { Button } from '$lib/components/ui/button/index.js'
+import { online } from '$lib/stores/connection.js'
+import { offlineQueue } from '$lib/utils/offline.js'
 
-	let queueStatus = $state({ pending: 0, processing: 0 });
-	let showDetails = $state(false);
+let queueStatus = $state({ pending: 0, processing: 0 })
+let showDetails = $state(false)
 
-	onMount(() => {
-		const interval = setInterval(() => {
-			queueStatus = offlineQueue.getStatus();
-		}, 1000);
+onMount(() => {
+	const interval = setInterval(() => {
+		queueStatus = offlineQueue.getStatus()
+	}, 1000)
 
-		return () => clearInterval(interval);
-	});
+	return () => clearInterval(interval)
+})
 
-	function forceRetry() {
-		if ($online) {
-			offlineQueue.processQueue();
-		}
+function forceRetry() {
+	if ($online) {
+		offlineQueue.processQueue()
 	}
+}
 </script>
 
 {#if !$online || queueStatus.pending > 0}

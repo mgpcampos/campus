@@ -1,11 +1,11 @@
-import { defineConfig } from 'vitest/config';
-import { sveltekit } from '@sveltejs/kit/vite';
-import tailwindcss from '@tailwindcss/vite';
-import path from 'node:path';
+import path from 'node:path'
+import { sveltekit } from '@sveltejs/kit/vite'
+import tailwindcss from '@tailwindcss/vite'
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig(({ mode }) => {
-	const isProduction = mode === 'production';
-	const shouldEmitSourcemap = isProduction && process.env.BUNDLE_SOURCEMAP === 'true';
+	const isProduction = mode === 'production'
+	const shouldEmitSourcemap = isProduction && process.env.BUNDLE_SOURCEMAP === 'true'
 
 	return {
 		// Keep sveltekit first to ensure its aliases (like $lib) register early
@@ -31,13 +31,13 @@ export default defineConfig(({ mode }) => {
 			rollupOptions: {
 				output: {
 					manualChunks(id) {
-						if (!id.includes('node_modules')) return;
-						if (id.includes('lucide-svelte')) return 'icons';
-						if (id.includes('date-fns')) return 'date-fns';
-						if (id.includes('sveltekit-superforms') || id.includes('zod')) return 'forms';
-						if (id.includes('pocketbase')) return 'pocketbase-client';
-						if (id.includes('bits-ui') || id.includes('@melt-ui')) return 'ui-primitives';
-						return 'vendor';
+						if (!id.includes('node_modules')) return
+						if (id.includes('lucide-svelte')) return 'icons'
+						if (id.includes('date-fns')) return 'date-fns'
+						if (id.includes('sveltekit-superforms') || id.includes('zod')) return 'forms'
+						if (id.includes('pocketbase')) return 'pocketbase-client'
+						if (id.includes('bits-ui') || id.includes('@melt-ui')) return 'ui-primitives'
+						return 'vendor'
 					}
 				}
 			}
@@ -80,5 +80,5 @@ export default defineConfig(({ mode }) => {
 				}
 			]
 		}
-	};
-});
+	}
+})

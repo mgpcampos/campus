@@ -64,4 +64,4 @@
  * @property {string} updated
  */
 
-export {};
+export {}

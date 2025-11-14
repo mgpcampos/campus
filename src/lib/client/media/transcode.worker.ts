@@ -7,51 +7,51 @@ import {
 	EncodedVideoPacketSource,
 	Mp4OutputFormat,
 	Output
-} from 'mediabunny';
+} from 'mediabunny'
 import type {
 	TranscodeAudioDataMessage,
 	TranscodeConfigureMessage,
+	TranscodeVideoFrameMessage,
 	TranscodeWorkerMessage,
-	TranscodeWorkerResponse,
-	TranscodeVideoFrameMessage
-} from './transcode.types';
+	TranscodeWorkerResponse
+} from './transcode.types'
 
 type JobContext = {
-	readonly output: Output;
-	readonly target: BufferTarget;
-	readonly videoSource: EncodedVideoPacketSource;
-	readonly audioSource?: EncodedAudioPacketSource;
-	readonly videoEncoder: VideoEncoder;
-	readonly audioEncoder?: AudioEncoder;
-	readonly expectFrames?: number;
-	encodedFrames: number;
-};
+	readonly output: Output
+	readonly target: BufferTarget
+	readonly videoSource: EncodedVideoPacketSource
+	readonly audioSource?: EncodedAudioPacketSource
+	readonly videoEncoder: VideoEncoder
+	readonly audioEncoder?: AudioEncoder
+	readonly expectFrames?: number
+	encodedFrames: number
+}
 
-const activeJobs = new Map<string, JobContext>();
+const activeJobs = new Map<string, JobContext>()
 
-const workerContext = self as unknown as DedicatedWorkerGlobalScope;
+const workerContext = self as unknown as DedicatedWorkerGlobalScope
 const webCodecsScope = globalThis as typeof globalThis & {
-	VideoEncoder?: typeof VideoEncoder;
-	AudioEncoder?: typeof AudioEncoder;
-};
+	VideoEncoder?: typeof VideoEncoder
+	AudioEncoder?: typeof AudioEncoder
+}
 
 function post(message: TranscodeWorkerResponse, transfer: Transferable[] = []) {
-	workerContext.postMessage(message, { transfer });
+	workerContext.postMessage(message, { transfer })
 }
 
 function ensureJob(jobId: string): JobContext {
-	const job = activeJobs.get(jobId);
+	const job = activeJobs.get(jobId)
 	if (!job) {
-		throw new Error(`Unknown transcode job: ${jobId}`);
+		throw new Error(`Unknown transcode job: ${jobId}`)
 	}
-	return job;
+	return job
 }
 
 async function handleConfigure(message: TranscodeConfigureMessage) {
-	const VideoEncoderCtor = webCodecsScope.VideoEncoder;
+	const VideoEncoderCtor = webCodecsScope.VideoEncoder
 	if (!VideoEncoderCtor) {
-		post({ type: 'unsupported', jobId: message.jobId, reason: 'no-webcodecs' });
-		return;
+		post({ type: 'unsupported', jobId: message.jobId, reason: 'no-webcodecs' })
+		return
 	}
 
 	const {
@@ -65,7 +65,7 @@ async function handleConfigure(message: TranscodeConfigureMessage) {
 			audio,
 			expectFrames
 		}
-	} = message;
+	} = message
 
 	const encoderConfig: VideoEncoderConfig = {
 		codec,
@@ -75,36 +75,36 @@ async function handleConfigure(message: TranscodeConfigureMessage) {
 		framerate: fps,
 		hardwareAcceleration: hardwareAcceleration as VideoEncoderConfig['hardwareAcceleration'],
 		avc: { format: 'annexb' }
-	};
-
-	try {
-		const support = await VideoEncoderCtor.isConfigSupported(encoderConfig);
-		if (!support.supported) {
-			post({ type: 'unsupported', jobId: message.jobId, reason: 'codec' });
-			return;
-		}
-	} catch (error) {
-		post({ type: 'unsupported', jobId: message.jobId, reason: 'codec' });
-		return;
 	}
 
-	const target = new BufferTarget();
+	try {
+		const support = await VideoEncoderCtor.isConfigSupported(encoderConfig)
+		if (!support.supported) {
+			post({ type: 'unsupported', jobId: message.jobId, reason: 'codec' })
+			return
+		}
+	} catch (error) {
+		post({ type: 'unsupported', jobId: message.jobId, reason: 'codec' })
+		return
+	}
+
+	const target = new BufferTarget()
 	const output = new Output({
 		format: new Mp4OutputFormat({
 			fastStart: 'in-memory'
 		}),
 		target
-	});
+	})
 
-	const videoSource = new EncodedVideoPacketSource('avc');
+	const videoSource = new EncodedVideoPacketSource('avc')
 	output.addVideoTrack(videoSource, {
 		frameRate: fps
-	});
+	})
 
-	let audioSource: EncodedAudioPacketSource | undefined;
+	let audioSource: EncodedAudioPacketSource | undefined
 	if (audio) {
-		audioSource = new EncodedAudioPacketSource('aac');
-		output.addAudioTrack(audioSource);
+		audioSource = new EncodedAudioPacketSource('aac')
+		output.addAudioTrack(audioSource)
 	}
 
 	const videoEncoder = new VideoEncoderCtor({
@@ -114,29 +114,29 @@ async function handleConfigure(message: TranscodeConfigureMessage) {
 					type: 'error',
 					jobId: message.jobId,
 					error: error instanceof Error ? error.message : String(error)
-				});
-			});
+				})
+			})
 		},
 		error(error: unknown) {
 			post({
 				type: 'error',
 				jobId: message.jobId,
 				error: error instanceof Error ? error.message : String(error)
-			});
+			})
 		}
-	});
+	})
 
-	await videoEncoder.configure(encoderConfig);
+	await videoEncoder.configure(encoderConfig)
 
-	let audioEncoder: AudioEncoder | undefined;
+	let audioEncoder: AudioEncoder | undefined
 
 	if (audio) {
-		const AudioEncoderCtor = webCodecsScope.AudioEncoder;
+		const AudioEncoderCtor = webCodecsScope.AudioEncoder
 		if (!AudioEncoderCtor) {
-			post({ type: 'unsupported', jobId: message.jobId, reason: 'codec' });
-			videoEncoder.close();
-			await output.finalize().catch(() => undefined);
-			return;
+			post({ type: 'unsupported', jobId: message.jobId, reason: 'codec' })
+			videoEncoder.close()
+			await output.finalize().catch(() => undefined)
+			return
 		}
 
 		const audioConfig: AudioEncoderConfig = {
@@ -144,21 +144,21 @@ async function handleConfigure(message: TranscodeConfigureMessage) {
 			numberOfChannels: audio.channels,
 			sampleRate: audio.sampleRate,
 			bitrate: audio.bitrate ?? 128_000
-		};
+		}
 
 		try {
-			const support = await AudioEncoderCtor.isConfigSupported(audioConfig);
+			const support = await AudioEncoderCtor.isConfigSupported(audioConfig)
 			if (!support.supported) {
-				post({ type: 'unsupported', jobId: message.jobId, reason: 'codec' });
-				videoEncoder.close();
-				await output.finalize().catch(() => undefined);
-				return;
+				post({ type: 'unsupported', jobId: message.jobId, reason: 'codec' })
+				videoEncoder.close()
+				await output.finalize().catch(() => undefined)
+				return
 			}
 		} catch (error) {
-			post({ type: 'unsupported', jobId: message.jobId, reason: 'codec' });
-			videoEncoder.close();
-			await output.finalize().catch(() => undefined);
-			return;
+			post({ type: 'unsupported', jobId: message.jobId, reason: 'codec' })
+			videoEncoder.close()
+			await output.finalize().catch(() => undefined)
+			return
 		}
 
 		audioEncoder = new AudioEncoderCtor({
@@ -169,8 +169,8 @@ async function handleConfigure(message: TranscodeConfigureMessage) {
 							type: 'error',
 							jobId: message.jobId,
 							error: error instanceof Error ? error.message : String(error)
-						});
-					});
+						})
+					})
 				}
 			},
 			error(error: unknown) {
@@ -178,17 +178,17 @@ async function handleConfigure(message: TranscodeConfigureMessage) {
 					type: 'error',
 					jobId: message.jobId,
 					error: error instanceof Error ? error.message : String(error)
-				});
+				})
 			}
-		});
+		})
 
 		if (audioEncoder) {
-			audioEncoder.configure(audioConfig);
+			audioEncoder.configure(audioConfig)
 		}
 	}
 
 	// Start the output after all tracks are configured
-	await output.start();
+	await output.start()
 
 	activeJobs.set(message.jobId, {
 		output,
@@ -199,84 +199,84 @@ async function handleConfigure(message: TranscodeConfigureMessage) {
 		audioEncoder,
 		expectFrames,
 		encodedFrames: 0
-	});
+	})
 
-	post({ type: 'ready', jobId: message.jobId });
+	post({ type: 'ready', jobId: message.jobId })
 }
 
 async function handleVideoFrame(message: TranscodeVideoFrameMessage) {
-	const job = ensureJob(message.jobId);
+	const job = ensureJob(message.jobId)
 	try {
-		job.videoEncoder.encode(message.frame, { keyFrame: message.keyFrame ?? false });
-		job.encodedFrames += 1;
+		job.videoEncoder.encode(message.frame, { keyFrame: message.keyFrame ?? false })
+		job.encodedFrames += 1
 		post({
 			type: 'progress',
 			jobId: message.jobId,
 			encodedFrames: job.encodedFrames,
 			expectFrames: job.expectFrames
-		});
+		})
 	} finally {
-		message.frame.close();
+		message.frame.close()
 	}
 }
 
 async function handleAudioData(message: TranscodeAudioDataMessage) {
-	const job = ensureJob(message.jobId);
+	const job = ensureJob(message.jobId)
 	if (!job.audioEncoder) {
-		message.data.close();
-		return;
+		message.data.close()
+		return
 	}
 	try {
-		job.audioEncoder.encode(message.data);
+		job.audioEncoder.encode(message.data)
 	} finally {
-		message.data.close();
+		message.data.close()
 	}
 }
 
 async function finalizeJob(jobId: string) {
-	const job = activeJobs.get(jobId);
-	if (!job) return;
+	const job = activeJobs.get(jobId)
+	if (!job) return
 	try {
-		await job.videoEncoder.flush();
+		await job.videoEncoder.flush()
 		if (job.audioEncoder) {
-			await job.audioEncoder.flush();
+			await job.audioEncoder.flush()
 		}
-		await job.output.finalize();
-		const buffer = job.target.buffer;
+		await job.output.finalize()
+		const buffer = job.target.buffer
 		if (buffer) {
-			post({ type: 'complete', jobId, buffer }, [buffer]);
+			post({ type: 'complete', jobId, buffer }, [buffer])
 		} else {
 			post({
 				type: 'error',
 				jobId,
 				error: 'No buffer produced by output'
-			});
+			})
 		}
 	} catch (error) {
 		post({
 			type: 'error',
 			jobId,
 			error: error instanceof Error ? error.message : String(error)
-		});
+		})
 	} finally {
-		job.videoEncoder.close();
-		job.audioEncoder?.close();
-		activeJobs.delete(jobId);
+		job.videoEncoder.close()
+		job.audioEncoder?.close()
+		activeJobs.delete(jobId)
 	}
 }
 
 async function cancelJob(jobId: string) {
-	const job = activeJobs.get(jobId);
-	if (!job) return;
+	const job = activeJobs.get(jobId)
+	if (!job) return
 	try {
-		await job.videoEncoder.flush().catch(() => undefined);
+		await job.videoEncoder.flush().catch(() => undefined)
 	} finally {
-		job.videoEncoder.close();
+		job.videoEncoder.close()
 		if (job.audioEncoder) {
-			await job.audioEncoder.flush().catch(() => undefined);
-			job.audioEncoder.close();
+			await job.audioEncoder.flush().catch(() => undefined)
+			job.audioEncoder.close()
 		}
-		activeJobs.delete(jobId);
+		activeJobs.delete(jobId)
 	}
 }
 
@@ -288,42 +288,42 @@ workerContext.onmessage = (event: MessageEvent<TranscodeWorkerMessage>) => {
 					type: 'error',
 					jobId: event.data.jobId,
 					error: error instanceof Error ? error.message : String(error)
-				});
-			});
-			break;
+				})
+			})
+			break
 		case 'video-frame':
 			handleVideoFrame(event.data).catch((error) => {
 				post({
 					type: 'error',
 					jobId: event.data.jobId,
 					error: error instanceof Error ? error.message : String(error)
-				});
-			});
-			break;
+				})
+			})
+			break
 		case 'audio-data':
 			handleAudioData(event.data).catch((error) => {
 				post({
 					type: 'error',
 					jobId: event.data.jobId,
 					error: error instanceof Error ? error.message : String(error)
-				});
-			});
-			break;
+				})
+			})
+			break
 		case 'flush':
 			finalizeJob(event.data.jobId).catch((error) => {
 				post({
 					type: 'error',
 					jobId: event.data.jobId,
 					error: error instanceof Error ? error.message : String(error)
-				});
-			});
-			break;
+				})
+			})
+			break
 		case 'cancel':
-			cancelJob(event.data.jobId).catch(() => undefined);
-			break;
+			cancelJob(event.data.jobId).catch(() => undefined)
+			break
 		default:
-			break;
+			break
 	}
-};
+}
 
-export {};
+export {}

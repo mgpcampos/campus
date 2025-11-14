@@ -1,22 +1,22 @@
 <script lang="ts">
-	import { ChevronLeft, Mail, MapPin, Link as LinkIcon, Calendar } from '@lucide/svelte';
-	import { page } from '$app/stores';
-	import { t } from '$lib/i18n';
+import { Calendar, ChevronLeft, Link as LinkIcon, Mail, MapPin } from '@lucide/svelte'
+import { page } from '$app/stores'
+import { t } from '$lib/i18n'
 
-	let { data } = $props();
+let { data } = $props()
 
-	const profile = $derived(data.profile);
-	const publications = $derived(data.publications || []);
-	const user = $derived(profile?.expand?.user);
+const profile = $derived(data.profile)
+const publications = $derived(data.publications || [])
+const user = $derived(profile?.expand?.user)
 
-	function formatYear(year: number | null | undefined): string {
-		return year ? String(year) : 'N/A';
-	}
+function formatYear(year: number | null | undefined): string {
+	return year ? String(year) : 'N/A'
+}
 
-	function formatAuthors(authors: Array<{ name: string }> | undefined): string {
-		if (!authors || authors.length === 0) return '';
-		return authors.map((a) => a.name).join(', ');
-	}
+function formatAuthors(authors: Array<{ name: string }> | undefined): string {
+	if (!authors || authors.length === 0) return ''
+	return authors.map((a) => a.name).join(', ')
+}
 </script>
 
 <svelte:head>

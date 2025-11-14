@@ -31,4 +31,4 @@ export default {
 		import('@tailwindcss/forms'),
 		import('@tailwindcss/typography')
 	]
-};
+}

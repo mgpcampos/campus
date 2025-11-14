@@ -1,27 +1,27 @@
 <script lang="ts">
-	import { currentUser, pb } from '$lib/pocketbase.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
-	import { User, LogOut, Settings, Shield } from '@lucide/svelte';
-	import SettingsModal from '$lib/components/settings/SettingsModal.svelte';
-	import NotificationsDropdown from '$lib/components/notifications/NotificationsDropdown.svelte';
-	import { cn } from '$lib/utils.js';
-	import { t } from '$lib/i18n/index.js';
+import { LogOut, Settings, Shield, User } from '@lucide/svelte'
+import NotificationsDropdown from '$lib/components/notifications/NotificationsDropdown.svelte'
+import SettingsModal from '$lib/components/settings/SettingsModal.svelte'
+import { Button } from '$lib/components/ui/button/index.js'
+import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js'
+import { t } from '$lib/i18n/index.js'
+import { currentUser, pb } from '$lib/pocketbase.js'
+import { cn } from '$lib/utils.js'
 
-	const logoutFormId = 'user-menu-logout-form';
+const logoutFormId = 'user-menu-logout-form'
 
-	let { class: className = '', id, ...restProps } = $props();
-	let userMenuOpen = $state(false);
-	let settingsOpen = $state(false);
+let { class: className = '', id, ...restProps } = $props()
+let userMenuOpen = $state(false)
+let settingsOpen = $state(false)
 
-	function handleUserMenuOpenChange(value: boolean) {
-		userMenuOpen = value;
-	}
+function handleUserMenuOpenChange(value: boolean) {
+	userMenuOpen = value
+}
 
-	function openSettings() {
-		settingsOpen = true;
-		userMenuOpen = false;
-	}
+function openSettings() {
+	settingsOpen = true
+	userMenuOpen = false
+}
 </script>
 
 <header

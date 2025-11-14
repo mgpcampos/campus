@@ -1,25 +1,25 @@
 <script lang="ts">
-	import type { PageData } from './$types';
-	import { goto } from '$app/navigation';
-	import { currentUser } from '$lib/pocketbase';
-	import ThreadList from '$lib/components/messaging/ThreadList.svelte';
-	import * as Card from '$lib/components/ui/card/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { MessageCircle, Plus } from '@lucide/svelte';
-	import { toast } from 'svelte-sonner';
-	import { t } from '$lib/i18n';
+import { MessageCircle, Plus } from '@lucide/svelte'
+import { toast } from 'svelte-sonner'
+import { goto } from '$app/navigation'
+import ThreadList from '$lib/components/messaging/ThreadList.svelte'
+import { Button } from '$lib/components/ui/button/index.js'
+import * as Card from '$lib/components/ui/card/index.js'
+import { t } from '$lib/i18n'
+import { currentUser } from '$lib/pocketbase'
+import type { PageData } from './$types'
 
-	let { data }: { data: PageData } = $props();
+let { data }: { data: PageData } = $props()
 
-	function handleThreadSelect(threadId: string) {
-		goto(`/messages/${threadId}`);
-	}
+function handleThreadSelect(threadId: string) {
+	goto(`/messages/${threadId}`)
+}
 
-	function handleNewThread() {
-		// For now, direct to a hypothetical thread creation page
-		// Could be implemented as a modal or separate route
-		toast.info(t('messages.threadCreationComingSoon'));
-	}
+function handleNewThread() {
+	// For now, direct to a hypothetical thread creation page
+	// Could be implemented as a modal or separate route
+	toast.info(t('messages.threadCreationComingSoon'))
+}
 </script>
 
 <svelte:head>

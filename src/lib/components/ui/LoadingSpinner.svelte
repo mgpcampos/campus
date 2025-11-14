@@ -1,21 +1,21 @@
 <script lang="ts">
-	import { LoaderCircle } from '@lucide/svelte';
+import { LoaderCircle } from '@lucide/svelte'
 
-	let {
-		size = 'default',
-		class: className = '',
-		text = ''
-	}: {
-		size?: 'sm' | 'default' | 'lg';
-		class?: string;
-		text?: string;
-	} = $props();
+let {
+	size = 'default',
+	class: className = '',
+	text = ''
+}: {
+	size?: 'sm' | 'default' | 'lg'
+	class?: string
+	text?: string
+} = $props()
 
-	const sizeClasses = {
-		sm: 'w-4 h-4',
-		default: 'w-6 h-6',
-		lg: 'w-8 h-8'
-	};
+const sizeClasses = {
+	sm: 'w-4 h-4',
+	default: 'w-6 h-6',
+	lg: 'w-8 h-8'
+}
 </script>
 
 <div

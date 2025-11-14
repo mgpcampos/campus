@@ -1,81 +1,81 @@
 <script lang="ts">
-	import { superForm } from 'sveltekit-superforms';
-	import { z } from 'zod';
-	import * as Card from '$lib/components/ui/card/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
-	import { Textarea } from '$lib/components/ui/textarea/index.js';
-	import { toast } from 'svelte-sonner';
-	import { notifyError } from '$lib/utils/errors.js';
-	import { User, Save, LoaderCircle } from '@lucide/svelte';
-	import { createClientFormOptions } from '$lib/validation';
-	import { fileLikeSchema } from '$lib/schemas/helpers.js';
+import { LoaderCircle, Save, User } from '@lucide/svelte'
+import { toast } from 'svelte-sonner'
+import { superForm } from 'sveltekit-superforms'
+import { z } from 'zod'
+import { Button } from '$lib/components/ui/button/index.js'
+import * as Card from '$lib/components/ui/card/index.js'
+import { Input } from '$lib/components/ui/input/index.js'
+import { Label } from '$lib/components/ui/label/index.js'
+import { Textarea } from '$lib/components/ui/textarea/index.js'
+import { fileLikeSchema } from '$lib/schemas/helpers.js'
+import { notifyError } from '$lib/utils/errors.js'
+import { createClientFormOptions } from '$lib/validation'
 
-	// Profile form schema
-	const profileSchema = z.object({
-		name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),
-		username: z
-			.string()
-			.min(3, 'Username must be at least 3 characters')
-			.max(30, 'Username must be less than 30 characters')
-			.regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores'),
-		bio: z.string().max(500, 'Bio must be less than 500 characters').optional(),
-		avatar: fileLikeSchema.optional()
-	});
+// Profile form schema
+const profileSchema = z.object({
+	name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),
+	username: z
+		.string()
+		.min(3, 'Username must be at least 3 characters')
+		.max(30, 'Username must be less than 30 characters')
+		.regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores'),
+	bio: z.string().max(500, 'Bio must be less than 500 characters').optional(),
+	avatar: fileLikeSchema.optional()
+})
 
-	let {
-		data,
-		class: className = ''
-	}: {
-		data: any;
-		class?: string;
-	} = $props();
+let {
+	data,
+	class: className = ''
+}: {
+	data: any
+	class?: string
+} = $props()
 
-	const { form, errors, enhance, submitting } = superForm(data, {
-		...createClientFormOptions(profileSchema),
-		onUpdated: ({ form }) => {
-			if (form.valid) {
-				toast.success('Profile updated successfully!');
-			} else {
-				toast.error('Please fix the errors below');
-			}
-		},
-		onError: ({ result }) => {
-			notifyError(result, { context: 'profile.update' });
-		}
-	});
-
-	let avatarInput: HTMLInputElement;
-	let previewUrl: string | null = $state(null);
-
-	function handleAvatarChange(event: Event) {
-		const target = event.target as HTMLInputElement;
-		const file = target.files?.[0];
-
-		if (file) {
-			// Validate file type and size
-			if (!file.type.startsWith('image/')) {
-				toast.error('Please select an image file');
-				target.value = '';
-				return;
-			}
-
-			if (file.size > 5 * 1024 * 1024) {
-				// 5MB limit
-				toast.error('Image must be less than 5MB');
-				target.value = '';
-				return;
-			}
-
-			// Create preview URL
-			previewUrl = URL.createObjectURL(file);
-			$form.avatar = file;
+const { form, errors, enhance, submitting } = superForm(data, {
+	...createClientFormOptions(profileSchema),
+	onUpdated: ({ form }) => {
+		if (form.valid) {
+			toast.success('Profile updated successfully!')
 		} else {
-			previewUrl = null;
-			$form.avatar = undefined;
+			toast.error('Please fix the errors below')
 		}
+	},
+	onError: ({ result }) => {
+		notifyError(result, { context: 'profile.update' })
 	}
+})
+
+let avatarInput: HTMLInputElement
+let previewUrl: string | null = $state(null)
+
+function handleAvatarChange(event: Event) {
+	const target = event.target as HTMLInputElement
+	const file = target.files?.[0]
+
+	if (file) {
+		// Validate file type and size
+		if (!file.type.startsWith('image/')) {
+			toast.error('Please select an image file')
+			target.value = ''
+			return
+		}
+
+		if (file.size > 5 * 1024 * 1024) {
+			// 5MB limit
+			toast.error('Image must be less than 5MB')
+			target.value = ''
+			return
+		}
+
+		// Create preview URL
+		previewUrl = URL.createObjectURL(file)
+		$form.avatar = file
+	} else {
+		previewUrl = null
+		$form.avatar = undefined
+	}
+}
 </script>
 
 <Card.Root class="w-full max-w-2xl {className}">

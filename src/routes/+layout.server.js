@@ -3,5 +3,5 @@ export async function load({ locals }) {
 	return {
 		user: locals.user ?? null,
 		sessionToken: locals.sessionToken ?? null
-	};
+	}
 }

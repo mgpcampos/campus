@@ -1,176 +1,176 @@
 <script lang="ts">
-	import * as Dialog from '$lib/components/ui/dialog/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
-	import { Switch } from '$lib/components/ui/switch/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { pb, currentUser } from '$lib/pocketbase.js';
-	import { browser } from '$app/environment';
-	import { onMount } from 'svelte';
-	import { toast } from 'svelte-sonner';
-	import { mode, setMode } from 'mode-watcher';
-	import {
-		t,
-		getCurrentLocale,
-		setLocale,
-		availableLanguages,
-		getLanguageName,
-		type Locale
-	} from '$lib/i18n/index.js';
+import { mode, setMode } from 'mode-watcher'
+import { onMount } from 'svelte'
+import { toast } from 'svelte-sonner'
+import { browser } from '$app/environment'
+import { Button } from '$lib/components/ui/button/index.js'
+import * as Dialog from '$lib/components/ui/dialog/index.js'
+import { Label } from '$lib/components/ui/label/index.js'
+import { Switch } from '$lib/components/ui/switch/index.js'
+import {
+	availableLanguages,
+	getCurrentLocale,
+	getLanguageName,
+	type Locale,
+	setLocale,
+	t
+} from '$lib/i18n/index.js'
+import { currentUser, pb } from '$lib/pocketbase.js'
 
-	interface Props {
-		open?: boolean;
+interface Props {
+	open?: boolean
+}
+
+let { open = $bindable(false) }: Props = $props()
+
+let loading = $state(false)
+let selectedLocale = $state<Locale>(getCurrentLocale())
+
+function resolveActiveMode(): 'dark' | 'light' {
+	const current = mode.current
+	if (current === 'dark' || current === 'light') {
+		return current
+	}
+	if (!browser) {
+		return 'light'
+	}
+	return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+}
+
+const isDarkMode = $derived.by(() => resolveActiveMode() === 'dark')
+
+function migrateLegacyPreference() {
+	if (!browser) return
+	const legacy = window.localStorage.getItem('campus.theme')
+	if (legacy === 'dark' || legacy === 'light') {
+		setMode(legacy)
+		window.localStorage.removeItem('campus.theme')
+	}
+}
+
+function applyUserPreference() {
+	const user = $currentUser
+	if (user && typeof user.prefersDarkMode === 'boolean') {
+		setMode(user.prefersDarkMode ? 'dark' : 'light')
+	}
+}
+
+function initializeThemePreference() {
+	if (!browser) return
+	migrateLegacyPreference()
+	applyUserPreference()
+}
+
+onMount(() => {
+	initializeThemePreference()
+})
+
+function handleKeyToggle(event: KeyboardEvent) {
+	if (event.key === 'Enter' || event.key === ' ') {
+		event.preventDefault()
+		toggleTheme()
+	}
+}
+
+async function toggleTheme() {
+	if (!browser) return
+
+	const previousMode = resolveActiveMode()
+	const nextMode = previousMode === 'light' ? 'dark' : 'light'
+	const enablingDarkMode = nextMode === 'dark'
+
+	setMode(nextMode)
+
+	const user = $currentUser
+	if (!user) {
+		toast.success(enablingDarkMode ? t('settings.themeEnabled') : t('settings.themeDisabled'))
+		return
 	}
 
-	let { open = $bindable(false) }: Props = $props();
+	loading = true
+	try {
+		const response = await fetch('/api/user/theme', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({ enabled: enablingDarkMode })
+		})
 
-	let loading = $state(false);
-	let selectedLocale = $state<Locale>(getCurrentLocale());
+		if (!response.ok) {
+			throw new Error('Failed to update preference')
+		}
 
-	function resolveActiveMode(): 'dark' | 'light' {
-		const current = mode.current;
-		if (current === 'dark' || current === 'light') {
-			return current;
+		const data = await response.json()
+		if (data?.user) {
+			pb.authStore.save(pb.authStore.token, data.user)
+			currentUser.set(data.user)
 		}
-		if (!browser) {
-			return 'light';
-		}
-		return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+
+		toast.success(enablingDarkMode ? t('settings.themeEnabled') : t('settings.themeDisabled'))
+	} catch (error) {
+		console.error('Failed to update theme preference', error)
+		setMode(previousMode)
+		toast.error(t('settings.errorTheme'))
+	} finally {
+		loading = false
+	}
+}
+
+async function handleLanguageChange(event: Event) {
+	const target = event.target as HTMLSelectElement
+	const locale = target.value as Locale
+
+	const user = $currentUser
+	if (!user) {
+		toast.error(t('settings.errorSignIn'))
+		target.value = selectedLocale // Reset select to previous value
+		return
 	}
 
-	const isDarkMode = $derived.by(() => resolveActiveMode() === 'dark');
+	const previousLocale = selectedLocale
+	selectedLocale = locale
+	setLocale(locale)
 
-	function migrateLegacyPreference() {
-		if (!browser) return;
-		const legacy = window.localStorage.getItem('campus.theme');
-		if (legacy === 'dark' || legacy === 'light') {
-			setMode(legacy);
-			window.localStorage.removeItem('campus.theme');
+	loading = true
+	try {
+		const response = await fetch('/api/user/locale', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({ locale })
+		})
+
+		if (!response.ok) {
+			throw new Error('Failed to update locale')
 		}
+
+		const data = await response.json()
+		if (data?.user) {
+			pb.authStore.save(pb.authStore.token, data.user)
+			currentUser.set(data.user)
+		}
+
+		toast.success(t('settings.languageChanged', { language: getLanguageName(locale) }))
+	} catch (error) {
+		console.error('Failed to update locale preference', error)
+		selectedLocale = previousLocale
+		setLocale(previousLocale)
+		target.value = previousLocale // Reset select to previous value
+		toast.error(t('settings.errorLanguage'))
+	} finally {
+		loading = false
 	}
+}
 
-	function applyUserPreference() {
-		const user = $currentUser;
-		if (user && typeof user.prefersDarkMode === 'boolean') {
-			setMode(user.prefersDarkMode ? 'dark' : 'light');
-		}
+function handleOpenChange(value: boolean) {
+	if (value) {
+		initializeThemePreference()
+		selectedLocale = getCurrentLocale()
 	}
-
-	function initializeThemePreference() {
-		if (!browser) return;
-		migrateLegacyPreference();
-		applyUserPreference();
-	}
-
-	onMount(() => {
-		initializeThemePreference();
-	});
-
-	function handleKeyToggle(event: KeyboardEvent) {
-		if (event.key === 'Enter' || event.key === ' ') {
-			event.preventDefault();
-			toggleTheme();
-		}
-	}
-
-	async function toggleTheme() {
-		if (!browser) return;
-
-		const previousMode = resolveActiveMode();
-		const nextMode = previousMode === 'light' ? 'dark' : 'light';
-		const enablingDarkMode = nextMode === 'dark';
-
-		setMode(nextMode);
-
-		const user = $currentUser;
-		if (!user) {
-			toast.success(enablingDarkMode ? t('settings.themeEnabled') : t('settings.themeDisabled'));
-			return;
-		}
-
-		loading = true;
-		try {
-			const response = await fetch('/api/user/theme', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({ enabled: enablingDarkMode })
-			});
-
-			if (!response.ok) {
-				throw new Error('Failed to update preference');
-			}
-
-			const data = await response.json();
-			if (data?.user) {
-				pb.authStore.save(pb.authStore.token, data.user);
-				currentUser.set(data.user);
-			}
-
-			toast.success(enablingDarkMode ? t('settings.themeEnabled') : t('settings.themeDisabled'));
-		} catch (error) {
-			console.error('Failed to update theme preference', error);
-			setMode(previousMode);
-			toast.error(t('settings.errorTheme'));
-		} finally {
-			loading = false;
-		}
-	}
-
-	async function handleLanguageChange(event: Event) {
-		const target = event.target as HTMLSelectElement;
-		const locale = target.value as Locale;
-
-		const user = $currentUser;
-		if (!user) {
-			toast.error(t('settings.errorSignIn'));
-			target.value = selectedLocale; // Reset select to previous value
-			return;
-		}
-
-		const previousLocale = selectedLocale;
-		selectedLocale = locale;
-		setLocale(locale);
-
-		loading = true;
-		try {
-			const response = await fetch('/api/user/locale', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({ locale })
-			});
-
-			if (!response.ok) {
-				throw new Error('Failed to update locale');
-			}
-
-			const data = await response.json();
-			if (data?.user) {
-				pb.authStore.save(pb.authStore.token, data.user);
-				currentUser.set(data.user);
-			}
-
-			toast.success(t('settings.languageChanged', { language: getLanguageName(locale) }));
-		} catch (error) {
-			console.error('Failed to update locale preference', error);
-			selectedLocale = previousLocale;
-			setLocale(previousLocale);
-			target.value = previousLocale; // Reset select to previous value
-			toast.error(t('settings.errorLanguage'));
-		} finally {
-			loading = false;
-		}
-	}
-
-	function handleOpenChange(value: boolean) {
-		if (value) {
-			initializeThemePreference();
-			selectedLocale = getCurrentLocale();
-		}
-		open = value;
-	}
+	open = value
+}
 </script>
 
 <Dialog.Root bind:open onOpenChange={handleOpenChange}>

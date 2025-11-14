@@ -1,50 +1,50 @@
 <svelte:options runes />
 
 <script lang="ts">
-	import { currentUser, pb } from '$lib/pocketbase.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import PostForm from '$lib/components/forms/PostForm.svelte';
-	import Feed from '$lib/components/feed/Feed.svelte';
-	import { MessageSquare, User } from '@lucide/svelte';
-	import { t } from '$lib/i18n';
+import { MessageSquare, User } from '@lucide/svelte'
+import Feed from '$lib/components/feed/Feed.svelte'
+import PostForm from '$lib/components/forms/PostForm.svelte'
+import { Button } from '$lib/components/ui/button/index.js'
+import { t } from '$lib/i18n'
+import { currentUser, pb } from '$lib/pocketbase.js'
 
-	let { data } = $props();
+let { data } = $props()
 
-	let feedComponent: InstanceType<typeof Feed> | null = null;
+let feedComponent: InstanceType<typeof Feed> | null = null
 
-	let refreshTrigger = $state(0);
+let refreshTrigger = $state(0)
 
-	type SortOption = 'new' | 'top' | 'trending';
-	let feedSearch = $state('');
-	let feedSort = $state<SortOption>('new');
-	let timeframeHours = $state(48);
+type SortOption = 'new' | 'top' | 'trending'
+let feedSearch = $state('')
+let feedSort = $state<SortOption>('new')
+let timeframeHours = $state(48)
 
-	const trendingOptions = [6, 12, 24, 48, 72] as const;
+const trendingOptions = [6, 12, 24, 48, 72] as const
 
-	let searchDebounce: ReturnType<typeof setTimeout> | null = null;
-	function handleSearchInput(event: Event) {
-		const value = (event.target as HTMLInputElement).value;
-		if (searchDebounce) clearTimeout(searchDebounce);
-		searchDebounce = setTimeout(() => {
-			feedSearch = value.trim();
-		}, 250);
+let searchDebounce: ReturnType<typeof setTimeout> | null = null
+function handleSearchInput(event: Event) {
+	const value = (event.target as HTMLInputElement).value
+	if (searchDebounce) clearTimeout(searchDebounce)
+	searchDebounce = setTimeout(() => {
+		feedSearch = value.trim()
+	}, 250)
+}
+
+function changeSort(next: SortOption) {
+	feedSort = next
+}
+
+function changeTimeframe(event: Event) {
+	timeframeHours = Number.parseInt((event.target as HTMLSelectElement).value, 10)
+}
+
+function handlePostCreated(event: CustomEvent<any>) {
+	const newPost = event.detail
+	if (feedComponent && typeof feedComponent.addPost === 'function') {
+		feedComponent.addPost(newPost)
 	}
-
-	function changeSort(next: SortOption) {
-		feedSort = next;
-	}
-
-	function changeTimeframe(event: Event) {
-		timeframeHours = Number.parseInt((event.target as HTMLSelectElement).value, 10);
-	}
-
-	function handlePostCreated(event: CustomEvent<any>) {
-		const newPost = event.detail;
-		if (feedComponent && typeof feedComponent.addPost === 'function') {
-			feedComponent.addPost(newPost);
-		}
-		refreshTrigger += 1;
-	}
+	refreshTrigger += 1
+}
 </script>
 
 <div class="min-h-screen bg-background">

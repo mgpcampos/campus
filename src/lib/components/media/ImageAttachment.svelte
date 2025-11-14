@@ -1,47 +1,47 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	export let src: string;
-	export let alt: string = 'Attachment';
-	export let aspect: number | null = null; // width/height if known - for future use
-	export let sizes: string = '(max-width: 640px) 100vw, 640px';
-	export let className: string = '';
-	let loaded = false;
-	let hasError = false;
-	let imageEl: HTMLImageElement | null = null;
-	let currentSrc: string | null = null;
+import { onMount } from 'svelte'
+export let src: string
+export let alt: string = 'Attachment'
+export let aspect: number | null = null // width/height if known - for future use
+export let sizes: string = '(max-width: 640px) 100vw, 640px'
+export let className: string = ''
+let loaded = false
+let hasError = false
+let imageEl: HTMLImageElement | null = null
+let currentSrc: string | null = null
 
-	function handleLoad() {
-		loaded = true;
-		hasError = false;
-	}
+function handleLoad() {
+	loaded = true
+	hasError = false
+}
 
-	function handleError() {
-		hasError = true;
-	}
+function handleError() {
+	hasError = true
+}
 
-	onMount(() => {
-		if (!imageEl) return;
-		if (imageEl.complete) {
-			if (imageEl.naturalWidth > 0 && imageEl.naturalHeight > 0) {
-				handleLoad();
-			} else {
-				handleError();
-			}
-		}
-	});
-
-	$: if (src !== currentSrc) {
-		currentSrc = src;
-		loaded = false;
-		hasError = false;
-		if (imageEl && imageEl.complete) {
-			if (imageEl.naturalWidth > 0 && imageEl.naturalHeight > 0) {
-				handleLoad();
-			} else {
-				handleError();
-			}
+onMount(() => {
+	if (!imageEl) return
+	if (imageEl.complete) {
+		if (imageEl.naturalWidth > 0 && imageEl.naturalHeight > 0) {
+			handleLoad()
+		} else {
+			handleError()
 		}
 	}
+})
+
+$: if (src !== currentSrc) {
+	currentSrc = src
+	loaded = false
+	hasError = false
+	if (imageEl && imageEl.complete) {
+		if (imageEl.naturalWidth > 0 && imageEl.naturalHeight > 0) {
+			handleLoad()
+		} else {
+			handleError()
+		}
+	}
+}
 </script>
 
 {#if hasError}

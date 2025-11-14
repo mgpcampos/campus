@@ -1,6 +1,6 @@
-import { writable } from 'svelte/store';
+import { writable } from 'svelte/store'
 
-export const currentUser = writable({ id: 'test-user', name: 'Test User', username: 'testuser' });
+export const currentUser = writable({ id: 'test-user', name: 'Test User', username: 'testuser' })
 
 // Minimal mock of PocketBase client with collections returning noop methods
 export const pb = {
@@ -13,4 +13,4 @@ export const pb = {
 		create: async () => ({}),
 		getFirstListItem: async () => ({ id: 'u-mention' })
 	})
-};
+}

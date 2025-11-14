@@ -1,43 +1,43 @@
 <script lang="ts">
-	import type { ConversationThreadRecord, ThreadWithMessages } from '$types/messaging';
-	import { formatDistanceToNow } from 'date-fns';
-	import { MessageCircle, Lock, Users, User } from '@lucide/svelte';
-	import * as Card from '$lib/components/ui/card/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Badge } from '$lib/components/ui/badge/index.js';
+import { Lock, MessageCircle, User, Users } from '@lucide/svelte'
+import { formatDistanceToNow } from 'date-fns'
+import { Badge } from '$lib/components/ui/badge/index.js'
+import { Button } from '$lib/components/ui/button/index.js'
+import * as Card from '$lib/components/ui/card/index.js'
+import type { ConversationThreadRecord, ThreadWithMessages } from '$types/messaging'
 
-	interface Props {
-		threads: ThreadWithMessages[];
-		currentUserId: string;
-		onThreadSelect: (threadId: string) => void;
-		selectedThreadId?: string;
+interface Props {
+	threads: ThreadWithMessages[]
+	currentUserId: string
+	onThreadSelect: (threadId: string) => void
+	selectedThreadId?: string
+}
+
+let { threads, currentUserId, onThreadSelect, selectedThreadId }: Props = $props()
+
+function getThreadTitle(thread: ThreadWithMessages, currentUserId: string): string {
+	if (thread.type === 'group' && thread.name) {
+		return thread.name
 	}
 
-	let { threads, currentUserId, onThreadSelect, selectedThreadId }: Props = $props();
+	// For direct messages, show the other participant's name
+	const otherMember = thread.expand?.members?.find(
+		(m: { id: string; name?: string; email?: string }) => m.id !== currentUserId
+	)
+	return otherMember?.name || 'Unknown User'
+}
 
-	function getThreadTitle(thread: ThreadWithMessages, currentUserId: string): string {
-		if (thread.type === 'group' && thread.name) {
-			return thread.name;
-		}
+function getThreadIcon(type: 'direct' | 'group') {
+	return type === 'group' ? Users : User
+}
 
-		// For direct messages, show the other participant's name
-		const otherMember = thread.expand?.members?.find(
-			(m: { id: string; name?: string; email?: string }) => m.id !== currentUserId
-		);
-		return otherMember?.name || 'Unknown User';
+function formatTimestamp(dateString: string): string {
+	try {
+		return formatDistanceToNow(new Date(dateString), { addSuffix: true })
+	} catch {
+		return 'recently'
 	}
-
-	function getThreadIcon(type: 'direct' | 'group') {
-		return type === 'group' ? Users : User;
-	}
-
-	function formatTimestamp(dateString: string): string {
-		try {
-			return formatDistanceToNow(new Date(dateString), { addSuffix: true });
-		} catch {
-			return 'recently';
-		}
-	}
+}
 </script>
 
 <div class="space-y-2" role="list" aria-label="Message threads">

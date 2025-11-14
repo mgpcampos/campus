@@ -3,26 +3,26 @@
  * Monitors and tracks notification delivery times to enforce NFR-003 (< 1 minute)
  */
 
-import type PocketBase from 'pocketbase';
+import type PocketBase from 'pocketbase'
 
 export interface NotificationTelemetry {
-	eventId: string;
-	notificationType: 'created' | 'updated' | 'reminder' | 'cancelled';
-	recipientCount: number;
-	startTime: number;
-	endTime: number;
-	latencyMs: number;
-	exceededSLA: boolean;
+	eventId: string
+	notificationType: 'created' | 'updated' | 'reminder' | 'cancelled'
+	recipientCount: number
+	startTime: number
+	endTime: number
+	latencyMs: number
+	exceededSLA: boolean
 }
 
-const SLA_THRESHOLD_MS = 60 * 1000; // 1 minute in milliseconds
+const SLA_THRESHOLD_MS = 60 * 1000 // 1 minute in milliseconds
 
 /**
  * Records the start of a notification broadcast
  * @returns timestamp to be used for measuring latency
  */
 export function startNotificationTimer(): number {
-	return Date.now();
+	return Date.now()
 }
 
 /**
@@ -40,9 +40,9 @@ export async function recordNotificationLatency(
 	recipientCount: number,
 	startTime: number
 ): Promise<NotificationTelemetry> {
-	const endTime = Date.now();
-	const latencyMs = endTime - startTime;
-	const exceededSLA = latencyMs > SLA_THRESHOLD_MS;
+	const endTime = Date.now()
+	const latencyMs = endTime - startTime
+	const exceededSLA = latencyMs > SLA_THRESHOLD_MS
 
 	const telemetry: NotificationTelemetry = {
 		eventId,
@@ -52,7 +52,7 @@ export async function recordNotificationLatency(
 		endTime,
 		latencyMs,
 		exceededSLA
-	};
+	}
 
 	// Log to console for monitoring
 	if (exceededSLA) {
@@ -61,14 +61,14 @@ export async function recordNotificationLatency(
 			type: notificationType,
 			recipients: recipientCount,
 			latency: `${(latencyMs / 1000).toFixed(2)}s`
-		});
+		})
 	} else {
 		console.log(`✓ Event notification delivered within SLA`, {
 			eventId,
 			type: notificationType,
 			recipients: recipientCount,
 			latency: `${(latencyMs / 1000).toFixed(2)}s`
-		});
+		})
 	}
 
 	// Record in analytics_events collection
@@ -84,12 +84,12 @@ export async function recordNotificationLatency(
 				exceededSLA,
 				timestamp: new Date(startTime).toISOString()
 			})
-		});
+		})
 	} catch (error) {
-		console.error('Failed to record notification telemetry:', error);
+		console.error('Failed to record notification telemetry:', error)
 	}
 
-	return telemetry;
+	return telemetry
 }
 
 /**
@@ -104,17 +104,17 @@ export async function getNotificationStats(
 	from: Date,
 	to: Date
 ): Promise<{
-	total: number;
-	withinSLA: number;
-	exceededSLA: number;
-	averageLatencyMs: number;
-	p95LatencyMs: number;
+	total: number
+	withinSLA: number
+	exceededSLA: number
+	averageLatencyMs: number
+	p95LatencyMs: number
 }> {
 	try {
 		const events = await pb.collection('analytics_events').getFullList({
 			filter: `type = "calendar_notification_latency" && created >= "${from.toISOString()}" && created <= "${to.toISOString()}"`,
 			sort: '-created'
-		});
+		})
 
 		if (events.length === 0) {
 			return {
@@ -123,28 +123,28 @@ export async function getNotificationStats(
 				exceededSLA: 0,
 				averageLatencyMs: 0,
 				p95LatencyMs: 0
-			};
+			}
 		}
 
 		const latencies = events
 			.map((e) => {
 				try {
-					const metadata = JSON.parse(e.metadata as string);
-					return metadata.latencyMs;
+					const metadata = JSON.parse(e.metadata as string)
+					return metadata.latencyMs
 				} catch {
-					return 0;
+					return 0
 				}
 			})
-			.filter((l) => l > 0);
+			.filter((l) => l > 0)
 
-		const withinSLA = latencies.filter((l) => l <= SLA_THRESHOLD_MS).length;
-		const exceededSLA = latencies.filter((l) => l > SLA_THRESHOLD_MS).length;
-		const averageLatencyMs = latencies.reduce((sum, l) => sum + l, 0) / latencies.length;
+		const withinSLA = latencies.filter((l) => l <= SLA_THRESHOLD_MS).length
+		const exceededSLA = latencies.filter((l) => l > SLA_THRESHOLD_MS).length
+		const averageLatencyMs = latencies.reduce((sum, l) => sum + l, 0) / latencies.length
 
 		// Calculate p95
-		const sorted = [...latencies].sort((a, b) => a - b);
-		const p95Index = Math.ceil(sorted.length * 0.95) - 1;
-		const p95LatencyMs = sorted[p95Index] || 0;
+		const sorted = [...latencies].sort((a, b) => a - b)
+		const p95Index = Math.ceil(sorted.length * 0.95) - 1
+		const p95LatencyMs = sorted[p95Index] || 0
 
 		return {
 			total: events.length,
@@ -152,10 +152,10 @@ export async function getNotificationStats(
 			exceededSLA,
 			averageLatencyMs,
 			p95LatencyMs
-		};
+		}
 	} catch (error) {
-		console.error('Failed to retrieve notification stats:', error);
-		throw error;
+		console.error('Failed to retrieve notification stats:', error)
+		throw error
 	}
 }
 
@@ -170,32 +170,32 @@ export async function checkForAlerts(pb: PocketBase, threshold: number = 3): Pro
 		const recentEvents = await pb.collection('analytics_events').getList(1, threshold, {
 			filter: `type = "calendar_notification_latency"`,
 			sort: '-created'
-		});
+		})
 
 		if (recentEvents.items.length < threshold) {
-			return false;
+			return false
 		}
 
 		// Check if all recent events exceeded SLA
 		const allExceeded = recentEvents.items.every((e) => {
 			try {
-				const metadata = JSON.parse(e.metadata as string);
-				return metadata.exceededSLA === true;
+				const metadata = JSON.parse(e.metadata as string)
+				return metadata.exceededSLA === true
 			} catch {
-				return false;
+				return false
 			}
-		});
+		})
 
 		if (allExceeded) {
 			console.error(
 				`🚨 ALERT: ${threshold} consecutive calendar notification SLA violations detected. Immediate attention required.`
-			);
-			return true;
+			)
+			return true
 		}
 
-		return false;
+		return false
 	} catch (error) {
-		console.error('Failed to check for alerts:', error);
-		return false;
+		console.error('Failed to check for alerts:', error)
+		return false
 	}
 }

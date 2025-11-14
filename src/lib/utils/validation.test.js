@@ -1,57 +1,57 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest'
 import {
 	emailSchema,
-	passwordSchema,
-	usernameSchema,
-	registerSchema,
 	loginSchema,
-	profileSchema
-} from './validation.js';
+	passwordSchema,
+	profileSchema,
+	registerSchema,
+	usernameSchema
+} from './validation.js'
 
 describe('Email validation', () => {
 	it('should accept valid email addresses', () => {
-		const validEmails = ['test@example.com', 'user.name@domain.co.uk', 'student@university.edu'];
+		const validEmails = ['test@example.com', 'user.name@domain.co.uk', 'student@university.edu']
 
 		validEmails.forEach((email) => {
-			expect(() => emailSchema.parse(email)).not.toThrow();
-		});
-	});
+			expect(() => emailSchema.parse(email)).not.toThrow()
+		})
+	})
 
 	it('should reject invalid email addresses', () => {
-		const invalidEmails = ['invalid-email', '@domain.com', 'user@', ''];
+		const invalidEmails = ['invalid-email', '@domain.com', 'user@', '']
 
 		invalidEmails.forEach((email) => {
-			expect(() => emailSchema.parse(email)).toThrow();
-		});
-	});
-});
+			expect(() => emailSchema.parse(email)).toThrow()
+		})
+	})
+})
 
 describe('Password validation', () => {
 	it('should accept passwords with 8+ characters', () => {
-		const validPasswords = ['password123', 'mySecurePass', '12345678'];
+		const validPasswords = ['password123', 'mySecurePass', '12345678']
 
 		validPasswords.forEach((password) => {
-			expect(() => passwordSchema.parse(password)).not.toThrow();
-		});
-	});
+			expect(() => passwordSchema.parse(password)).not.toThrow()
+		})
+	})
 
 	it('should reject passwords with less than 8 characters', () => {
-		const invalidPasswords = ['short', '1234567', ''];
+		const invalidPasswords = ['short', '1234567', '']
 
 		invalidPasswords.forEach((password) => {
-			expect(() => passwordSchema.parse(password)).toThrow();
-		});
-	});
-});
+			expect(() => passwordSchema.parse(password)).toThrow()
+		})
+	})
+})
 
 describe('Username validation', () => {
 	it('should accept valid usernames', () => {
-		const validUsernames = ['user123', 'test_user', 'JohnDoe', 'abc'];
+		const validUsernames = ['user123', 'test_user', 'JohnDoe', 'abc']
 
 		validUsernames.forEach((username) => {
-			expect(() => usernameSchema.parse(username)).not.toThrow();
-		});
-	});
+			expect(() => usernameSchema.parse(username)).not.toThrow()
+		})
+	})
 
 	it('should reject invalid usernames', () => {
 		const invalidUsernames = [
@@ -61,13 +61,13 @@ describe('Username validation', () => {
 			'user name', // contains space
 			'user@name', // contains special char
 			''
-		];
+		]
 
 		invalidUsernames.forEach((username) => {
-			expect(() => usernameSchema.parse(username)).toThrow();
-		});
-	});
-});
+			expect(() => usernameSchema.parse(username)).toThrow()
+		})
+	})
+})
 
 describe('Registration schema', () => {
 	it('should accept valid registration data', () => {
@@ -77,10 +77,10 @@ describe('Registration schema', () => {
 			passwordConfirm: 'password123',
 			username: 'testuser',
 			name: 'Test User'
-		};
+		}
 
-		expect(() => registerSchema.parse(validData)).not.toThrow();
-	});
+		expect(() => registerSchema.parse(validData)).not.toThrow()
+	})
 
 	it('should reject when passwords do not match', () => {
 		const invalidData = {
@@ -89,10 +89,10 @@ describe('Registration schema', () => {
 			passwordConfirm: 'different123',
 			username: 'testuser',
 			name: 'Test User'
-		};
+		}
 
-		expect(() => registerSchema.parse(invalidData)).toThrow();
-	});
+		expect(() => registerSchema.parse(invalidData)).toThrow()
+	})
 
 	it('should reject when required fields are missing', () => {
 		const invalidData = {
@@ -101,31 +101,31 @@ describe('Registration schema', () => {
 			passwordConfirm: 'password123',
 			username: 'testuser'
 			// name is missing
-		};
+		}
 
-		expect(() => registerSchema.parse(invalidData)).toThrow();
-	});
-});
+		expect(() => registerSchema.parse(invalidData)).toThrow()
+	})
+})
 
 describe('Login schema', () => {
 	it('should accept valid login data', () => {
 		const validData = {
 			email: 'test@example.com',
 			password: 'password123'
-		};
+		}
 
-		expect(() => loginSchema.parse(validData)).not.toThrow();
-	});
+		expect(() => loginSchema.parse(validData)).not.toThrow()
+	})
 
 	it('should reject invalid login data', () => {
 		const invalidData = {
 			email: 'invalid-email',
 			password: ''
-		};
+		}
 
-		expect(() => loginSchema.parse(invalidData)).toThrow();
-	});
-});
+		expect(() => loginSchema.parse(invalidData)).toThrow()
+	})
+})
 
 describe('Profile schema', () => {
 	it('should accept valid profile data', () => {
@@ -133,27 +133,27 @@ describe('Profile schema', () => {
 			name: 'Test User',
 			username: 'testuser',
 			bio: 'This is my bio'
-		};
+		}
 
-		expect(() => profileSchema.parse(validData)).not.toThrow();
-	});
+		expect(() => profileSchema.parse(validData)).not.toThrow()
+	})
 
 	it('should accept profile data without bio', () => {
 		const validData = {
 			name: 'Test User',
 			username: 'testuser'
-		};
+		}
 
-		expect(() => profileSchema.parse(validData)).not.toThrow();
-	});
+		expect(() => profileSchema.parse(validData)).not.toThrow()
+	})
 
 	it('should reject profile with too long bio', () => {
 		const invalidData = {
 			name: 'Test User',
 			username: 'testuser',
 			bio: 'a'.repeat(501) // too long
-		};
+		}
 
-		expect(() => profileSchema.parse(invalidData)).toThrow();
-	});
-});
+		expect(() => profileSchema.parse(invalidData)).toThrow()
+	})
+})

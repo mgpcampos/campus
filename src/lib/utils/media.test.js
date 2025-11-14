@@ -1,33 +1,33 @@
 // @vitest-environment node
-import { describe, it, expect, vi } from 'vitest';
-import { validateImages, MAX_ATTACHMENTS, optimizeImage, sanitizeFilename } from './media.js';
+import { describe, expect, it, vi } from 'vitest'
+import { MAX_ATTACHMENTS, optimizeImage, sanitizeFilename, validateImages } from './media.js'
 
 class FakeSharpPipeline {
 	/**
 	 * @param {Buffer} buffer
 	 */
 	constructor(buffer) {
-		this.buffer = buffer;
+		this.buffer = buffer
 	}
 
 	async metadata() {
-		return { format: 'png', width: 128 };
+		return { format: 'png', width: 128 }
 	}
 
 	clone() {
-		return new FakeSharpPipeline(this.buffer);
+		return new FakeSharpPipeline(this.buffer)
 	}
 
 	resize() {
-		return this;
+		return this
 	}
 
 	webp() {
-		return this;
+		return this
 	}
 
 	async toBuffer() {
-		return Buffer.from(this.buffer);
+		return Buffer.from(this.buffer)
 	}
 }
 
@@ -36,7 +36,7 @@ vi.mock('sharp', () => ({
 	 * @param {Buffer} buffer
 	 */
 	default: (buffer) => new FakeSharpPipeline(buffer)
-}));
+}))
 
 /**
  * @param {string} name
@@ -44,50 +44,50 @@ vi.mock('sharp', () => ({
  * @param {number} size
  */
 function makeFile(name, type, size) {
-	return new File([new Uint8Array(size)], name, { type });
+	return new File([new Uint8Array(size)], name, { type })
 }
 
 describe('media utils', () => {
 	it('validates allowed images', () => {
-		const f1 = makeFile('a.jpg', 'image/jpeg', 1024);
-		const res = validateImages([f1]);
-		expect(res.valid).toBe(true);
-	});
+		const f1 = makeFile('a.jpg', 'image/jpeg', 1024)
+		const res = validateImages([f1])
+		expect(res.valid).toBe(true)
+	})
 	it('includes modern iphone formats', () => {
-		const heic = makeFile('a.heic', 'image/heic', 1024);
-		const heif = makeFile('b.heif', 'image/heif', 2048);
-		const res = validateImages([heic, heif]);
-		expect(res.valid).toBe(true);
-	});
+		const heic = makeFile('a.heic', 'image/heic', 1024)
+		const heif = makeFile('b.heif', 'image/heif', 2048)
+		const res = validateImages([heic, heif])
+		expect(res.valid).toBe(true)
+	})
 	it('rejects invalid mime', () => {
-		const f = makeFile('a.txt', 'text/plain', 100);
-		const res = validateImages([f]);
-		expect(res.valid).toBe(false);
-	});
+		const f = makeFile('a.txt', 'text/plain', 100)
+		const res = validateImages([f])
+		expect(res.valid).toBe(false)
+	})
 	it('rejects oversize', () => {
-		const f = makeFile('big.jpg', 'image/jpeg', 11 * 1024 * 1024);
-		const res = validateImages([f]);
-		expect(res.valid).toBe(false);
-	});
+		const f = makeFile('big.jpg', 'image/jpeg', 11 * 1024 * 1024)
+		const res = validateImages([f])
+		expect(res.valid).toBe(false)
+	})
 	it('enforces count limit', () => {
 		const files = Array.from({ length: MAX_ATTACHMENTS + 1 }, (_, i) =>
 			makeFile(`f${i}.jpg`, 'image/jpeg', 100)
-		);
-		const res = validateImages(files);
-		expect(res.valid).toBe(false);
-	});
+		)
+		const res = validateImages(files)
+		expect(res.valid).toBe(false)
+	})
 	it('sanitizes filename', () => {
-		expect(sanitizeFilename('a b*c?.jpg')).toBe('a_b_c_.jpg');
-	});
+		expect(sanitizeFilename('a b*c?.jpg')).toBe('a_b_c_.jpg')
+	})
 	it('optimizes image buffer', async () => {
 		// create a small red png via data url
 		const pngData = Buffer.from(
 			'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGP4BwQACfsD/Qq9YpEAAAAASUVORK5CYII=',
 			'base64'
-		);
-		const { original, variants } = await optimizeImage(pngData, { widths: [50], quality: 70 });
-		expect(original.length).toBeGreaterThan(0);
+		)
+		const { original, variants } = await optimizeImage(pngData, { widths: [50], quality: 70 })
+		expect(original.length).toBeGreaterThan(0)
 		// variant may be skipped if width larger than source; allow empty or buffer
-		expect(typeof variants).toBe('object');
-	}, 15000);
-});
+		expect(typeof variants).toBe('object')
+	}, 15000)
+})

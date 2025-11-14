@@ -1,12 +1,12 @@
-import { z } from 'zod';
-import { fileLikeSchema } from './helpers.js';
+import { z } from 'zod'
+import { fileLikeSchema } from './helpers.js'
 
 /**
  * @typedef {import('zod').RefinementCtx} RefinementCtx
  */
 
-const MAX_FILE_SIZE = 104857600; // 100MB
-const MAX_TAGS = 10;
+const MAX_FILE_SIZE = 104857600 // 100MB
+const MAX_TAGS = 10
 
 const DOCUMENT_MIME_TYPES = [
 	'application/pdf',
@@ -18,34 +18,34 @@ const DOCUMENT_MIME_TYPES = [
 	'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 	'text/csv',
 	'application/zip'
-];
+]
 
-const VIDEO_MIME_TYPES = ['video/mp4', 'video/webm'];
+const VIDEO_MIME_TYPES = ['video/mp4', 'video/webm']
 
-const ALL_ALLOWED_MIME_TYPES = [...DOCUMENT_MIME_TYPES, ...VIDEO_MIME_TYPES];
+const ALL_ALLOWED_MIME_TYPES = [...DOCUMENT_MIME_TYPES, ...VIDEO_MIME_TYPES]
 
 /**
  * @param {unknown} file
  * @returns {string}
  */
 const getFileMimeType = (file) => {
-	if (!file || typeof file !== 'object') return '';
-	const type = Reflect.get(file, 'type');
-	if (typeof type === 'string' && type.length > 0) return type;
-	const mimeType = Reflect.get(file, 'mimeType');
-	if (typeof mimeType === 'string' && mimeType.length > 0) return mimeType;
-	return '';
-};
+	if (!file || typeof file !== 'object') return ''
+	const type = Reflect.get(file, 'type')
+	if (typeof type === 'string' && type.length > 0) return type
+	const mimeType = Reflect.get(file, 'mimeType')
+	if (typeof mimeType === 'string' && mimeType.length > 0) return mimeType
+	return ''
+}
 
 /**
  * @param {unknown} file
  * @returns {number}
  */
 const getFileSize = (file) => {
-	if (!file || typeof file !== 'object') return 0;
-	const size = Reflect.get(file, 'size');
-	return typeof size === 'number' ? size : 0;
-};
+	if (!file || typeof file !== 'object') return 0
+	const size = Reflect.get(file, 'size')
+	return typeof size === 'number' ? size : 0
+}
 
 /**
  * Simplified schema for creating a new material - just title, description, and file
@@ -58,7 +58,7 @@ export const materialCreateSchema = z.object({
 		.max(500, 'Title cannot exceed 500 characters'),
 	description: z.string().trim().max(5000, 'Description cannot exceed 5000 characters').optional(),
 	file: fileLikeSchema
-});
+})
 
 /**
  * Schema for updating an existing material (simplified)
@@ -69,7 +69,7 @@ export const materialUpdateSchema = z
 		description: z.string().trim().max(5000).optional(),
 		file: fileLikeSchema.optional()
 	})
-	.partial();
+	.partial()
 
 /**
  * Schema for material search parameters
@@ -89,7 +89,7 @@ export const materialSearchSchema = z
 		page: z.coerce.number().int().positive().default(1),
 		perPage: z.coerce.number().int().positive().max(100).default(20)
 	})
-	.default({});
+	.default({})
 
 /**
  * Schema for logging material access
@@ -98,4 +98,4 @@ export const materialAccessLogSchema = z.object({
 	material: z.string({ required_error: 'Material ID is required' }),
 	user: z.string({ required_error: 'User ID is required' }),
 	action: z.enum(['view', 'download'], { required_error: 'Action is required' })
-});
+})

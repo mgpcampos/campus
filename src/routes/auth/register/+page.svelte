@@ -1,52 +1,51 @@
 <script lang="ts">
-	import { superForm } from 'sveltekit-superforms/client';
-	import { registerSchema } from '$lib/utils/validation.js';
-	import { getErrorMessage } from '$lib/utils/errors.js';
-	import { goto } from '$app/navigation';
-	import { createClientFormOptions } from '$lib/validation';
-	import { ariaValidity } from '$lib/actions/ariaValidity';
-	import { t } from '$lib/i18n';
+import { superForm } from 'sveltekit-superforms/client'
+import { goto } from '$app/navigation'
+import { ariaValidity } from '$lib/actions/ariaValidity'
+import { t } from '$lib/i18n'
+import { getErrorMessage } from '$lib/utils/errors.js'
+import { registerSchema } from '$lib/utils/validation.js'
+import { createClientFormOptions } from '$lib/validation'
 
-	let { data } = $props();
-	let generalError = $state('');
-	const errorIds = {
-		name: 'register-name-error',
-		username: 'register-username-error',
-		email: 'register-email-error',
-		password: 'register-password-error',
-		passwordConfirm: 'register-password-confirm-error'
-	};
+let { data } = $props()
+let generalError = $state('')
+const errorIds = {
+	name: 'register-name-error',
+	username: 'register-username-error',
+	email: 'register-email-error',
+	password: 'register-password-error',
+	passwordConfirm: 'register-password-confirm-error'
+}
 
-	const { form, errors, enhance, submitting } = superForm(data.form, {
-		...createClientFormOptions(registerSchema),
-		onSubmit: () => {
-			generalError = '';
-		},
-		onResult: ({ result }) => {
-			if (result.type === 'redirect') {
-				generalError = '';
-				goto(result.location);
-				return;
-			}
-
-			if (result.type === 'success') {
-				generalError = '';
-				goto('/feed');
-				return;
-			}
-
-			if (result.type === 'failure') {
-				const serverMessage =
-					typeof result.data?.error === 'string' ? result.data.error : undefined;
-				generalError = serverMessage ?? '';
-				return;
-			}
-
-			if (result.type === 'error') {
-				generalError = getErrorMessage(result.error);
-			}
+const { form, errors, enhance, submitting } = superForm(data.form, {
+	...createClientFormOptions(registerSchema),
+	onSubmit: () => {
+		generalError = ''
+	},
+	onResult: ({ result }) => {
+		if (result.type === 'redirect') {
+			generalError = ''
+			goto(result.location)
+			return
 		}
-	});
+
+		if (result.type === 'success') {
+			generalError = ''
+			goto('/feed')
+			return
+		}
+
+		if (result.type === 'failure') {
+			const serverMessage = typeof result.data?.error === 'string' ? result.data.error : undefined
+			generalError = serverMessage ?? ''
+			return
+		}
+
+		if (result.type === 'error') {
+			generalError = getErrorMessage(result.error)
+		}
+	}
+})
 </script>
 
 <svelte:head>

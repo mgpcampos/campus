@@ -1,59 +1,59 @@
-import type { Actions, PageServerLoad } from './$types';
-import { error, fail } from '@sveltejs/kit';
-import { superValidate, setError, setMessage } from 'sveltekit-superforms/server';
-import { withZod } from '$lib/validation';
-import { z } from 'zod';
-import { hasConflict, validateEventData } from '$lib/server/events/conflicts';
-import { toUTC, validateTimeRange } from '$lib/utils/timezone';
-import { normalizeError } from '$lib/utils/errors.js';
-import type { EventRecord } from '../../types/events';
+import { error, fail } from '@sveltejs/kit'
+import { setError, setMessage, superValidate } from 'sveltekit-superforms/server'
+import { z } from 'zod'
+import { hasConflict, validateEventData } from '$lib/server/events/conflicts'
+import { normalizeError } from '$lib/utils/errors.js'
+import { toUTC, validateTimeRange } from '$lib/utils/timezone'
+import { withZod } from '$lib/validation'
+import type { EventRecord } from '../../types/events'
+import type { Actions, PageServerLoad } from './$types'
 
 // Event creation schema - simplified to just title, description, and date
 const eventCreateSchema = z.object({
 	title: z.string().min(1, 'Title is required').max(200),
 	description: z.string().optional(),
 	date: z.string().refine((val) => !isNaN(Date.parse(val)), 'Invalid date')
-});
+})
 
-type EventCreateData = z.infer<typeof eventCreateSchema>;
+type EventCreateData = z.infer<typeof eventCreateSchema>
 
 // RSVP schema
 const rsvpSchema = z.object({
 	eventId: z.string().min(1),
 	status: z.enum(['going', 'maybe', 'declined'])
-});
+})
 
-type RSVPData = z.infer<typeof rsvpSchema>;
+type RSVPData = z.infer<typeof rsvpSchema>
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	if (!locals.pb.authStore.isValid) {
-		return error(401, 'Authentication required');
+		return error(401, 'Authentication required')
 	}
 
 	try {
 		// Parse query parameters for filtering
-		const scopeType = url.searchParams.get('scopeType');
-		const scopeId = url.searchParams.get('scopeId');
-		const from = url.searchParams.get('from');
-		const to = url.searchParams.get('to');
+		const scopeType = url.searchParams.get('scopeType')
+		const scopeId = url.searchParams.get('scopeId')
+		const from = url.searchParams.get('from')
+		const to = url.searchParams.get('to')
 
 		// Build filter - only show events created by the current user
-		let filter = `createdBy = "${locals.user!.id}"`;
+		let filter = `createdBy = "${locals.user!.id}"`
 
 		if (scopeType) {
-			filter += ` && scopeType = "${scopeType}"`;
+			filter += ` && scopeType = "${scopeType}"`
 		}
 
 		if (scopeId) {
-			filter += ` && scopeId = "${scopeId}"`;
+			filter += ` && scopeId = "${scopeId}"`
 		}
 
 		if (from) {
-			filter += ` && end >= "${toUTC(from)}"`;
+			filter += ` && end >= "${toUTC(from)}"`
 		}
 
 		if (to) {
-			filter += ` && start <= "${toUTC(to)}"`;
+			filter += ` && start <= "${toUTC(to)}"`
 		}
 
 		// Fetch events
@@ -61,44 +61,44 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			filter,
 			sort: 'start',
 			expand: 'event_participants_via_event,createdBy'
-		});
+		})
 
 		// Initialize forms
-		const createForm = await superValidate(withZod(eventCreateSchema));
-		const rsvpForm = await superValidate(withZod(rsvpSchema));
+		const createForm = await superValidate(withZod(eventCreateSchema))
+		const rsvpForm = await superValidate(withZod(rsvpSchema))
 
 		return {
 			events,
 			createForm,
 			rsvpForm,
 			user: locals.user
-		};
+		}
 	} catch (err) {
-		const normalized = normalizeError(err, { context: 'load calendar' });
-		console.error('Error loading calendar:', normalized);
-		return error(500, normalized.userMessage || 'Failed to load calendar');
+		const normalized = normalizeError(err, { context: 'load calendar' })
+		console.error('Error loading calendar:', normalized)
+		return error(500, normalized.userMessage || 'Failed to load calendar')
 	}
-};
+}
 
 export const actions: Actions = {
 	createEvent: async ({ request, locals }) => {
 		if (!locals.pb.authStore.isValid) {
-			return fail(401, { message: 'Authentication required' });
+			return fail(401, { message: 'Authentication required' })
 		}
 
 		try {
-			const createForm = await superValidate(request, withZod(eventCreateSchema));
+			const createForm = await superValidate(request, withZod(eventCreateSchema))
 
 			if (!createForm.valid) {
-				return fail(400, { createForm });
+				return fail(400, { createForm })
 			}
 
-			const data = createForm.data as EventCreateData;
+			const data = createForm.data as EventCreateData
 
 			// Parse the date and create start/end times
 			// Event starts at the selected date and time, ends 1 hour later
-			const eventDate = new Date(data.date);
-			const endDate = new Date(eventDate.getTime() + 60 * 60 * 1000); // Add 1 hour
+			const eventDate = new Date(data.date)
+			const endDate = new Date(eventDate.getTime() + 60 * 60 * 1000) // Add 1 hour
 
 			// Validate event data with simplified structure
 			validateEventData({
@@ -107,7 +107,7 @@ export const actions: Actions = {
 				end: endDate.toISOString(),
 				scopeType: 'global', // Default to global scope
 				scopeId: undefined
-			});
+			})
 
 			// Create event with default values for removed fields
 			await locals.pb.collection('events').create({
@@ -120,95 +120,95 @@ export const actions: Actions = {
 				location: undefined, // No location
 				reminderLeadMinutes: 30, // Default 30 minute reminder
 				createdBy: locals.user!.id
-			});
+			})
 
-			return { createForm, success: true };
+			return { createForm, success: true }
 		} catch (err) {
-			const normalized = normalizeError(err, { context: 'create event' });
-			console.error('Error creating event:', normalized);
-			const errorForm = await superValidate(request, withZod(eventCreateSchema));
+			const normalized = normalizeError(err, { context: 'create event' })
+			console.error('Error creating event:', normalized)
+			const errorForm = await superValidate(request, withZod(eventCreateSchema))
 			return fail(normalized.status || 500, {
 				createForm: errorForm,
 				message: normalized.userMessage || 'Failed to create event'
-			});
+			})
 		}
 	},
 
 	rsvp: async ({ request, locals }) => {
 		if (!locals.pb.authStore.isValid) {
-			return fail(401, { message: 'Authentication required' });
+			return fail(401, { message: 'Authentication required' })
 		}
 
 		try {
-			const rsvpForm = await superValidate(request, withZod(rsvpSchema));
+			const rsvpForm = await superValidate(request, withZod(rsvpSchema))
 
 			if (!rsvpForm.valid) {
-				return fail(400, { rsvpForm });
+				return fail(400, { rsvpForm })
 			}
 
-			const { eventId, status } = rsvpForm.data as RSVPData;
+			const { eventId, status } = rsvpForm.data as RSVPData
 
 			// Check if participant already exists
 			const existingParticipants = await locals.pb.collection('event_participants').getFullList({
 				filter: `event = "${eventId}" && user = "${locals.user!.id}"`
-			});
+			})
 
 			if (existingParticipants.length > 0) {
 				// Update existing RSVP
 				await locals.pb.collection('event_participants').update(existingParticipants[0].id, {
 					status
-				});
+				})
 			} else {
 				// Create new RSVP
 				await locals.pb.collection('event_participants').create({
 					event: eventId,
 					user: locals.user!.id,
 					status
-				});
+				})
 			}
 
-			return { rsvpForm, success: true };
+			return { rsvpForm, success: true }
 		} catch (err) {
-			const normalized = normalizeError(err, { context: 'rsvp event' });
-			console.error('Error RSVPing to event:', normalized);
-			const errorForm = await superValidate(request, withZod(rsvpSchema));
+			const normalized = normalizeError(err, { context: 'rsvp event' })
+			console.error('Error RSVPing to event:', normalized)
+			const errorForm = await superValidate(request, withZod(rsvpSchema))
 			return fail(normalized.status || 500, {
 				rsvpForm: errorForm,
 				message: normalized.userMessage || 'Failed to RSVP'
-			});
+			})
 		}
 	},
 
 	deleteEvent: async ({ request, locals }) => {
 		if (!locals.pb.authStore.isValid) {
-			return fail(401, { message: 'Authentication required' });
+			return fail(401, { message: 'Authentication required' })
 		}
 
 		try {
-			const formData = await request.formData();
-			const eventId = formData.get('eventId') as string;
+			const formData = await request.formData()
+			const eventId = formData.get('eventId') as string
 
 			if (!eventId) {
-				return fail(400, { message: 'Event ID is required' });
+				return fail(400, { message: 'Event ID is required' })
 			}
 
 			// Fetch event to check ownership
-			const event = await locals.pb.collection('events').getOne(eventId);
+			const event = await locals.pb.collection('events').getOne(eventId)
 
 			if (event.createdBy !== locals.user!.id) {
-				return fail(403, { message: 'You do not have permission to delete this event' });
+				return fail(403, { message: 'You do not have permission to delete this event' })
 			}
 
 			// Delete event
-			await locals.pb.collection('events').delete(eventId);
+			await locals.pb.collection('events').delete(eventId)
 
-			return { success: true };
+			return { success: true }
 		} catch (err) {
-			const normalized = normalizeError(err, { context: 'delete event' });
-			console.error('Error deleting event:', normalized);
+			const normalized = normalizeError(err, { context: 'delete event' })
+			console.error('Error deleting event:', normalized)
 			return fail(normalized.status || 500, {
 				message: normalized.userMessage || 'Failed to delete event'
-			});
+			})
 		}
 	}
-};
+}

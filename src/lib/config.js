@@ -1,27 +1,27 @@
 const publicEnv = (() => {
 	if (typeof import.meta !== 'undefined' && import.meta.env) {
-		return import.meta.env;
+		return import.meta.env
 	}
 	if (typeof process !== 'undefined' && process.env) {
-		return process.env;
+		return process.env
 	}
-	return {};
-})();
+	return {}
+})()
 
 const analyticsSampleRate = (() => {
-	const rawValue = publicEnv.PUBLIC_ANALYTICS_SAMPLE_RATE ?? '1';
-	const parsed = Number.parseFloat(rawValue);
-	if (Number.isNaN(parsed)) return 1;
-	return Math.min(1, Math.max(0, parsed));
-})();
+	const rawValue = publicEnv.PUBLIC_ANALYTICS_SAMPLE_RATE ?? '1'
+	const parsed = Number.parseFloat(rawValue)
+	if (Number.isNaN(parsed)) return 1
+	return Math.min(1, Math.max(0, parsed))
+})()
 
 const inferredPocketBaseUrl = (() => {
-	if (publicEnv.PUBLIC_POCKETBASE_URL) return publicEnv.PUBLIC_POCKETBASE_URL;
+	if (publicEnv.PUBLIC_POCKETBASE_URL) return publicEnv.PUBLIC_POCKETBASE_URL
 	if (typeof window !== 'undefined') {
-		return new URL('/pb', window.location.origin).toString().replace(/\/$/, '');
+		return new URL('/pb', window.location.origin).toString().replace(/\/$/, '')
 	}
-	return 'http://127.0.0.1:8090';
-})();
+	return 'http://127.0.0.1:8090'
+})()
 
 export const config = {
 	// PocketBase configuration
@@ -67,4 +67,4 @@ export const config = {
 	support: {
 		email: publicEnv.PUBLIC_SUPPORT_EMAIL || 'support@example.com'
 	}
-};
+}

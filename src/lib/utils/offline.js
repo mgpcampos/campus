@@ -1,6 +1,6 @@
-import { get } from 'svelte/store';
-import { online } from '../stores/connection.js';
-import { normalizeError, withRetry } from './errors.js';
+import { get } from 'svelte/store'
+import { online } from '../stores/connection.js'
+import { normalizeError, withRetry } from './errors.js'
 
 /**
  * Wrapper for API calls that handles offline scenarios gracefully
@@ -20,37 +20,37 @@ export async function withOfflineSupport(apiCall, options = {}) {
 		offlineMessage = 'This action requires an internet connection',
 		enableRetry = true,
 		context = 'api'
-	} = options;
+	} = options
 
-	const isOnline = get(online);
+	const isOnline = get(online)
 
 	if (!isOnline) {
 		if (fallback) {
 			try {
-				return await fallback();
+				return await fallback()
 			} catch {
-				throw normalizeError(new Error(offlineMessage), { context });
+				throw normalizeError(new Error(offlineMessage), { context })
 			}
 		} else {
-			throw normalizeError(new Error(offlineMessage), { context });
+			throw normalizeError(new Error(offlineMessage), { context })
 		}
 	}
 
-	const wrappedCall = enableRetry ? () => withRetry(apiCall, { context }) : apiCall;
+	const wrappedCall = enableRetry ? () => withRetry(apiCall, { context }) : apiCall
 
 	try {
-		return await wrappedCall();
+		return await wrappedCall()
 	} catch (error) {
 		// If we detect we went offline during the call, try fallback
 		if (!get(online) && fallback) {
 			try {
-				return await fallback();
+				return await fallback()
 			} catch {
 				// Return the original error if fallback also fails
-				throw error;
+				throw error
 			}
 		}
-		throw error;
+		throw error
 	}
 }
 
@@ -60,10 +60,10 @@ export async function withOfflineSupport(apiCall, options = {}) {
 class OfflineQueue {
 	constructor() {
 		/** @type {{ id: string, action: () => Promise<any>, retryCount: number }[]} */
-		this.queue = [];
+		this.queue = []
 		/** @type {Set<string>} */
-		this.processing = new Set();
-		this.isListening = false;
+		this.processing = new Set()
+		this.isListening = false
 	}
 
 	/**
@@ -74,35 +74,35 @@ class OfflineQueue {
 	enqueue(action, id = Math.random().toString(36)) {
 		// Prevent duplicates
 		if (id && this.queue.some((item) => item.id === id)) {
-			return;
+			return
 		}
 
-		this.queue.push({ id, action, retryCount: 0 });
-		this.startListening();
+		this.queue.push({ id, action, retryCount: 0 })
+		this.startListening()
 	}
 
 	/**
 	 * Process queue when connection is restored
 	 */
 	async processQueue() {
-		if (!get(online) || this.queue.length === 0) return;
+		if (!get(online) || this.queue.length === 0) return
 
-		const toProcess = [...this.queue];
-		this.queue = [];
+		const toProcess = [...this.queue]
+		this.queue = []
 
 		for (const item of toProcess) {
-			if (this.processing.has(item.id)) continue;
+			if (this.processing.has(item.id)) continue
 
-			this.processing.add(item.id);
+			this.processing.add(item.id)
 			try {
-				await item.action();
+				await item.action()
 			} catch {
 				// Re-queue if retryable and under retry limit
 				if (item.retryCount < 3) {
-					this.queue.push({ ...item, retryCount: item.retryCount + 1 });
+					this.queue.push({ ...item, retryCount: item.retryCount + 1 })
 				}
 			} finally {
-				this.processing.delete(item.id);
+				this.processing.delete(item.id)
 			}
 		}
 	}
@@ -111,15 +111,15 @@ class OfflineQueue {
 	 * Start listening for connection changes
 	 */
 	startListening() {
-		if (this.isListening) return;
-		this.isListening = true;
+		if (this.isListening) return
+		this.isListening = true
 
 		online.subscribe((isOnline) => {
 			if (isOnline && this.queue.length > 0) {
 				// Small delay to ensure connection is stable
-				setTimeout(() => this.processQueue(), 1000);
+				setTimeout(() => this.processQueue(), 1000)
 			}
-		});
+		})
 	}
 
 	/**
@@ -129,8 +129,8 @@ class OfflineQueue {
 		return {
 			pending: this.queue.length,
 			processing: this.processing.size
-		};
+		}
 	}
 }
 
-export const offlineQueue = new OfflineQueue();
+export const offlineQueue = new OfflineQueue()

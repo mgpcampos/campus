@@ -1,46 +1,46 @@
 <script lang="ts">
-	import { config } from '$lib/config.js';
-	import { t } from '$lib/i18n';
+import { config } from '$lib/config.js'
+import { t } from '$lib/i18n'
 
-	let { data } = $props<{
-		data: {
-			error: Error & { status?: number; message?: string };
-			status?: number;
-		};
-	}>();
-
-	function clampStatus(value: number | undefined, fallback: number): number {
-		const numericValue = typeof value === 'number' && Number.isFinite(value) ? value : fallback;
-		return Math.min(599, Math.max(400, numericValue));
+let { data } = $props<{
+	data: {
+		error: Error & { status?: number; message?: string }
+		status?: number
 	}
+}>()
 
-	function generateErrorId(): string {
-		const timestamp = Date.now().toString(36);
-		const random = Math.random().toString(36).substring(2, 9);
-		return `ERR-${timestamp}-${random}`.toUpperCase();
-	}
+function clampStatus(value: number | undefined, fallback: number): number {
+	const numericValue = typeof value === 'number' && Number.isFinite(value) ? value : fallback
+	return Math.min(599, Math.max(400, numericValue))
+}
 
-	const error = data?.error;
-	const status = clampStatus(data?.status ?? error?.status, 500);
-	const errorId = generateErrorId();
-	const timestamp = new Date().toISOString();
+function generateErrorId(): string {
+	const timestamp = Date.now().toString(36)
+	const random = Math.random().toString(36).substring(2, 9)
+	return `ERR-${timestamp}-${random}`.toUpperCase()
+}
 
-	const isNotFound = status === 404;
-	const title = isNotFound ? t('errors.pageNotFoundTitle') : t('errors.unexpectedErrorTitle');
-	const description = isNotFound
-		? t('errors.pageNotFoundDescription')
-		: t('errors.unexpectedErrorDescription');
+const error = data?.error
+const status = clampStatus(data?.status ?? error?.status, 500)
+const errorId = generateErrorId()
+const timestamp = new Date().toISOString()
 
-	// Log error details for debugging (only on client)
-	if (typeof window !== 'undefined' && !isNotFound) {
-		console.error('Error Details:', {
-			errorId,
-			status,
-			timestamp,
-			message: error?.message,
-			error
-		});
-	}
+const isNotFound = status === 404
+const title = isNotFound ? t('errors.pageNotFoundTitle') : t('errors.unexpectedErrorTitle')
+const description = isNotFound
+	? t('errors.pageNotFoundDescription')
+	: t('errors.unexpectedErrorDescription')
+
+// Log error details for debugging (only on client)
+if (typeof window !== 'undefined' && !isNotFound) {
+	console.error('Error Details:', {
+		errorId,
+		status,
+		timestamp,
+		message: error?.message,
+		error
+	})
+}
 </script>
 
 <svelte:head>

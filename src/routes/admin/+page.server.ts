@@ -1,18 +1,18 @@
-import { requireAdmin } from '$lib/auth.js';
-import { getAnalyticsSummary, getRecentAnalyticsEvents } from '$lib/services/analytics.server';
-import type { PageServerLoad } from './$types';
+import { requireAdmin } from '$lib/auth.js'
+import { getAnalyticsSummary, getRecentAnalyticsEvents } from '$lib/services/analytics.server'
+import type { PageServerLoad } from './$types'
 
 async function countRecords(pb: App.Locals['pb'], collection: string, filter?: string) {
 	const list = await pb.collection(collection).getList(1, 1, {
 		filter,
 		fields: 'id',
 		sort: '-created'
-	});
-	return list.totalItems;
+	})
+	return list.totalItems
 }
 
 export const load: PageServerLoad = async ({ locals }) => {
-	const admin = requireAdmin(locals);
+	const admin = requireAdmin(locals)
 
 	const [analytics, recentEvents, spacesTotal, groupsTotal, usersTotal, openReports, reports] =
 		await Promise.all([
@@ -27,12 +27,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 				expand: 'reporter',
 				sort: '-created'
 			})
-		]);
+		])
 
 	const recentModeration = await locals.pb.collection('moderation_logs').getList(1, 6, {
 		expand: 'actor',
 		sort: '-created'
-	});
+	})
 
 	return {
 		admin,
@@ -46,5 +46,5 @@ export const load: PageServerLoad = async ({ locals }) => {
 		},
 		recentReports: reports.items,
 		recentModeration: recentModeration.items
-	};
-};
+	}
+}

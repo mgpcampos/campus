@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod'
 
 /**
  * @typedef {{ name?: string; size?: number; arrayBuffer?: () => Promise<ArrayBuffer> | ArrayBuffer; type?: string }} MaybeFile
@@ -7,7 +7,7 @@ import { z } from 'zod';
 const FileCtor =
 	typeof globalThis !== 'undefined' && typeof globalThis.File !== 'undefined'
 		? globalThis.File
-		: undefined;
+		: undefined
 
 /**
  * @param {unknown} value
@@ -15,27 +15,27 @@ const FileCtor =
  */
 const isFileLike = (value) => {
 	if (!value || typeof value !== 'object') {
-		return false;
+		return false
 	}
 
 	if (FileCtor && value instanceof FileCtor) {
-		return true;
+		return true
 	}
 
-	const name = Reflect.get(value, 'name');
-	const size = Reflect.get(value, 'size');
-	const arrayBuffer = Reflect.get(value, 'arrayBuffer');
+	const name = Reflect.get(value, 'name')
+	const size = Reflect.get(value, 'size')
+	const arrayBuffer = Reflect.get(value, 'arrayBuffer')
 
-	return typeof name === 'string' && typeof size === 'number' && typeof arrayBuffer === 'function';
-};
+	return typeof name === 'string' && typeof size === 'number' && typeof arrayBuffer === 'function'
+}
 
 export const fileLikeSchema = z.custom((value) => isFileLike(value), {
 	message: 'Invalid file upload'
-});
+})
 
 /**
  * @param {number} maxFiles
  * @param {string} message
  */
 export const fileArraySchema = (maxFiles, message) =>
-	z.array(fileLikeSchema).max(maxFiles, message).default([]);
+	z.array(fileLikeSchema).max(maxFiles, message).default([])

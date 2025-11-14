@@ -1,28 +1,28 @@
 <script lang="ts">
-	import { ChevronRight, Home } from '@lucide/svelte';
+import { ChevronRight, Home } from '@lucide/svelte'
 
-	interface BreadcrumbItem {
-		label: string;
-		href?: string;
-		icon?: any;
-		current?: boolean;
-	}
+interface BreadcrumbItem {
+	label: string
+	href?: string
+	icon?: any
+	current?: boolean
+}
 
-	let {
-		items = [],
-		separator = ChevronRight,
-		showHome = true,
-		homeHref = '/',
-		class: className = ''
-	}: {
-		items: BreadcrumbItem[];
-		separator?: any;
-		showHome?: boolean;
-		homeHref?: string;
-		class?: string;
-	} = $props();
+let {
+	items = [],
+	separator = ChevronRight,
+	showHome = true,
+	homeHref = '/',
+	class: className = ''
+}: {
+	items: BreadcrumbItem[]
+	separator?: any
+	showHome?: boolean
+	homeHref?: string
+	class?: string
+} = $props()
 
-	const allItems = showHome ? [{ label: 'Home', href: homeHref, icon: Home }, ...items] : items;
+const allItems = showHome ? [{ label: 'Home', href: homeHref, icon: Home }, ...items] : items
 </script>
 
 <nav aria-label="Breadcrumb" class="flex {className}">

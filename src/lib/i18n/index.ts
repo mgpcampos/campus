@@ -4,14 +4,14 @@
  */
 
 export {
-	type Locale,
 	availableLanguages,
-	getCurrentLocale,
-	initLocale,
-	setLocale,
-	t,
-	getLanguageName,
 	createTranslator,
+	DEFAULT_LOCALE,
+	getCurrentLocale,
+	getLanguageName,
+	initLocale,
+	type Locale,
 	normalizeLocale,
-	DEFAULT_LOCALE
-} from './locale.svelte.js';
+	setLocale,
+	t
+} from './locale.svelte.js'

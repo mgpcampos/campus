@@ -1,4 +1,4 @@
-import sanitizeHtml from 'sanitize-html';
+import sanitizeHtml from 'sanitize-html'
 
 // Define a conservative allowlist: basic formatting only
 const allowedTags = [
@@ -17,13 +17,13 @@ const allowedTags = [
 	'code',
 	'pre',
 	'span'
-];
+]
 
 const allowedAttributes = {
 	span: ['class']
-};
+}
 
-const whitespaceSensitiveTags = new Set(['pre', 'code']);
+const whitespaceSensitiveTags = new Set(['pre', 'code'])
 
 /**
  * @typedef {import('sanitize-html').IOptions & {
@@ -39,24 +39,24 @@ const whitespaceSensitiveTags = new Set(['pre', 'code']);
  * @returns {string}
  */
 export function sanitizeContent(input = '') {
-	if (typeof input !== 'string') return '';
-	const trimmed = input.trim();
-	if (!trimmed) return '';
-	let preserveWhitespaceDepth = 0;
+	if (typeof input !== 'string') return ''
+	const trimmed = input.trim()
+	if (!trimmed) return ''
+	let preserveWhitespaceDepth = 0
 
 	/** @param {string} tagName */
 	const handleOpenTag = (tagName) => {
 		if (whitespaceSensitiveTags.has(tagName)) {
-			preserveWhitespaceDepth += 1;
+			preserveWhitespaceDepth += 1
 		}
-	};
+	}
 
 	/** @param {string} tagName */
 	const handleCloseTag = (tagName) => {
 		if (whitespaceSensitiveTags.has(tagName) && preserveWhitespaceDepth > 0) {
-			preserveWhitespaceDepth -= 1;
+			preserveWhitespaceDepth -= 1
 		}
-	};
+	}
 
 	/**
 	 * @param {string} text
@@ -64,10 +64,10 @@ export function sanitizeContent(input = '') {
 	 */
 	const normalizeText = (text, tagName) => {
 		if (preserveWhitespaceDepth > 0 || (tagName && whitespaceSensitiveTags.has(tagName))) {
-			return text;
+			return text
 		}
-		return text.replace(/\s+/g, ' ');
-	};
+		return text.replace(/\s+/g, ' ')
+	}
 
 	/** @type {SanitizeOptions} */
 	const options = {
@@ -77,10 +77,10 @@ export function sanitizeContent(input = '') {
 		onOpenTag: handleOpenTag,
 		onCloseTag: handleCloseTag,
 		textFilter: normalizeText
-	};
+	}
 
-	const cleaned = sanitizeHtml(trimmed, options);
-	return cleaned;
+	const cleaned = sanitizeHtml(trimmed, options)
+	return cleaned
 }
 
 /**
@@ -88,5 +88,5 @@ export function sanitizeContent(input = '') {
  * @param {string} input
  */
 export function sanitizePlainText(input = '') {
-	return sanitizeHtml(input || '', { allowedTags: [], allowedAttributes: {} });
+	return sanitizeHtml(input || '', { allowedTags: [], allowedAttributes: {} })
 }

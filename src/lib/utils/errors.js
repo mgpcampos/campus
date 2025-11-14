@@ -5,24 +5,24 @@
  */
 export function getErrorMessage(error) {
 	if (error?.response?.data) {
-		const data = error.response.data;
+		const data = error.response.data
 
 		// Handle validation errors
 		if (data.data) {
-			const fieldErrors = Object.values(data.data).flat();
+			const fieldErrors = Object.values(data.data).flat()
 			if (fieldErrors.length > 0) {
-				return fieldErrors[0].message || fieldErrors[0];
+				return fieldErrors[0].message || fieldErrors[0]
 			}
 		}
 
 		// Handle general errors
 		if (data.message) {
-			return data.message;
+			return data.message
 		}
 	}
 
 	// Fallback to error message or generic message
-	return error?.message || 'An unexpected error occurred';
+	return error?.message || 'An unexpected error occurred'
 }
 
 /**
@@ -31,7 +31,7 @@ export function getErrorMessage(error) {
  * @returns {boolean} - True if it's an auth error
  */
 export function isAuthError(error) {
-	return error?.status === 401 || error?.response?.status === 401;
+	return error?.status === 401 || error?.response?.status === 401
 }
 
 /**
@@ -48,68 +48,68 @@ export function isAuthError(error) {
  * }}
  */
 export function classifyError(error) {
-	const status = error?.status || error?.response?.status;
-	const offline = typeof navigator !== 'undefined' && !navigator.onLine;
-	let type = 'UNKNOWN';
-	let code = 'unknown_error';
-	let retryable = false;
+	const status = error?.status || error?.response?.status
+	const offline = typeof navigator !== 'undefined' && !navigator.onLine
+	let type = 'UNKNOWN'
+	let code = 'unknown_error'
+	let retryable = false
 
 	// Validation (PocketBase format or Zod)
 	if (error?.response?.data?.data || error?.name === 'ZodError') {
-		type = 'VALIDATION';
-		code = 'validation_error';
-		retryable = false;
+		type = 'VALIDATION'
+		code = 'validation_error'
+		retryable = false
 	}
 	// Auth
 	else if (status === 401) {
-		type = 'AUTH';
-		code = 'auth_required';
-		retryable = false;
+		type = 'AUTH'
+		code = 'auth_required'
+		retryable = false
 	}
 	// Permission
 	else if (status === 403) {
-		type = 'PERMISSION';
-		code = 'forbidden';
-		retryable = false;
+		type = 'PERMISSION'
+		code = 'forbidden'
+		retryable = false
 	}
 	// Not Found
 	else if (status === 404) {
-		type = 'NOT_FOUND';
-		code = 'resource_not_found';
-		retryable = false;
+		type = 'NOT_FOUND'
+		code = 'resource_not_found'
+		retryable = false
 	}
 	// Conflict
 	else if (status === 409) {
-		type = 'CONFLICT';
-		code = 'conflict';
-		retryable = false;
+		type = 'CONFLICT'
+		code = 'conflict'
+		retryable = false
 	}
 	// Rate limit
 	else if (status === 429) {
-		type = 'RATE_LIMIT';
-		code = 'rate_limited';
-		retryable = true;
+		type = 'RATE_LIMIT'
+		code = 'rate_limited'
+		retryable = true
 	}
 	// Offline
 	else if (offline) {
-		type = 'OFFLINE';
-		code = 'offline';
-		retryable = true;
+		type = 'OFFLINE'
+		code = 'offline'
+		retryable = true
 	}
 	// Network
 	else if (error?.message?.toLowerCase?.().includes('network')) {
-		type = 'NETWORK';
-		code = 'network_error';
-		retryable = true;
+		type = 'NETWORK'
+		code = 'network_error'
+		retryable = true
 	}
 	// Server
 	else if (status >= 500 && status <= 599) {
-		type = 'SERVER';
-		code = 'server_error';
-		retryable = true;
+		type = 'SERVER'
+		code = 'server_error'
+		retryable = true
 	}
 
-	const rawMessage = getErrorMessage(error);
+	const rawMessage = getErrorMessage(error)
 
 	/** @type {Record<string,string>} */
 	const userMessageMap = {
@@ -122,11 +122,11 @@ export function classifyError(error) {
 		offline: 'You appear to be offline. Check your connection.',
 		network_error: 'Network issue. Please retry.',
 		server_error: 'A server error occurred. Try again shortly.'
-	};
+	}
 
-	const userMessage = Object.prototype.hasOwnProperty.call(userMessageMap, code)
+	const userMessage = Object.hasOwn(userMessageMap, code)
 		? userMessageMap[code]
-		: 'Something went wrong.';
+		: 'Something went wrong.'
 	return {
 		type,
 		code,
@@ -135,7 +135,7 @@ export function classifyError(error) {
 		userMessage,
 		devMessage: rawMessage,
 		cause: error
-	};
+	}
 }
 
 /**
@@ -144,10 +144,10 @@ export function classifyError(error) {
  */
 export function logError(meta) {
 	try {
-		if (!meta) return;
-		const code = meta.code || 'unknown';
-		const msg = meta.devMessage || meta.message || 'No message';
-		console.error('[ERROR]', code, msg, { meta });
+		if (!meta) return
+		const code = meta.code || 'unknown'
+		const msg = meta.devMessage || meta.message || 'No message'
+		console.error('[ERROR]', code, msg, { meta })
 	} catch {
 		/* noop: logging transport unavailable */
 	}
@@ -159,13 +159,13 @@ export function logError(meta) {
  * @param {{ context?: string }} [options]
  */
 export function normalizeError(error, options = {}) {
-	if (error?.__normalized) return error;
-	const classification = classifyError(error);
+	if (error?.__normalized) return error
+	const classification = classifyError(error)
 
 	// Preserve Error prototype so test frameworks (toThrow) that rely on instanceof
 	// and access to stack/message methods still work.
 	if (error instanceof Error) {
-		const e = error;
+		const e = error
 		// Attach normalized metadata directly on the original Error object
 		Object.assign(e, {
 			__normalized: true,
@@ -177,9 +177,9 @@ export function normalizeError(error, options = {}) {
 			devMessage: classification.devMessage,
 			context: options.context,
 			message: classification.devMessage // ensure message string present
-		});
-		logError(e);
-		return e;
+		})
+		logError(e)
+		return e
 	}
 
 	// Fallback to plain object when original isn't an Error instance
@@ -189,11 +189,11 @@ export function normalizeError(error, options = {}) {
 		context: options.context,
 		message: classification.devMessage,
 		toString() {
-			return `[${classification.code}] ${classification.devMessage}`;
+			return `[${classification.code}] ${classification.devMessage}`
 		}
-	};
-	logError(o);
-	return o;
+	}
+	logError(o)
+	return o
 }
 
 /**
@@ -203,9 +203,9 @@ export function normalizeError(error, options = {}) {
  * @returns {string}
  */
 export function getUserMessage(error) {
-	if (!error) return 'Something went wrong.';
-	if (error.userMessage) return error.userMessage;
-	return classifyError(error).userMessage;
+	if (!error) return 'Something went wrong.'
+	if (error.userMessage) return error.userMessage
+	return classifyError(error).userMessage
 }
 
 /**
@@ -215,13 +215,13 @@ export function getUserMessage(error) {
  * @returns {{ code: string; message: string; retryable: boolean; status?: number }}
  */
 export function toErrorPayload(error, options = {}) {
-	const n = normalizeError(error, options);
+	const n = normalizeError(error, options)
 	return {
 		code: n.code,
 		message: n.userMessage,
 		retryable: n.retryable,
 		status: n.status
-	};
+	}
 }
 
 /**
@@ -231,17 +231,17 @@ export function toErrorPayload(error, options = {}) {
  * @param {{ context?: string; showDev?: boolean; description?: string }} [options]
  */
 export async function notifyError(error, options = {}) {
-	if (typeof window === 'undefined') return;
+	if (typeof window === 'undefined') return
 	try {
-		const mod = await import('svelte-sonner');
-		const toastFn = mod.toast;
-		const n = normalizeError(error, { context: options.context });
-		logError(n);
-		const description = options.description || (options.showDev ? n.devMessage : undefined);
-		toastFn.error(n.userMessage, { description });
-		return n;
+		const mod = await import('svelte-sonner')
+		const toastFn = mod.toast
+		const n = normalizeError(error, { context: options.context })
+		logError(n)
+		const description = options.description || (options.showDev ? n.devMessage : undefined)
+		toastFn.error(n.userMessage, { description })
+		return n
 	} catch {
-		return; // toast system not available
+		return // toast system not available
 	}
 }
 
@@ -253,23 +253,23 @@ export async function notifyError(error, options = {}) {
  * @returns {Promise<T>}
  */
 export async function withRetry(fn, options = {}) {
-	const { attempts = 3, baseDelay = 250, factor = 2, context, onAttempt } = options;
-	let lastError;
+	const { attempts = 3, baseDelay = 250, factor = 2, context, onAttempt } = options
+	let lastError
 	for (let i = 0; i < attempts; i++) {
 		try {
-			return await fn();
+			return await fn()
 		} catch (e) {
-			const n = normalizeError(e, { context });
-			lastError = n;
+			const n = normalizeError(e, { context })
+			lastError = n
 			if (!n.retryable || i === attempts - 1) {
-				throw n;
+				throw n
 			}
-			onAttempt?.(n, i + 1);
-			const delay = baseDelay * Math.pow(factor, i);
-			await new Promise((r) => setTimeout(r, delay));
+			onAttempt?.(n, i + 1)
+			const delay = baseDelay * Math.pow(factor, i)
+			await new Promise((r) => setTimeout(r, delay))
 		}
 	}
-	throw lastError;
+	throw lastError
 }
 
 /**
@@ -281,10 +281,10 @@ export async function withRetry(fn, options = {}) {
  */
 export async function withErrorToast(fn, options = {}) {
 	try {
-		return await fn();
+		return await fn()
 	} catch (e) {
-		const n = await notifyError(e, { context: options.context });
-		options.onError?.(n);
-		if (options.rethrow) throw n;
+		const n = await notifyError(e, { context: options.context })
+		options.onError?.(n)
+		if (options.rethrow) throw n
 	}
 }

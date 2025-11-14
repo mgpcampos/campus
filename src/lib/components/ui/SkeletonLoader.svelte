@@ -1,19 +1,19 @@
 <script lang="ts">
-	let {
-		variant = 'default',
-		class: className = '',
-		count = 1,
-		height = 'auto',
-		width = 'auto'
-	}: {
-		variant?: 'default' | 'card' | 'post' | 'profile' | 'list';
-		class?: string;
-		count?: number;
-		height?: string;
-		width?: string;
-	} = $props();
+let {
+	variant = 'default',
+	class: className = '',
+	count = 1,
+	height = 'auto',
+	width = 'auto'
+}: {
+	variant?: 'default' | 'card' | 'post' | 'profile' | 'list'
+	class?: string
+	count?: number
+	height?: string
+	width?: string
+} = $props()
 
-	const baseClasses = 'animate-pulse bg-muted rounded';
+const baseClasses = 'animate-pulse bg-muted rounded'
 </script>
 
 {#if variant === 'card'}

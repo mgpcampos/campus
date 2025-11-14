@@ -1,56 +1,56 @@
 <svelte:options runes />
 
 <script lang="ts">
-	import { currentUser } from '$lib/pocketbase.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import {
-		MessageSquare,
-		Users,
-		User,
-		Plus,
-		Shield,
-		BookOpen,
-		Calendar,
-		UserCircle,
-		ChevronLeft,
-		ChevronRight,
-		CalendarDays
-	} from '@lucide/svelte';
-	import { page } from '$app/stores';
-	import { t } from '$lib/i18n/index.js';
+import {
+	BookOpen,
+	Calendar,
+	CalendarDays,
+	ChevronLeft,
+	ChevronRight,
+	MessageSquare,
+	Plus,
+	Shield,
+	User,
+	UserCircle,
+	Users
+} from '@lucide/svelte'
+import { page } from '$app/stores'
+import { Button } from '$lib/components/ui/button/index.js'
+import { t } from '$lib/i18n/index.js'
+import { currentUser } from '$lib/pocketbase.js'
 
-	let { class: className = '' } = $props();
-	let expanded = $state(true);
+let { class: className = '' } = $props()
+let expanded = $state(true)
 
-	// Navigation items - using derived getter to make them reactive to locale changes
-	const getNavigationItems = () => [
-		{ href: '/feed', label: t('sidebar.feed'), icon: MessageSquare, requiresAuth: false },
-		{ href: '/spaces', label: t('sidebar.spaces'), icon: Users, requiresAuth: true },
-		{ href: '/events', label: t('sidebar.events'), icon: CalendarDays, requiresAuth: true },
-		{ href: '/calendar', label: t('sidebar.calendar'), icon: Calendar, requiresAuth: true },
-		{ href: '/materials', label: t('sidebar.materials'), icon: BookOpen, requiresAuth: true },
-		{ href: '/profiles', label: t('sidebar.profiles'), icon: UserCircle, requiresAuth: true },
-		{ href: '/profile', label: t('sidebar.profile'), icon: User, requiresAuth: true }
-	];
+// Navigation items - using derived getter to make them reactive to locale changes
+const getNavigationItems = () => [
+	{ href: '/feed', label: t('sidebar.feed'), icon: MessageSquare, requiresAuth: false },
+	{ href: '/spaces', label: t('sidebar.spaces'), icon: Users, requiresAuth: true },
+	{ href: '/events', label: t('sidebar.events'), icon: CalendarDays, requiresAuth: true },
+	{ href: '/calendar', label: t('sidebar.calendar'), icon: Calendar, requiresAuth: true },
+	{ href: '/materials', label: t('sidebar.materials'), icon: BookOpen, requiresAuth: true },
+	{ href: '/profiles', label: t('sidebar.profiles'), icon: UserCircle, requiresAuth: true },
+	{ href: '/profile', label: t('sidebar.profile'), icon: User, requiresAuth: true }
+]
 
-	const getAdminNavItems = () => [
-		{ href: '/admin', label: t('sidebar.adminDashboard'), icon: Shield, requiresAuth: true },
-		{ href: '/admin/moderation', label: t('sidebar.moderation'), icon: Shield, requiresAuth: true }
-	];
+const getAdminNavItems = () => [
+	{ href: '/admin', label: t('sidebar.adminDashboard'), icon: Shield, requiresAuth: true },
+	{ href: '/admin/moderation', label: t('sidebar.moderation'), icon: Shield, requiresAuth: true }
+]
 
-	function isActive(href: string): boolean {
-		if (href === '/') {
-			return $page.url.pathname === '/';
-		}
-		return (
-			$page.url.pathname === href ||
-			$page.url.pathname.startsWith(href.endsWith('/') ? href : `${href}/`)
-		);
+function isActive(href: string): boolean {
+	if (href === '/') {
+		return $page.url.pathname === '/'
 	}
+	return (
+		$page.url.pathname === href ||
+		$page.url.pathname.startsWith(href.endsWith('/') ? href : `${href}/`)
+	)
+}
 
-	function toggleSidebar() {
-		expanded = !expanded;
-	}
+function toggleSidebar() {
+	expanded = !expanded
+}
 </script>
 
 {#if $currentUser}

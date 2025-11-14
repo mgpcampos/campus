@@ -1,7 +1,7 @@
 // Test mock for $lib/pocketbase.js to avoid real network and env dependency
-import { writable } from 'svelte/store';
+import { writable } from 'svelte/store'
 
-export const currentUser = writable(/** @type {import('pocketbase').RecordModel | null} */ (null));
+export const currentUser = writable(/** @type {import('pocketbase').RecordModel | null} */ (null))
 
 const authStore = {
 	/** @type {string | null} */
@@ -15,31 +15,31 @@ const authStore = {
 	 * @param {import('pocketbase').RecordModel | null | undefined} model
 	 */
 	save(token, model) {
-		const nextToken = token ?? null;
-		const nextModel = model ?? null;
-		this.token = nextToken;
-		this.model = nextModel;
-		currentUser.set(nextModel);
-		this.listener?.(nextToken, nextModel);
+		const nextToken = token ?? null
+		const nextModel = model ?? null
+		this.token = nextToken
+		this.model = nextModel
+		currentUser.set(nextModel)
+		this.listener?.(nextToken, nextModel)
 	},
 	clear() {
-		this.token = null;
-		this.model = null;
-		currentUser.set(null);
-		this.listener?.(null, null);
+		this.token = null
+		this.model = null
+		currentUser.set(null)
+		this.listener?.(null, null)
 	},
 	/**
 	 * @param {(token: string | null, model: import('pocketbase').RecordModel | null) => void} callback
 	 */
 	onChange(callback) {
-		this.listener = callback;
+		this.listener = callback
 		return () => {
 			if (this.listener === callback) {
-				this.listener = null;
+				this.listener = null
 			}
-		};
+		}
 	}
-};
+}
 
 export const pb = {
 	authStore,
@@ -51,7 +51,7 @@ export const pb = {
 		create: async () => ({}),
 		getFirstListItem: async () => ({ id: 'u-mention' })
 	})
-};
+}
 
 /**
  * @param {string | null | undefined} token
@@ -59,8 +59,8 @@ export const pb = {
  */
 export function hydrateClientAuth(token, model) {
 	if (token && model) {
-		authStore.save(token, model);
+		authStore.save(token, model)
 	} else {
-		authStore.clear();
+		authStore.clear()
 	}
 }

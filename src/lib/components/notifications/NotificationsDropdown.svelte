@@ -1,21 +1,21 @@
 <script lang="ts">
-	import {
-		notifications,
-		unreadCount,
-		describeNotification,
-		markAllRead,
-		markRead,
-		subscribeNotifications
-	} from '$lib/services/notificationClient';
-	import { onMount } from 'svelte';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { Bell } from '@lucide/svelte';
-	import { t } from '$lib/i18n';
+import { Bell } from '@lucide/svelte'
+import { onMount } from 'svelte'
+import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
+import { t } from '$lib/i18n'
+import {
+	describeNotification,
+	markAllRead,
+	markRead,
+	notifications,
+	subscribeNotifications,
+	unreadCount
+} from '$lib/services/notificationClient'
 
-	let open = $state(false);
-	onMount(() => {
-		subscribeNotifications();
-	});
+let open = $state(false)
+onMount(() => {
+	subscribeNotifications()
+})
 </script>
 
 <DropdownMenu.Root bind:open>

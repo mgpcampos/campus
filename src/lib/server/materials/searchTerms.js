@@ -13,7 +13,7 @@ function normalizeText(text) {
 		.toLowerCase()
 		.trim()
 		.replace(/[^\w\s-]/g, ' ') // Replace punctuation with spaces
-		.replace(/\s+/g, ' '); // Collapse multiple spaces
+		.replace(/\s+/g, ' ') // Collapse multiple spaces
 }
 
 /**
@@ -23,9 +23,9 @@ function normalizeText(text) {
  * @returns {string[]}
  */
 function extractKeywords(text, minLength = 3) {
-	const normalized = normalizeText(text);
-	const words = normalized.split(' ').filter((word) => word.length >= minLength);
-	return [...new Set(words)]; // Remove duplicates
+	const normalized = normalizeText(text)
+	const words = normalized.split(' ').filter((word) => word.length >= minLength)
+	return [...new Set(words)] // Remove duplicates
 }
 
 /**
@@ -39,37 +39,37 @@ function extractKeywords(text, minLength = 3) {
  * @returns {string} - Space-separated search terms
  */
 export function aggregateMaterialSearchTerms(material) {
-	const terms = [];
+	const terms = []
 
 	// Extract from title (highest priority)
 	if (material.title) {
-		terms.push(...extractKeywords(material.title, 2));
+		terms.push(...extractKeywords(material.title, 2))
 	}
 
 	// Extract from description
 	if (material.description) {
-		terms.push(...extractKeywords(material.description, 3));
+		terms.push(...extractKeywords(material.description, 3))
 	}
 
 	// Add course code segments
 	if (material.courseCode) {
-		terms.push(normalizeText(material.courseCode));
+		terms.push(normalizeText(material.courseCode))
 	}
 
 	// Add tags
 	if (Array.isArray(material.tags)) {
 		material.tags.forEach((tag) => {
-			terms.push(normalizeText(tag));
-		});
+			terms.push(normalizeText(tag))
+		})
 	}
 
 	// Add format as a searchable term
 	if (material.format) {
-		terms.push(material.format.toLowerCase());
+		terms.push(material.format.toLowerCase())
 	}
 
 	// Remove duplicates and join
-	return [...new Set(terms)].join(' ');
+	return [...new Set(terms)].join(' ')
 }
 
 /**
@@ -81,21 +81,21 @@ export function aggregateMaterialSearchTerms(material) {
  * @returns {string} - Extracted keywords for manual indexing
  */
 export function extractMaterialKeywords(material) {
-	const keywords = [];
+	const keywords = []
 
 	if (material.title) {
-		keywords.push(...extractKeywords(material.title, 2));
+		keywords.push(...extractKeywords(material.title, 2))
 	}
 
 	if (Array.isArray(material.tags)) {
 		material.tags.forEach((/** @type {string} */ tag) => {
-			keywords.push(normalizeText(tag));
-		});
+			keywords.push(normalizeText(tag))
+		})
 	}
 
 	if (material.courseCode) {
-		keywords.push(normalizeText(material.courseCode));
+		keywords.push(normalizeText(material.courseCode))
 	}
 
-	return [...new Set(keywords)].slice(0, 50).join(' '); // Limit to 50 keywords
+	return [...new Set(keywords)].slice(0, 50).join(' ') // Limit to 50 keywords
 }

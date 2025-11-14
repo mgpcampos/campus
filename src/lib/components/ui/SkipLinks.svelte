@@ -1,20 +1,20 @@
 <script lang="ts">
-	interface SkipLink {
-		href: string;
-		label: string;
-	}
+interface SkipLink {
+	href: string
+	label: string
+}
 
-	let {
-		links = [
-			{ href: '#main-content', label: 'Skip to main content' },
-			{ href: '#navigation', label: 'Skip to navigation' },
-			{ href: '#footer', label: 'Skip to footer' }
-		],
-		class: className = ''
-	}: {
-		links?: SkipLink[];
-		class?: string;
-	} = $props();
+let {
+	links = [
+		{ href: '#main-content', label: 'Skip to main content' },
+		{ href: '#navigation', label: 'Skip to navigation' },
+		{ href: '#footer', label: 'Skip to footer' }
+	],
+	class: className = ''
+}: {
+	links?: SkipLink[]
+	class?: string
+} = $props()
 </script>
 
 <div class="sr-only focus-within:not-sr-only {className}">

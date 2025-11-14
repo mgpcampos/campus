@@ -1,46 +1,46 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button/index.js';
-	import * as Card from '$lib/components/ui/card/index.js';
-	import { AlertTriangle, RefreshCw } from '@lucide/svelte';
-	import { normalizeError } from '$lib/utils/errors.js';
-	import LiveRegion from './LiveRegion.svelte';
+import { AlertTriangle, RefreshCw } from '@lucide/svelte'
+import { Button } from '$lib/components/ui/button/index.js'
+import * as Card from '$lib/components/ui/card/index.js'
+import { normalizeError } from '$lib/utils/errors.js'
+import LiveRegion from './LiveRegion.svelte'
 
-	const props = $props<{
-		error?: any | null;
-		retry?: () => void;
-		class?: string;
-		showDetails?: boolean;
-	}>();
+const props = $props<{
+	error?: any | null
+	retry?: () => void
+	class?: string
+	showDetails?: boolean
+}>()
 
-	const defaultRetry = () => window.location.reload();
+const defaultRetry = () => window.location.reload()
 
-	const normalized = $derived.by(() => {
-		const value = props.error;
-		if (!value) return null;
-		return value?.__normalized ? value : normalizeError(value);
-	});
+const normalized = $derived.by(() => {
+	const value = props.error
+	if (!value) return null
+	return value?.__normalized ? value : normalizeError(value)
+})
 
-	const announcedMessage = $derived.by(() => {
-		if (!props.error) return '';
-		return normalized?.userMessage || 'Something went wrong.';
-	});
+const announcedMessage = $derived.by(() => {
+	if (!props.error) return ''
+	return normalized?.userMessage || 'Something went wrong.'
+})
 
-	let detailsVisible = $state(props.showDetails ?? false);
+let detailsVisible = $state(props.showDetails ?? false)
 
-	$effect(() => {
-		if (props.showDetails !== undefined) {
-			detailsVisible = props.showDetails;
-		}
-	});
-
-	function revealDetails() {
-		detailsVisible = true;
+$effect(() => {
+	if (props.showDetails !== undefined) {
+		detailsVisible = props.showDetails
 	}
+})
 
-	function handleRetry() {
-		const retry = props.retry ?? defaultRetry;
-		retry();
-	}
+function revealDetails() {
+	detailsVisible = true
+}
+
+function handleRetry() {
+	const retry = props.retry ?? defaultRetry
+	retry()
+}
 </script>
 
 {#if props.error}

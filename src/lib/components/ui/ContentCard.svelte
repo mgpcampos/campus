@@ -1,38 +1,38 @@
 <script lang="ts">
-	import * as Card from '$lib/components/ui/card/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import LoadingSpinner from './LoadingSpinner.svelte';
+import { Button } from '$lib/components/ui/button/index.js'
+import * as Card from '$lib/components/ui/card/index.js'
+import LoadingSpinner from './LoadingSpinner.svelte'
 
-	let {
-		title = '',
-		description = '',
-		children,
-		actions = [],
-		loading = false,
-		error = null,
-		class: className = '',
-		variant = 'default'
-	}: {
-		title?: string;
-		description?: string;
-		children?: any;
-		actions?: Array<{
-			label: string;
-			onClick: () => void;
-			variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
-			disabled?: boolean;
-		}>;
-		loading?: boolean;
-		error?: string | null;
-		class?: string;
-		variant?: 'default' | 'elevated' | 'outlined';
-	} = $props();
+let {
+	title = '',
+	description = '',
+	children,
+	actions = [],
+	loading = false,
+	error = null,
+	class: className = '',
+	variant = 'default'
+}: {
+	title?: string
+	description?: string
+	children?: any
+	actions?: Array<{
+		label: string
+		onClick: () => void
+		variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link'
+		disabled?: boolean
+	}>
+	loading?: boolean
+	error?: string | null
+	class?: string
+	variant?: 'default' | 'elevated' | 'outlined'
+} = $props()
 
-	const variantClasses = {
-		default: '',
-		elevated: 'shadow-lg',
-		outlined: 'border-2'
-	};
+const variantClasses = {
+	default: '',
+	elevated: 'shadow-lg',
+	outlined: 'border-2'
+}
 </script>
 
 <Card.Root class="{variantClasses[variant]} {className}">

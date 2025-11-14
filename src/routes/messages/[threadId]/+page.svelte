@@ -1,119 +1,119 @@
 <script lang="ts">
-	import type { PageData } from './$types';
-	import { page } from '$app/state';
-	import { goto } from '$app/navigation';
-	import { currentUser } from '$lib/pocketbase';
-	import { t } from '$lib/i18n';
-	import MessageTimeline from '$lib/components/messaging/MessageTimeline.svelte';
-	import MessageComposer from '$lib/components/messaging/MessageComposer.svelte';
-	import FlagDialog from '$lib/components/messaging/FlagDialog.svelte';
-	import * as Card from '$lib/components/ui/card/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { ArrowLeft, Lock, Users, User, AlertCircle } from '@lucide/svelte';
-	import { toast } from 'svelte-sonner';
-	import type { MessageWithDetails } from '$types/messaging';
+import { AlertCircle, ArrowLeft, Lock, User, Users } from '@lucide/svelte'
+import { toast } from 'svelte-sonner'
+import { goto } from '$app/navigation'
+import { page } from '$app/state'
+import FlagDialog from '$lib/components/messaging/FlagDialog.svelte'
+import MessageComposer from '$lib/components/messaging/MessageComposer.svelte'
+import MessageTimeline from '$lib/components/messaging/MessageTimeline.svelte'
+import { Badge } from '$lib/components/ui/badge/index.js'
+import { Button } from '$lib/components/ui/button/index.js'
+import * as Card from '$lib/components/ui/card/index.js'
+import { t } from '$lib/i18n'
+import { currentUser } from '$lib/pocketbase'
+import type { MessageWithDetails } from '$types/messaging'
+import type { PageData } from './$types'
 
-	let { data }: { data: PageData } = $props();
+let { data }: { data: PageData } = $props()
 
-	let messages = $state<MessageWithDetails[]>(data.messages);
-	let flagDialogOpen = $state(false);
-	let selectedMessageId = $state<string | null>(null);
-	let messageTimelineElement = $state<HTMLDivElement | null>(null);
+let messages = $state<MessageWithDetails[]>(data.messages)
+let flagDialogOpen = $state(false)
+let selectedMessageId = $state<string | null>(null)
+let messageTimelineElement = $state<HTMLDivElement | null>(null)
 
-	// Set up realtime updates
-	$effect(() => {
-		if (!data.thread) return;
+// Set up realtime updates
+$effect(() => {
+	if (!data.thread) return
 
-		// Poll for new messages every 5 seconds
-		// In a production app, you'd use WebSockets or SSE
-		const interval = setInterval(async () => {
-			try {
-				const response = await fetch(`/api/threads/${data.thread!.id}/messages?page=1&perPage=100`);
-				if (response.ok) {
-					const newData = await response.json();
-					messages = newData.items;
+	// Poll for new messages every 5 seconds
+	// In a production app, you'd use WebSockets or SSE
+	const interval = setInterval(async () => {
+		try {
+			const response = await fetch(`/api/threads/${data.thread!.id}/messages?page=1&perPage=100`)
+			if (response.ok) {
+				const newData = await response.json()
+				messages = newData.items
 
-					// Scroll to bottom if user is near the bottom
-					if (messageTimelineElement) {
-						const { scrollTop, scrollHeight, clientHeight } = messageTimelineElement;
-						const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+				// Scroll to bottom if user is near the bottom
+				if (messageTimelineElement) {
+					const { scrollTop, scrollHeight, clientHeight } = messageTimelineElement
+					const isNearBottom = scrollHeight - scrollTop - clientHeight < 100
 
-						if (isNearBottom) {
-							setTimeout(() => {
-								messageTimelineElement?.scrollTo({ top: scrollHeight, behavior: 'smooth' });
-							}, 100);
-						}
+					if (isNearBottom) {
+						setTimeout(() => {
+							messageTimelineElement?.scrollTo({ top: scrollHeight, behavior: 'smooth' })
+						}, 100)
 					}
 				}
-			} catch (error) {
-				console.error('Failed to refresh messages:', error);
-			}
-		}, 5000);
-
-		return () => clearInterval(interval);
-	});
-
-	// Scroll to bottom on initial load
-	$effect(() => {
-		if (messageTimelineElement && messages.length > 0) {
-			setTimeout(() => {
-				messageTimelineElement?.scrollTo({
-					top: messageTimelineElement.scrollHeight,
-					behavior: 'auto'
-				});
-			}, 100);
-		}
-	});
-
-	function handleFlagMessage(messageId: string) {
-		selectedMessageId = messageId;
-		flagDialogOpen = true;
-	}
-
-	async function handleMessageSent() {
-		// Refresh messages
-		try {
-			const response = await fetch(`/api/threads/${data.thread!.id}/messages?page=1&perPage=100`);
-			if (response.ok) {
-				const newData = await response.json();
-				messages = newData.items;
-
-				// Scroll to bottom
-				setTimeout(() => {
-					if (messageTimelineElement) {
-						messageTimelineElement.scrollTo({
-							top: messageTimelineElement.scrollHeight,
-							behavior: 'smooth'
-						});
-					}
-				}, 100);
 			}
 		} catch (error) {
-			console.error('Failed to refresh messages:', error);
+			console.error('Failed to refresh messages:', error)
 		}
+	}, 5000)
+
+	return () => clearInterval(interval)
+})
+
+// Scroll to bottom on initial load
+$effect(() => {
+	if (messageTimelineElement && messages.length > 0) {
+		setTimeout(() => {
+			messageTimelineElement?.scrollTo({
+				top: messageTimelineElement.scrollHeight,
+				behavior: 'auto'
+			})
+		}, 100)
 	}
+})
 
-	function handleFlagSubmitted() {
-		// Refresh messages to show updated status
-		handleMessageSent();
-	}
+function handleFlagMessage(messageId: string) {
+	selectedMessageId = messageId
+	flagDialogOpen = true
+}
 
-	function getThreadTitle(): string {
-		if (!data.thread || !$currentUser) return 'Unknown';
+async function handleMessageSent() {
+	// Refresh messages
+	try {
+		const response = await fetch(`/api/threads/${data.thread!.id}/messages?page=1&perPage=100`)
+		if (response.ok) {
+			const newData = await response.json()
+			messages = newData.items
 
-		if (data.thread.type === 'group' && data.thread.name) {
-			return data.thread.name;
+			// Scroll to bottom
+			setTimeout(() => {
+				if (messageTimelineElement) {
+					messageTimelineElement.scrollTo({
+						top: messageTimelineElement.scrollHeight,
+						behavior: 'smooth'
+					})
+				}
+			}, 100)
 		}
+	} catch (error) {
+		console.error('Failed to refresh messages:', error)
+	}
+}
 
-		// For direct messages, show the other participant's name
-		const otherMember = data.thread.expand?.members?.find(
-			(m: { id: string; name?: string; email?: string }) => m.id !== $currentUser.id
-		);
-		return otherMember?.name || 'Unknown User';
+function handleFlagSubmitted() {
+	// Refresh messages to show updated status
+	handleMessageSent()
+}
+
+function getThreadTitle(): string {
+	if (!data.thread || !$currentUser) return 'Unknown'
+
+	if (data.thread.type === 'group' && data.thread.name) {
+		return data.thread.name
 	}
 
-	const isLocked = $derived(data.thread?.moderationStatus === 'locked');
+	// For direct messages, show the other participant's name
+	const otherMember = data.thread.expand?.members?.find(
+		(m: { id: string; name?: string; email?: string }) => m.id !== $currentUser.id
+	)
+	return otherMember?.name || 'Unknown User'
+}
+
+const isLocked = $derived(data.thread?.moderationStatus === 'locked')
 </script>
 
 <svelte:head>

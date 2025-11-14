@@ -1,181 +1,181 @@
 <script lang="ts">
-	import '../app.css';
-	import { currentUser, hydrateClientAuth } from '$lib/pocketbase.js';
-	import { config } from '$lib/config.js';
-	import { onMount } from 'svelte';
-	import { SvelteURL } from 'svelte/reactivity';
-	import { page } from '$app/stores';
-	import { dev } from '$app/environment';
-	import Header from '$lib/components/layout/Header.svelte';
-	import Sidebar from '$lib/components/layout/Sidebar.svelte';
-	import SkipLinks from '$lib/components/ui/SkipLinks.svelte';
-	import LiveRegion from '$lib/components/ui/LiveRegion.svelte';
-	import ConnectionStatus from '$lib/components/ui/ConnectionStatus.svelte';
-	import { Toaster } from '$lib/components/ui/sonner/index.js';
-	import { online, initConnectionListeners } from '$lib/stores/connection';
-	import { initAnalytics } from '$lib/services/analytics';
-	import { ModeWatcher, setMode } from 'mode-watcher';
-	import { initLocale, setLocale } from '$lib/i18n/index.js';
+import '../app.css'
+import { ModeWatcher, setMode } from 'mode-watcher'
+import { onMount } from 'svelte'
+import { SvelteURL } from 'svelte/reactivity'
+import { dev } from '$app/environment'
+import { page } from '$app/stores'
+import Header from '$lib/components/layout/Header.svelte'
+import Sidebar from '$lib/components/layout/Sidebar.svelte'
+import ConnectionStatus from '$lib/components/ui/ConnectionStatus.svelte'
+import LiveRegion from '$lib/components/ui/LiveRegion.svelte'
+import SkipLinks from '$lib/components/ui/SkipLinks.svelte'
+import { Toaster } from '$lib/components/ui/sonner/index.js'
+import { config } from '$lib/config.js'
+import { initLocale, setLocale } from '$lib/i18n/index.js'
+import { currentUser, hydrateClientAuth } from '$lib/pocketbase.js'
+import { initAnalytics } from '$lib/services/analytics'
+import { initConnectionListeners, online } from '$lib/stores/connection'
 
-	let { children, data } = $props();
+let { children, data } = $props()
 
-	const themeColor = '#0f172a';
+const themeColor = '#0f172a'
 
-	const siteOrigin = dev ? undefined : config.app.origin;
+const siteOrigin = dev ? undefined : config.app.origin
 
-	const defaultMeta = {
-		title: 'Campus | Academic Collaboration Hub',
-		description:
-			'Campus unites research updates, shared resources, and academic event planning in a single collaborative workspace.',
-		ogTitle: 'Campus | Academic Collaboration Hub',
-		ogDescription:
-			'Collaborate across labs, courses, and cohorts with Campus: share updates, resources, and events in one place.',
-		ogType: 'website',
-		ogImage: '/og-default.png',
-		ogUrl: siteOrigin ?? 'http://localhost:4173/',
-		twitterCard: 'summary_large_image',
-		twitterTitle: 'Campus | Academic Collaboration Hub',
+const defaultMeta = {
+	title: 'Campus | Academic Collaboration Hub',
+	description:
+		'Campus unites research updates, shared resources, and academic event planning in a single collaborative workspace.',
+	ogTitle: 'Campus | Academic Collaboration Hub',
+	ogDescription:
+		'Collaborate across labs, courses, and cohorts with Campus: share updates, resources, and events in one place.',
+	ogType: 'website',
+	ogImage: '/og-default.png',
+	ogUrl: siteOrigin ?? 'http://localhost:4173/',
+	twitterCard: 'summary_large_image',
+	twitterTitle: 'Campus | Academic Collaboration Hub',
+	twitterDescription:
+		'Join Campus to publish research updates, manage course materials, and coordinate events with your academic community.',
+	twitterImage: '/og-default.png'
+}
+
+const profiledMeta = $derived.by(() => {
+	const dataMeta = $page.data?.meta ?? {}
+
+	const mergeImage = (value?: string) => {
+		if (!value) return defaultMeta.ogImage
+		return value.startsWith('http')
+			? value
+			: `${siteOrigin ?? ''}${value.startsWith('/') ? value : `/${value}`}`
+	}
+
+	const ogImage = mergeImage(dataMeta.ogImage)
+	const twitterImage = mergeImage(dataMeta.twitterImage ?? dataMeta.ogImage)
+
+	return {
+		...defaultMeta,
+		...dataMeta,
+		title: dataMeta.title ?? defaultMeta.title,
+		description: dataMeta.description ?? defaultMeta.description,
+		ogTitle: dataMeta.ogTitle ?? dataMeta.title ?? defaultMeta.ogTitle,
+		ogDescription: dataMeta.ogDescription ?? dataMeta.description ?? defaultMeta.ogDescription,
+		ogType: dataMeta.ogType ?? defaultMeta.ogType,
+		ogImage,
+		ogUrl: dataMeta.ogUrl ?? defaultMeta.ogUrl,
+		twitterCard: dataMeta.twitterCard ?? defaultMeta.twitterCard,
+		twitterTitle: dataMeta.twitterTitle ?? dataMeta.title ?? defaultMeta.twitterTitle,
 		twitterDescription:
-			'Join Campus to publish research updates, manage course materials, and coordinate events with your academic community.',
-		twitterImage: '/og-default.png'
-	};
+			dataMeta.twitterDescription ?? dataMeta.description ?? defaultMeta.twitterDescription,
+		twitterImage
+	}
+})
 
-	const profiledMeta = $derived.by(() => {
-		const dataMeta = $page.data?.meta ?? {};
+const canonicalHref = $derived.by(() => {
+	const { url } = $page
 
-		const mergeImage = (value?: string) => {
-			if (!value) return defaultMeta.ogImage;
-			return value.startsWith('http')
-				? value
-				: `${siteOrigin ?? ''}${value.startsWith('/') ? value : `/${value}`}`;
-		};
-
-		const ogImage = mergeImage(dataMeta.ogImage);
-		const twitterImage = mergeImage(dataMeta.twitterImage ?? dataMeta.ogImage);
-
-		return {
-			...defaultMeta,
-			...dataMeta,
-			title: dataMeta.title ?? defaultMeta.title,
-			description: dataMeta.description ?? defaultMeta.description,
-			ogTitle: dataMeta.ogTitle ?? dataMeta.title ?? defaultMeta.ogTitle,
-			ogDescription: dataMeta.ogDescription ?? dataMeta.description ?? defaultMeta.ogDescription,
-			ogType: dataMeta.ogType ?? defaultMeta.ogType,
-			ogImage,
-			ogUrl: dataMeta.ogUrl ?? defaultMeta.ogUrl,
-			twitterCard: dataMeta.twitterCard ?? defaultMeta.twitterCard,
-			twitterTitle: dataMeta.twitterTitle ?? dataMeta.title ?? defaultMeta.twitterTitle,
-			twitterDescription:
-				dataMeta.twitterDescription ?? dataMeta.description ?? defaultMeta.twitterDescription,
-			twitterImage
-		};
-	});
-
-	const canonicalHref = $derived.by(() => {
-		const { url } = $page;
-
-		if (!siteOrigin) {
-			return dev ? '' : (url?.href ?? '');
-		}
-
-		try {
-			const canonical = new SvelteURL(url.pathname, siteOrigin);
-			canonical.search = '';
-			canonical.hash = '';
-			return canonical.toString();
-		} catch (error) {
-			console.error('Failed to compute canonical URL', error);
-			return '';
-		}
-	});
-
-	function syncAuthState() {
-		currentUser.set(data.user);
-		hydrateClientAuth(data.sessionToken, data.user);
+	if (!siteOrigin) {
+		return dev ? '' : (url?.href ?? '')
 	}
 
-	// Reflect server-provided user data immediately for SSR and CSR hydration
-	syncAuthState();
+	try {
+		const canonical = new SvelteURL(url.pathname, siteOrigin)
+		canonical.search = ''
+		canonical.hash = ''
+		return canonical.toString()
+	} catch (error) {
+		console.error('Failed to compute canonical URL', error)
+		return ''
+	}
+})
 
-	// Keep currentUser aligned with layout data on prop changes
-	$effect(() => {
-		syncAuthState();
-	});
+function syncAuthState() {
+	currentUser.set(data.user)
+	hydrateClientAuth(data.sessionToken, data.user)
+}
 
-	function focusHashTarget(hash: string) {
-		if (typeof document === 'undefined' || !hash) return;
+// Reflect server-provided user data immediately for SSR and CSR hydration
+syncAuthState()
 
-		const id = hash.startsWith('#') ? hash.slice(1) : hash;
-		if (!id) return;
+// Keep currentUser aligned with layout data on prop changes
+$effect(() => {
+	syncAuthState()
+})
 
-		const target = document.getElementById(id);
-		if (!target || !(target instanceof HTMLElement)) return;
+function focusHashTarget(hash: string) {
+	if (typeof document === 'undefined' || !hash) return
 
-		const hasExplicitTabIndex = target.hasAttribute('tabindex');
-		if (!hasExplicitTabIndex) {
-			target.setAttribute('tabindex', '-1');
-		}
+	const id = hash.startsWith('#') ? hash.slice(1) : hash
+	if (!id) return
 
-		target.focus({ preventScroll: true });
-		target.scrollIntoView({ block: 'start' });
+	const target = document.getElementById(id)
+	if (!target || !(target instanceof HTMLElement)) return
 
-		if (!hasExplicitTabIndex) {
-			const removeTabIndex = () => {
-				target.removeAttribute('tabindex');
-			};
-			target.addEventListener('blur', removeTabIndex, { once: true });
-		}
+	const hasExplicitTabIndex = target.hasAttribute('tabindex')
+	if (!hasExplicitTabIndex) {
+		target.setAttribute('tabindex', '-1')
 	}
 
-	// Initialize PocketBase auth state on mount
-	onMount(() => {
-		// Initialize i18n locale from storage/user preference
-		const locale = initLocale();
+	target.focus({ preventScroll: true })
+	target.scrollIntoView({ block: 'start' })
 
-		// If user has a saved locale preference, apply it
-		const user = data.user;
-		if (user?.locale && user.locale !== locale) {
-			setLocale(user.locale);
+	if (!hasExplicitTabIndex) {
+		const removeTabIndex = () => {
+			target.removeAttribute('tabindex')
 		}
+		target.addEventListener('blur', removeTabIndex, { once: true })
+	}
+}
 
-		if (typeof user?.prefersDarkMode === 'boolean') {
-			setMode(user.prefersDarkMode ? 'dark' : 'light');
-		}
+// Initialize PocketBase auth state on mount
+onMount(() => {
+	// Initialize i18n locale from storage/user preference
+	const locale = initLocale()
 
-		// Initialize online/offline listeners
-		const disposeConnection = initConnectionListeners();
-		const teardownAnalytics = initAnalytics();
+	// If user has a saved locale preference, apply it
+	const user = data.user
+	if (user?.locale && user.locale !== locale) {
+		setLocale(user.locale)
+	}
 
-		const handleHashChange = () => {
-			focusHashTarget(window.location.hash);
-		};
+	if (typeof user?.prefersDarkMode === 'boolean') {
+		setMode(user.prefersDarkMode ? 'dark' : 'light')
+	}
 
-		const handleSkipLinkActivation = (event: Event) => {
-			const target = event.target;
-			if (!(target instanceof HTMLElement)) return;
+	// Initialize online/offline listeners
+	const disposeConnection = initConnectionListeners()
+	const teardownAnalytics = initAnalytics()
 
-			const anchor = target.closest('a[data-skip-link]');
-			if (!(anchor instanceof HTMLAnchorElement)) return;
+	const handleHashChange = () => {
+		focusHashTarget(window.location.hash)
+	}
 
-			const href = anchor.getAttribute('href');
-			if (!href || !href.startsWith('#')) return;
+	const handleSkipLinkActivation = (event: Event) => {
+		const target = event.target
+		if (!(target instanceof HTMLElement)) return
 
-			requestAnimationFrame(() => focusHashTarget(href));
-		};
+		const anchor = target.closest('a[data-skip-link]')
+		if (!(anchor instanceof HTMLAnchorElement)) return
 
-		window.addEventListener('hashchange', handleHashChange);
-		document.addEventListener('click', handleSkipLinkActivation, true);
+		const href = anchor.getAttribute('href')
+		if (!href || !href.startsWith('#')) return
 
-		// If the page loads with a hash, ensure focus is applied
-		focusHashTarget(window.location.hash);
+		requestAnimationFrame(() => focusHashTarget(href))
+	}
 
-		return () => {
-			disposeConnection?.();
-			teardownAnalytics?.();
-			window.removeEventListener('hashchange', handleHashChange);
-			document.removeEventListener('click', handleSkipLinkActivation, true);
-		};
-	});
+	window.addEventListener('hashchange', handleHashChange)
+	document.addEventListener('click', handleSkipLinkActivation, true)
+
+	// If the page loads with a hash, ensure focus is applied
+	focusHashTarget(window.location.hash)
+
+	return () => {
+		disposeConnection?.()
+		teardownAnalytics?.()
+		window.removeEventListener('hashchange', handleHashChange)
+		document.removeEventListener('click', handleSkipLinkActivation, true)
+	}
+})
 </script>
 
 <svelte:head>

@@ -1,51 +1,51 @@
 <script lang="ts">
-	import { getContext, onMount } from 'svelte';
-	import { cn, type WithoutChildrenOrChild, type WithElementRef } from '$lib/utils.js';
-	import type { Snippet } from 'svelte';
-	import type { SvelteHTMLElements } from 'svelte/elements';
+import type { Snippet } from 'svelte'
+import { getContext, onMount } from 'svelte'
+import type { SvelteHTMLElements } from 'svelte/elements'
+import { cn, type WithElementRef, type WithoutChildrenOrChild } from '$lib/utils.js'
 
-	type ButtonContext = {
-		disabled?: boolean;
-	};
+type ButtonContext = {
+	disabled?: boolean
+}
 
-	const BUTTON_CONTEXT = 'bits-ui:Button';
+const BUTTON_CONTEXT = 'bits-ui:Button'
 
-	type SwitchProps = WithElementRef<
-		WithoutChildrenOrChild<SvelteHTMLElements['button']>,
-		HTMLButtonElement
-	> & {
-		children?: Snippet;
-		disabled?: boolean;
-		checked?: boolean;
-	};
+type SwitchProps = WithElementRef<
+	WithoutChildrenOrChild<SvelteHTMLElements['button']>,
+	HTMLButtonElement
+> & {
+	children?: Snippet
+	disabled?: boolean
+	checked?: boolean
+}
 
-	type $$Events = {
-		click: MouseEvent;
-		keydown: KeyboardEvent;
-	};
+type $$Events = {
+	click: MouseEvent
+	keydown: KeyboardEvent
+}
 
-	let {
-		ref = $bindable<HTMLButtonElement | null>(null),
-		class: className,
-		children,
-		disabled = false,
-		checked = $bindable(false),
-		type = 'button',
-		role = 'switch',
-		...restProps
-	}: SwitchProps = $props();
+let {
+	ref = $bindable<HTMLButtonElement | null>(null),
+	class: className,
+	children,
+	disabled = false,
+	checked = $bindable(false),
+	type = 'button',
+	role = 'switch',
+	...restProps
+}: SwitchProps = $props()
 
-	let buttonContext: ButtonContext | undefined;
+let buttonContext: ButtonContext | undefined
 
-	onMount(() => {
-		try {
-			buttonContext = getContext<ButtonContext>(BUTTON_CONTEXT);
-		} catch {
-			buttonContext = undefined;
-		}
-	});
+onMount(() => {
+	try {
+		buttonContext = getContext<ButtonContext>(BUTTON_CONTEXT)
+	} catch {
+		buttonContext = undefined
+	}
+})
 
-	let isDisabled = $derived(disabled || buttonContext?.disabled);
+let isDisabled = $derived(disabled || buttonContext?.disabled)
 </script>
 
 <button

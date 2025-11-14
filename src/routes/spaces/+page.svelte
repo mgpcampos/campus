@@ -1,63 +1,63 @@
 <svelte:options runes />
 
 <script lang="ts">
-	import type { PageData } from './$types';
-	import { t } from '$lib/i18n';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import * as Card from '$lib/components/ui/card/index.js';
-	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Plus, Search, Users } from 'lucide-svelte';
+import { Plus, Search, Users } from 'lucide-svelte'
+import { Badge } from '$lib/components/ui/badge/index.js'
+import { Button } from '$lib/components/ui/button/index.js'
+import * as Card from '$lib/components/ui/card/index.js'
+import { Input } from '$lib/components/ui/input/index.js'
+import { t } from '$lib/i18n'
+import type { PageData } from './$types'
 
-	type SpaceListItem = {
-		id: string;
-		slug?: string;
-		name?: string;
-		description?: string;
-		memberCount?: number | null;
-		memberCountHidden?: boolean;
-		avatar?: string;
-	};
+type SpaceListItem = {
+	id: string
+	slug?: string
+	name?: string
+	description?: string
+	memberCount?: number | null
+	memberCountHidden?: boolean
+	avatar?: string
+}
 
-	let { data }: { data: PageData } = $props();
-	const numberFormatter = new Intl.NumberFormat();
-	const spaces = $derived.by<SpaceListItem[]>(() => {
-		const items = data.spaces?.items ?? [];
-		return items as SpaceListItem[];
-	});
-	const search = $derived.by(() => (data.search ?? '').toString());
-	const normalizedSearch = $derived.by(() => search.trim().toLowerCase());
-	const filteredSpaces = $derived.by((): SpaceListItem[] => {
-		const items = spaces;
-		const query = normalizedSearch;
-		if (!query) {
-			return items;
-		}
-		return items.filter((space) => {
-			const haystack =
-				`${space.name ?? ''} ${space.slug ?? ''} ${space.description ?? ''}`.toLowerCase();
-			return haystack.includes(query);
-		});
-	});
-	const hasNoResults = $derived.by(() => filteredSpaces.length === 0);
-	const pageTitle = $derived.by(() =>
-		normalizedSearch ? t('spaces.pageTitleWithSearch', { query: search }) : t('spaces.pageTitle')
-	);
-
-	function formatMemberCount(space: SpaceListItem) {
-		if (space.memberCountHidden) return t('spaces.hidden');
-		if (typeof space.memberCount === 'number') {
-			return numberFormatter.format(space.memberCount);
-		}
-		return '0';
+let { data }: { data: PageData } = $props()
+const numberFormatter = new Intl.NumberFormat()
+const spaces = $derived.by<SpaceListItem[]>(() => {
+	const items = data.spaces?.items ?? []
+	return items as SpaceListItem[]
+})
+const search = $derived.by(() => (data.search ?? '').toString())
+const normalizedSearch = $derived.by(() => search.trim().toLowerCase())
+const filteredSpaces = $derived.by((): SpaceListItem[] => {
+	const items = spaces
+	const query = normalizedSearch
+	if (!query) {
+		return items
 	}
+	return items.filter((space) => {
+		const haystack =
+			`${space.name ?? ''} ${space.slug ?? ''} ${space.description ?? ''}`.toLowerCase()
+		return haystack.includes(query)
+	})
+})
+const hasNoResults = $derived.by(() => filteredSpaces.length === 0)
+const pageTitle = $derived.by(() =>
+	normalizedSearch ? t('spaces.pageTitleWithSearch', { query: search }) : t('spaces.pageTitle')
+)
 
-	function getAvatarUrl(space: SpaceListItem) {
-		if (space.avatar) {
-			return `/api/files/spaces/${space.id}/${space.avatar}`;
-		}
-		return null;
+function formatMemberCount(space: SpaceListItem) {
+	if (space.memberCountHidden) return t('spaces.hidden')
+	if (typeof space.memberCount === 'number') {
+		return numberFormatter.format(space.memberCount)
 	}
+	return '0'
+}
+
+function getAvatarUrl(space: SpaceListItem) {
+	if (space.avatar) {
+		return `/api/files/spaces/${space.id}/${space.avatar}`
+	}
+	return null
+}
 </script>
 
 <svelte:head>

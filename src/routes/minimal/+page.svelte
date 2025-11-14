@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { t } from '$lib/i18n';
+import { t } from '$lib/i18n'
 </script>
 
 <h1 style="color: red; font-size: 2rem; margin: 2rem;">{t('test.minimalTitle')}</h1>

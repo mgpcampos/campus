@@ -4,12 +4,12 @@
 
 import type {
 	ProfileRecord,
-	PublicationRecord,
 	PublicationCreateInput,
-	PublicationDedupeResult
-} from '../../../types/profiles.js';
+	PublicationDedupeResult,
+	PublicationRecord
+} from '../../../types/profiles.js'
 
-export type { ProfileRecord, PublicationRecord, PublicationCreateInput };
+export type { ProfileRecord, PublicationRecord, PublicationCreateInput }
 
 /**
  * Generate a slug hash for a publication to enable deduplication
@@ -23,20 +23,20 @@ export function generatePublicationSlugHash(title: string, year?: number): strin
 		.toLowerCase()
 		.replace(/[^\w\s]/g, '')
 		.replace(/\s+/g, ' ')
-		.trim();
+		.trim()
 
 	// Include year if provided for additional uniqueness
-	const slug = year ? `${normalized}-${year}` : normalized;
+	const slug = year ? `${normalized}-${year}` : normalized
 
 	// Generate a simple hash (for production, use a proper hash function like crypto.subtle.digest)
-	let hash = 0;
+	let hash = 0
 	for (let i = 0; i < slug.length; i++) {
-		const char = slug.charCodeAt(i);
-		hash = (hash << 5) - hash + char;
-		hash = hash & hash; // Convert to 32-bit integer
+		const char = slug.charCodeAt(i)
+		hash = (hash << 5) - hash + char
+		hash = hash & hash // Convert to 32-bit integer
 	}
 
-	return Math.abs(hash).toString(36);
+	return Math.abs(hash).toString(36)
 }
 
 /**
@@ -55,46 +55,46 @@ export async function checkPublicationExists(
 			try {
 				const existing = await pb
 					.collection('publication_records')
-					.getFirstListItem(`doi = "${input.doi}"`);
+					.getFirstListItem(`doi = "${input.doi}"`)
 				if (existing) {
 					return {
 						exists: true,
 						publicationId: existing.id,
 						matchType: 'doi'
-					};
+					}
 				}
 			} catch (err: any) {
 				// 404 means no match, continue to slug check
 				if (err?.status !== 404) {
-					throw err;
+					throw err
 				}
 			}
 		}
 
 		// Check slug hash
-		const slugHash = generatePublicationSlugHash(input.title, input.year);
+		const slugHash = generatePublicationSlugHash(input.title, input.year)
 		try {
 			const existing = await pb
 				.collection('publication_records')
-				.getFirstListItem(`slugHash = "${slugHash}"`);
+				.getFirstListItem(`slugHash = "${slugHash}"`)
 			if (existing) {
 				return {
 					exists: true,
 					publicationId: existing.id,
 					matchType: 'slugHash'
-				};
+				}
 			}
 		} catch (err: any) {
 			// 404 means no match
 			if (err?.status !== 404) {
-				throw err;
+				throw err
 			}
 		}
 
-		return { exists: false };
+		return { exists: false }
 	} catch (error) {
-		console.error('Error checking publication existence:', error);
-		throw error;
+		console.error('Error checking publication existence:', error)
+		throw error
 	}
 }
 
@@ -109,15 +109,15 @@ export async function createPublicationRecord(
 	input: PublicationCreateInput
 ): Promise<PublicationRecord> {
 	// Check for existing publication
-	const dedupeResult = await checkPublicationExists(pb, input);
+	const dedupeResult = await checkPublicationExists(pb, input)
 
 	if (dedupeResult.exists && dedupeResult.publicationId) {
 		// Return existing publication
-		return await pb.collection('publication_records').getOne(dedupeResult.publicationId);
+		return await pb.collection('publication_records').getOne(dedupeResult.publicationId)
 	}
 
 	// Create new publication
-	const slugHash = generatePublicationSlugHash(input.title, input.year);
+	const slugHash = generatePublicationSlugHash(input.title, input.year)
 	const publicationData = {
 		title: input.title,
 		doi: input.doi || null,
@@ -127,9 +127,9 @@ export async function createPublicationRecord(
 		venue: input.venue || null,
 		authors: input.authors || [],
 		material: input.materialId || null
-	};
+	}
 
-	return await pb.collection('publication_records').create(publicationData);
+	return await pb.collection('publication_records').create(publicationData)
 }
 
 /**
@@ -150,9 +150,9 @@ export async function linkPublicationToProfile(
 		// Check if link already exists
 		const existing = await pb
 			.collection('profile_publications')
-			.getFirstListItem(`profile = "${profileId}" && publication = "${publicationId}"`);
+			.getFirstListItem(`profile = "${profileId}" && publication = "${publicationId}"`)
 
-		return existing;
+		return existing
 	} catch (err: any) {
 		// 404 means no link exists, create it
 		if (err?.status === 404) {
@@ -160,9 +160,9 @@ export async function linkPublicationToProfile(
 				profile: profileId,
 				publication: publicationId,
 				contributionRole
-			});
+			})
 		}
-		throw err;
+		throw err
 	}
 }
 
@@ -177,11 +177,11 @@ export async function getProfilePublications(pb: any, profileId: string): Promis
 		filter: `profile = "${profileId}"`,
 		expand: 'publication,publication.material',
 		sort: '-publication.year'
-	});
+	})
 
 	return links.map((link: any) => ({
 		...link.expand?.publication,
 		contributionRole: link.contributionRole,
 		linkId: link.id
-	}));
+	}))
 }

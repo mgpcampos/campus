@@ -1,117 +1,117 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { trapFocus, FocusManager } from '$lib/utils/accessibility.js';
-	import KeyboardNavigation from './KeyboardNavigation.svelte';
+import { onMount } from 'svelte'
+import { FocusManager, trapFocus } from '$lib/utils/accessibility.js'
+import KeyboardNavigation from './KeyboardNavigation.svelte'
 
-	let {
-		open = false,
-		trigger,
-		children,
-		onOpenChange = (open: boolean) => {},
-		class: className = '',
-		placement = 'bottom-start',
-		closeOnSelect = true,
-		closeOnEscape = true,
-		closeOnOutsideClick = true
-	}: {
-		open?: boolean;
-		trigger?: any;
-		children?: any;
-		onOpenChange?: (open: boolean) => void;
-		class?: string;
-		placement?:
-			| 'top'
-			| 'bottom'
-			| 'left'
-			| 'right'
-			| 'top-start'
-			| 'top-end'
-			| 'bottom-start'
-			| 'bottom-end';
-		closeOnSelect?: boolean;
-		closeOnEscape?: boolean;
-		closeOnOutsideClick?: boolean;
-	} = $props();
+let {
+	open = false,
+	trigger,
+	children,
+	onOpenChange = (open: boolean) => {},
+	class: className = '',
+	placement = 'bottom-start',
+	closeOnSelect = true,
+	closeOnEscape = true,
+	closeOnOutsideClick = true
+}: {
+	open?: boolean
+	trigger?: any
+	children?: any
+	onOpenChange?: (open: boolean) => void
+	class?: string
+	placement?:
+		| 'top'
+		| 'bottom'
+		| 'left'
+		| 'right'
+		| 'top-start'
+		| 'top-end'
+		| 'bottom-start'
+		| 'bottom-end'
+	closeOnSelect?: boolean
+	closeOnEscape?: boolean
+	closeOnOutsideClick?: boolean
+} = $props()
 
-	let menuElement = $state<HTMLElement>();
-	let triggerElement = $state<HTMLElement>();
-	let focusManager = new FocusManager();
-	let cleanupFocusTrap: (() => void) | null = null;
+let menuElement = $state<HTMLElement>()
+let triggerElement = $state<HTMLElement>()
+let focusManager = new FocusManager()
+let cleanupFocusTrap: (() => void) | null = null
 
-	$effect(() => {
-		if (open) {
-			focusManager.save();
-			if (menuElement) {
-				cleanupFocusTrap = trapFocus(menuElement);
-			}
-		} else {
-			cleanupFocusTrap?.();
-			focusManager.restore();
+$effect(() => {
+	if (open) {
+		focusManager.save()
+		if (menuElement) {
+			cleanupFocusTrap = trapFocus(menuElement)
 		}
-	});
+	} else {
+		cleanupFocusTrap?.()
+		focusManager.restore()
+	}
+})
 
-	function handleTriggerClick() {
-		open = !open;
-		onOpenChange(open);
+function handleTriggerClick() {
+	open = !open
+	onOpenChange(open)
+}
+
+function handleTriggerKeydown(event: KeyboardEvent) {
+	if (event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowDown') {
+		event.preventDefault()
+		open = true
+		onOpenChange(true)
+	}
+}
+
+function handleMenuKeydown(event: KeyboardEvent) {
+	if (event.key === 'Escape' && closeOnEscape) {
+		event.preventDefault()
+		open = false
+		onOpenChange(false)
+		triggerElement?.focus()
+	}
+}
+
+function handleOutsideClick(event: MouseEvent) {
+	if (
+		closeOnOutsideClick &&
+		menuElement &&
+		!menuElement.contains(event.target as Node) &&
+		!triggerElement?.contains(event.target as Node)
+	) {
+		open = false
+		onOpenChange(false)
+	}
+}
+
+function handleMenuItemClick() {
+	if (closeOnSelect) {
+		open = false
+		onOpenChange(false)
+	}
+}
+
+onMount(() => {
+	if (closeOnOutsideClick) {
+		document.addEventListener('click', handleOutsideClick)
 	}
 
-	function handleTriggerKeydown(event: KeyboardEvent) {
-		if (event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowDown') {
-			event.preventDefault();
-			open = true;
-			onOpenChange(true);
-		}
+	return () => {
+		document.removeEventListener('click', handleOutsideClick)
+		cleanupFocusTrap?.()
 	}
+})
 
-	function handleMenuKeydown(event: KeyboardEvent) {
-		if (event.key === 'Escape' && closeOnEscape) {
-			event.preventDefault();
-			open = false;
-			onOpenChange(false);
-			triggerElement?.focus();
-		}
-	}
-
-	function handleOutsideClick(event: MouseEvent) {
-		if (
-			closeOnOutsideClick &&
-			menuElement &&
-			!menuElement.contains(event.target as Node) &&
-			!triggerElement?.contains(event.target as Node)
-		) {
-			open = false;
-			onOpenChange(false);
-		}
-	}
-
-	function handleMenuItemClick() {
-		if (closeOnSelect) {
-			open = false;
-			onOpenChange(false);
-		}
-	}
-
-	onMount(() => {
-		if (closeOnOutsideClick) {
-			document.addEventListener('click', handleOutsideClick);
-		}
-
-		return () => {
-			document.removeEventListener('click', handleOutsideClick);
-			cleanupFocusTrap?.();
-		};
-	});
-
-	const placementClasses = {
-		top: 'bottom-full mb-2',
-		bottom: 'top-full mt-2',
-		left: 'right-full mr-2',
-		right: 'left-full ml-2',
-		'top-start': 'bottom-full mb-2 left-0',
-		'top-end': 'bottom-full mb-2 right-0',
-		'bottom-start': 'top-full mt-2 left-0',
-		'bottom-end': 'top-full mt-2 right-0'
-	};
+const placementClasses = {
+	top: 'bottom-full mb-2',
+	bottom: 'top-full mt-2',
+	left: 'right-full mr-2',
+	right: 'left-full ml-2',
+	'top-start': 'bottom-full mb-2 left-0',
+	'top-end': 'bottom-full mb-2 right-0',
+	'bottom-start': 'top-full mt-2 left-0',
+	'bottom-end': 'top-full mt-2 right-0'
+}
 </script>
 
 <div class="relative inline-block">

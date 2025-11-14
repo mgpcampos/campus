@@ -1,147 +1,146 @@
 <script lang="ts">
-	import { superForm } from 'sveltekit-superforms/client';
-	import { loginSchema } from '$lib/utils/validation.js';
-	import { getErrorMessage } from '$lib/utils/errors.js';
-	import { goto } from '$app/navigation';
-	import { createClientFormOptions } from '$lib/validation';
-	import { ariaValidity } from '$lib/actions/ariaValidity';
-	import { t } from '$lib/i18n';
-	import type { PageData } from './$types';
+import { superForm } from 'sveltekit-superforms/client'
+import { goto } from '$app/navigation'
+import { ariaValidity } from '$lib/actions/ariaValidity'
+import { t } from '$lib/i18n'
+import { getErrorMessage } from '$lib/utils/errors.js'
+import { loginSchema } from '$lib/utils/validation.js'
+import { createClientFormOptions } from '$lib/validation'
+import type { PageData } from './$types'
 
-	type LoginForm = {
-		email: string;
-		password: string;
-	};
+type LoginForm = {
+	email: string
+	password: string
+}
 
-	let { data } = $props<{ data: PageData }>();
-	let generalError = $state('');
-	let attemptedSubmit = $state(false);
-	const touched = $state<Record<keyof LoginForm, boolean>>({
-		email: false,
-		password: false
-	});
+let { data } = $props<{ data: PageData }>()
+let generalError = $state('')
+let attemptedSubmit = $state(false)
+const touched = $state<Record<keyof LoginForm, boolean>>({
+	email: false,
+	password: false
+})
 
-	const errorIds: Record<keyof LoginForm, string> = {
-		email: 'login-email-error',
-		password: 'login-password-error'
-	};
+const errorIds: Record<keyof LoginForm, string> = {
+	email: 'login-email-error',
+	password: 'login-password-error'
+}
 
-	function coerceErrorMessage(error: unknown): string {
-		if (typeof error === 'string') return error;
-		if (Array.isArray(error)) {
-			const first = error.find((value): value is string => typeof value === 'string');
-			if (first) return first;
-		}
-		if (error && typeof error === 'object' && '_errors' in error) {
-			const nested = (error as { _errors?: unknown })._errors;
-			if (Array.isArray(nested)) {
-				const first = nested.find((value): value is string => typeof value === 'string');
-				if (first) return first;
-			}
-		}
-		return '';
+function coerceErrorMessage(error: unknown): string {
+	if (typeof error === 'string') return error
+	if (Array.isArray(error)) {
+		const first = error.find((value): value is string => typeof value === 'string')
+		if (first) return first
 	}
-
-	const { form, errors, enhance, submitting } = superForm(data.form, {
-		...createClientFormOptions(loginSchema),
-		onSubmit: () => {
-			generalError = '';
-		},
-		onResult: ({ result }) => {
-			if (result.type === 'redirect') {
-				generalError = '';
-				attemptedSubmit = false;
-				goto(result.location);
-				return;
-			}
-
-			if (result.type === 'success') {
-				generalError = '';
-				attemptedSubmit = false;
-				goto('/feed');
-				return;
-			}
-
-			if (result.type === 'failure') {
-				const serverMessage =
-					typeof result.data?.error === 'string' ? result.data.error : undefined;
-				generalError = serverMessage ?? '';
-				attemptedSubmit = false;
-				return;
-			}
-
-			if (result.type === 'error') {
-				generalError = getErrorMessage(result.error);
-			}
+	if (error && typeof error === 'object' && '_errors' in error) {
+		const nested = (error as { _errors?: unknown })._errors
+		if (Array.isArray(nested)) {
+			const first = nested.find((value): value is string => typeof value === 'string')
+			if (first) return first
 		}
-	});
+	}
+	return ''
+}
 
-	type ValidationState = {
-		valid: boolean;
-		errors: Record<keyof LoginForm, string>;
-	};
-
-	const clientValidation = $derived.by<ValidationState>(() => {
-		const result = loginSchema.safeParse({
-			email: $form.email,
-			password: $form.password
-		});
-
-		if (result.success) {
-			return {
-				valid: true,
-				errors: {
-					email: '',
-					password: ''
-				}
-			};
+const { form, errors, enhance, submitting } = superForm(data.form, {
+	...createClientFormOptions(loginSchema),
+	onSubmit: () => {
+		generalError = ''
+	},
+	onResult: ({ result }) => {
+		if (result.type === 'redirect') {
+			generalError = ''
+			attemptedSubmit = false
+			goto(result.location)
+			return
 		}
 
-		const fieldErrors = result.error.flatten().fieldErrors;
+		if (result.type === 'success') {
+			generalError = ''
+			attemptedSubmit = false
+			goto('/feed')
+			return
+		}
+
+		if (result.type === 'failure') {
+			const serverMessage = typeof result.data?.error === 'string' ? result.data.error : undefined
+			generalError = serverMessage ?? ''
+			attemptedSubmit = false
+			return
+		}
+
+		if (result.type === 'error') {
+			generalError = getErrorMessage(result.error)
+		}
+	}
+})
+
+type ValidationState = {
+	valid: boolean
+	errors: Record<keyof LoginForm, string>
+}
+
+const clientValidation = $derived.by<ValidationState>(() => {
+	const result = loginSchema.safeParse({
+		email: $form.email,
+		password: $form.password
+	})
+
+	if (result.success) {
 		return {
-			valid: false,
+			valid: true,
 			errors: {
-				email: fieldErrors.email?.[0] ?? t('auth.validEmailRequired'),
-				password: fieldErrors.password?.[0] ?? t('auth.passwordRequired')
+				email: '',
+				password: ''
 			}
-		};
-	});
-
-	const canSubmit = $derived.by(() => clientValidation.valid);
-
-	const emailErrorText = $derived.by(() => {
-		const serverError = coerceErrorMessage($errors.email);
-		if (serverError) return serverError;
-		const message = clientValidation.errors.email;
-		if (!message) return '';
-		return attemptedSubmit || touched.email ? message : '';
-	});
-
-	const passwordErrorText = $derived.by(() => {
-		const serverError = coerceErrorMessage($errors.password);
-		if (serverError) return serverError;
-		const message = clientValidation.errors.password;
-		if (!message) return '';
-		return attemptedSubmit || touched.password ? message : '';
-	});
-
-	const enhanceSubmit: typeof enhance = (formElement, options) =>
-		enhance(formElement, {
-			...options,
-			onSubmit: async (event) => {
-				attemptedSubmit = true;
-				if (!clientValidation.valid) {
-					event.cancel();
-					return;
-				}
-
-				return options?.onSubmit ? options.onSubmit(event) : undefined;
-			}
-		});
-
-	function handleBlur(field: keyof LoginForm) {
-		touched[field] = true;
+		}
 	}
+
+	const fieldErrors = result.error.flatten().fieldErrors
+	return {
+		valid: false,
+		errors: {
+			email: fieldErrors.email?.[0] ?? t('auth.validEmailRequired'),
+			password: fieldErrors.password?.[0] ?? t('auth.passwordRequired')
+		}
+	}
+})
+
+const canSubmit = $derived.by(() => clientValidation.valid)
+
+const emailErrorText = $derived.by(() => {
+	const serverError = coerceErrorMessage($errors.email)
+	if (serverError) return serverError
+	const message = clientValidation.errors.email
+	if (!message) return ''
+	return attemptedSubmit || touched.email ? message : ''
+})
+
+const passwordErrorText = $derived.by(() => {
+	const serverError = coerceErrorMessage($errors.password)
+	if (serverError) return serverError
+	const message = clientValidation.errors.password
+	if (!message) return ''
+	return attemptedSubmit || touched.password ? message : ''
+})
+
+const enhanceSubmit: typeof enhance = (formElement, options) =>
+	enhance(formElement, {
+		...options,
+		onSubmit: async (event) => {
+			attemptedSubmit = true
+			if (!clientValidation.valid) {
+				event.cancel()
+				return
+			}
+
+			return options?.onSubmit ? options.onSubmit(event) : undefined
+		}
+	})
+
+function handleBlur(field: keyof LoginForm) {
+	touched[field] = true
+}
 </script>
 
 <svelte:head>

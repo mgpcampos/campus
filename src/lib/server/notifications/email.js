@@ -1,5 +1,5 @@
-import { readFileSync } from 'fs';
-import { join } from 'path';
+import { readFileSync } from 'fs'
+import { join } from 'path'
 
 /**
  * Simple template renderer that replaces {{variable}} placeholders
@@ -8,20 +8,20 @@ import { join } from 'path';
  * @returns {string} Rendered HTML
  */
 function renderTemplate(template, variables) {
-	let rendered = template;
+	let rendered = template
 
 	// Replace {{variable}} placeholders
 	for (const [key, value] of Object.entries(variables)) {
-		const regex = new RegExp(`{{${key}}}`, 'g');
-		rendered = rendered.replace(regex, value ?? '');
+		const regex = new RegExp(`{{${key}}}`, 'g')
+		rendered = rendered.replace(regex, value ?? '')
 	}
 
 	// Handle conditional blocks {{#if variable}}...{{/if}}
 	rendered = rendered.replace(/{{#if\s+(\w+)}}([\s\S]*?){{\/if}}/g, (match, key, content) => {
-		return variables[key] ? content : '';
-	});
+		return variables[key] ? content : ''
+	})
 
-	return rendered;
+	return rendered
 }
 
 /**
@@ -40,12 +40,12 @@ export function renderEmailTemplate(templateName, variables) {
 			'notifications',
 			'templates',
 			`${templateName}.html`
-		);
-		const template = readFileSync(templatePath, 'utf-8');
-		return renderTemplate(template, variables);
+		)
+		const template = readFileSync(templatePath, 'utf-8')
+		return renderTemplate(template, variables)
 	} catch (error) {
-		console.error(`Failed to render email template ${templateName}:`, error);
-		return generateFallbackEmail(templateName, variables);
+		console.error(`Failed to render email template ${templateName}:`, error)
+		return generateFallbackEmail(templateName, variables)
 	}
 }
 
@@ -68,7 +68,7 @@ function generateFallbackEmail(templateName, variables) {
 	<pre>${JSON.stringify(variables, null, 2)}</pre>
 </body>
 </html>
-	`.trim();
+	`.trim()
 }
 
 /**
@@ -103,7 +103,7 @@ export function renderMessageFlaggedEmail({
 		dashboardUrl: `${baseUrl}/admin/moderation`,
 		guidelinesUrl: `${baseUrl}/guidelines`,
 		settingsUrl: `${baseUrl}/profile/settings`
-	});
+	})
 }
 
 /**
@@ -123,7 +123,7 @@ export function renderModerationEscalatedEmail({
 	originalTimestamp,
 	baseUrl
 }) {
-	const overdueMinutes = Math.max(0, ageMinutes - 15);
+	const overdueMinutes = Math.max(0, ageMinutes - 15)
 
 	return renderEmailTemplate('moderation-escalated', {
 		caseId,
@@ -134,7 +134,7 @@ export function renderModerationEscalatedEmail({
 		caseUrl: `${baseUrl}/admin/moderation/${caseId}`,
 		dashboardUrl: `${baseUrl}/admin/moderation`,
 		slaReportUrl: `${baseUrl}/admin/reports/sla`
-	});
+	})
 }
 
 /**
@@ -160,14 +160,14 @@ export function renderModerationDailySummaryEmail(params) {
 			? 'status-good'
 			: parseInt(params.avgResolutionTime) < 60
 				? 'status-warning'
-				: 'status-critical';
+				: 'status-critical'
 
 	const slaComplianceClass =
 		params.slaCompliance >= 95
 			? 'status-good'
 			: params.slaCompliance >= 90
 				? 'status-warning'
-				: 'status-critical';
+				: 'status-critical'
 
 	return renderEmailTemplate('moderation-daily-summary', {
 		...params,
@@ -183,7 +183,7 @@ export function renderModerationDailySummaryEmail(params) {
 		analyticsUrl: `${params.baseUrl}/admin/analytics`,
 		guidelinesUrl: `${params.baseUrl}/guidelines`,
 		settingsUrl: `${params.baseUrl}/profile/settings`
-	});
+	})
 }
 
 /**
@@ -209,7 +209,7 @@ export async function sendEmail({ to, subject, html, text }) {
 		subject,
 		htmlLength: html.length,
 		textLength: text?.length || 0
-	});
+	})
 
 	// In production, you would do something like:
 	/*
@@ -229,5 +229,5 @@ export async function sendEmail({ to, subject, html, text }) {
 	}
 	*/
 
-	return true;
+	return true
 }

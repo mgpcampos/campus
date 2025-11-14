@@ -1,6 +1,6 @@
-import { pb } from '../pocketbase.js';
+import { pb } from '../pocketbase.js'
 
-const mentionRegex = /@([a-zA-Z0-9_]{3,30})/g;
+const mentionRegex = /@([a-zA-Z0-9_]{3,30})/g
 
 /**
  * Extract unique mentioned usernames from content
@@ -8,12 +8,12 @@ const mentionRegex = /@([a-zA-Z0-9_]{3,30})/g;
  * @returns {string[]}
  */
 export function extractMentions(content) {
-	const matches = new Set();
-	let m;
+	const matches = new Set()
+	let m
 	while ((m = mentionRegex.exec(content)) !== null) {
-		matches.add(m[1]);
+		matches.add(m[1])
 	}
-	return Array.from(matches);
+	return Array.from(matches)
 }
 
 /**
@@ -41,9 +41,9 @@ export async function createNotification(data) {
 			event: data.event || undefined,
 			metadata: data.metadata ? JSON.stringify(data.metadata) : undefined,
 			read: false
-		});
+		})
 	} catch (e) {
-		console.warn('Failed to create notification', e);
+		console.warn('Failed to create notification', e)
 	}
 }
 
@@ -54,7 +54,7 @@ export async function createNotification(data) {
  * @param {string[]} participantIds - Array of participant user IDs
  */
 export async function notifyEventCreated(eventId, creatorId, participantIds) {
-	const uniqueParticipants = [...new Set(participantIds)].filter((id) => id !== creatorId);
+	const uniqueParticipants = [...new Set(participantIds)].filter((id) => id !== creatorId)
 
 	for (const userId of uniqueParticipants) {
 		await createNotification({
@@ -62,7 +62,7 @@ export async function notifyEventCreated(eventId, creatorId, participantIds) {
 			actor: creatorId,
 			type: 'event_created',
 			event: eventId
-		});
+		})
 	}
 }
 
@@ -74,7 +74,7 @@ export async function notifyEventCreated(eventId, creatorId, participantIds) {
  * @param {Object} changes - Description of changes
  */
 export async function notifyEventUpdated(eventId, updaterId, participantIds, changes) {
-	const uniqueParticipants = [...new Set(participantIds)].filter((id) => id !== updaterId);
+	const uniqueParticipants = [...new Set(participantIds)].filter((id) => id !== updaterId)
 
 	for (const userId of uniqueParticipants) {
 		await createNotification({
@@ -83,7 +83,7 @@ export async function notifyEventUpdated(eventId, updaterId, participantIds, cha
 			type: 'event_updated',
 			event: eventId,
 			metadata: changes
-		});
+		})
 	}
 }
 
@@ -99,7 +99,7 @@ export async function notifyEventReminder(eventId, participantIds) {
 			actor: userId, // Self-notification for reminders
 			type: 'event_reminder',
 			event: eventId
-		});
+		})
 	}
 }
 
@@ -110,7 +110,7 @@ export async function notifyEventReminder(eventId, participantIds) {
  * @param {string[]} participantIds - Array of participant user IDs
  */
 export async function notifyEventCancelled(eventId, cancellerId, participantIds) {
-	const uniqueParticipants = [...new Set(participantIds)].filter((id) => id !== cancellerId);
+	const uniqueParticipants = [...new Set(participantIds)].filter((id) => id !== cancellerId)
 
 	for (const userId of uniqueParticipants) {
 		await createNotification({
@@ -118,7 +118,7 @@ export async function notifyEventCancelled(eventId, cancellerId, participantIds)
 			actor: cancellerId,
 			type: 'event_cancelled',
 			event: eventId
-		});
+		})
 	}
 }
 
@@ -134,17 +134,17 @@ export async function notifyEventCancelled(eventId, cancellerId, participantIds)
  */
 export async function resolveUsernames(usernames) {
 	/** @type {Record<string,string>} */
-	const map = {};
-	if (usernames.length === 0) return map;
+	const map = {}
+	if (usernames.length === 0) return map
 	for (const username of usernames) {
 		try {
-			const user = await pb.collection('users').getFirstListItem(`username = "${username}"`);
-			if (user?.id) map[username] = user.id;
+			const user = await pb.collection('users').getFirstListItem(`username = "${username}"`)
+			if (user?.id) map[username] = user.id
 		} catch {
 			/* ignore */
 		}
 	}
-	return map;
+	return map
 }
 
 /**
@@ -166,7 +166,7 @@ export async function notifyModeratorsMessageFlagged(
 		// Get all moderators (users with is_admin = true)
 		const moderators = await pb.collection('users').getFullList({
 			filter: 'is_admin = true'
-		});
+		})
 
 		for (const moderator of moderators) {
 			await createNotification({
@@ -180,10 +180,10 @@ export async function notifyModeratorsMessageFlagged(
 					caseId,
 					severity: 'high'
 				}
-			});
+			})
 		}
 	} catch (e) {
-		console.error('Failed to notify moderators about flagged message', e);
+		console.error('Failed to notify moderators about flagged message', e)
 	}
 }
 
@@ -198,7 +198,7 @@ export async function notifyModeratorsEscalation(caseId, sourceType, sourceId, a
 	try {
 		const moderators = await pb.collection('users').getFullList({
 			filter: 'is_admin = true'
-		});
+		})
 
 		for (const moderator of moderators) {
 			await createNotification({
@@ -212,10 +212,10 @@ export async function notifyModeratorsEscalation(caseId, sourceType, sourceId, a
 					ageMinutes,
 					severity: 'critical'
 				}
-			});
+			})
 		}
 	} catch (e) {
-		console.error('Failed to notify moderators about escalation', e);
+		console.error('Failed to notify moderators about escalation', e)
 	}
 }
 
@@ -231,7 +231,7 @@ export async function notifyModeratorsDailySummary(summary) {
 	try {
 		const moderators = await pb.collection('users').getFullList({
 			filter: 'is_admin = true'
-		});
+		})
 
 		for (const moderator of moderators) {
 			await createNotification({
@@ -243,10 +243,10 @@ export async function notifyModeratorsDailySummary(summary) {
 					date: new Date().toISOString().split('T')[0],
 					severity: 'info'
 				}
-			});
+			})
 		}
 	} catch (e) {
-		console.error('Failed to send daily moderation summary', e);
+		console.error('Failed to send daily moderation summary', e)
 	}
 }
 
@@ -270,9 +270,9 @@ export async function notifyUserMessageRemoved(userId, messageId, threadId, mode
 				reason: reason.substring(0, 200),
 				severity: 'warning'
 			}
-		});
+		})
 	} catch (e) {
-		console.error('Failed to notify user about message removal', e);
+		console.error('Failed to notify user about message removal', e)
 	}
 }
 
@@ -285,7 +285,7 @@ export async function notifyUserMessageRemoved(userId, messageId, threadId, mode
  */
 export async function notifyThreadLocked(threadId, memberIds, moderatorId, reason) {
 	try {
-		const uniqueMembers = [...new Set(memberIds)];
+		const uniqueMembers = [...new Set(memberIds)]
 
 		for (const userId of uniqueMembers) {
 			await createNotification({
@@ -297,9 +297,9 @@ export async function notifyThreadLocked(threadId, memberIds, moderatorId, reaso
 					reason: reason.substring(0, 200),
 					severity: 'warning'
 				}
-			});
+			})
 		}
 	} catch (e) {
-		console.error('Failed to notify users about thread lock', e);
+		console.error('Failed to notify users about thread lock', e)
 	}
 }

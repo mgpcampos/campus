@@ -1,172 +1,172 @@
 <script lang="ts">
-	import * as Card from '$lib/components/ui/card/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Shield, AlertTriangle, CheckCircle, Clock, XCircle } from '@lucide/svelte';
-	import { onMount, onDestroy } from 'svelte';
-	import { pb } from '$lib/pocketbase.js';
-	import { goto } from '$app/navigation';
-	import { t } from '$lib/i18n';
+import { AlertTriangle, CheckCircle, Clock, Shield, XCircle } from '@lucide/svelte'
+import { onDestroy, onMount } from 'svelte'
+import { goto } from '$app/navigation'
+import { Badge } from '$lib/components/ui/badge/index.js'
+import { Button } from '$lib/components/ui/button/index.js'
+import * as Card from '$lib/components/ui/card/index.js'
+import { t } from '$lib/i18n'
+import { pb } from '$lib/pocketbase.js'
 
-	interface ModerationCase {
-		id: string;
-		sourceType: string;
-		sourceId: string;
-		state: 'open' | 'in_review' | 'escalated' | 'resolved';
-		evidence?: Array<{
-			type: string;
-			reason?: string;
-			body?: string;
-			flagCount?: number;
-		}>;
-		created: string;
-		updated: string;
-	}
+interface ModerationCase {
+	id: string
+	sourceType: string
+	sourceId: string
+	state: 'open' | 'in_review' | 'escalated' | 'resolved'
+	evidence?: Array<{
+		type: string
+		reason?: string
+		body?: string
+		flagCount?: number
+	}>
+	created: string
+	updated: string
+}
 
-	interface PageData {
-		cases: ModerationCase[];
-	}
+interface PageData {
+	cases: ModerationCase[]
+}
 
-	let { data }: { data: PageData } = $props();
+let { data }: { data: PageData } = $props()
 
-	let cases = $state<ModerationCase[]>(data.cases || []);
-	let selectedCase = $state<ModerationCase | null>(null);
-	let activeFilter = $state<string>('all');
-	let unsubscribe: (() => void) | null = null;
+let cases = $state<ModerationCase[]>(data.cases || [])
+let selectedCase = $state<ModerationCase | null>(null)
+let activeFilter = $state<string>('all')
+let unsubscribe: (() => void) | null = null
 
-	// Subscribe to real-time updates
-	onMount(async () => {
-		try {
-			unsubscribe = await pb.collection('moderation_cases').subscribe('*', (event) => {
-				const record = event.record as unknown as ModerationCase;
-				if (event.action === 'create') {
-					cases = [record, ...cases];
-				} else if (event.action === 'update') {
-					cases = cases.map((c: ModerationCase) => (c.id === record.id ? record : c));
-					if (selectedCase?.id === record.id) {
-						selectedCase = record;
-					}
-				} else if (event.action === 'delete') {
-					cases = cases.filter((c: ModerationCase) => c.id !== record.id);
-					if (selectedCase?.id === record.id) {
-						selectedCase = null;
-					}
+// Subscribe to real-time updates
+onMount(async () => {
+	try {
+		unsubscribe = await pb.collection('moderation_cases').subscribe('*', (event) => {
+			const record = event.record as unknown as ModerationCase
+			if (event.action === 'create') {
+				cases = [record, ...cases]
+			} else if (event.action === 'update') {
+				cases = cases.map((c: ModerationCase) => (c.id === record.id ? record : c))
+				if (selectedCase?.id === record.id) {
+					selectedCase = record
 				}
-			});
-		} catch (error) {
-			console.error('Failed to subscribe to moderation cases:', error);
-		}
-	});
-
-	onDestroy(() => {
-		if (unsubscribe) {
-			try {
-				unsubscribe();
-			} catch {
-				/* ignore */
+			} else if (event.action === 'delete') {
+				cases = cases.filter((c: ModerationCase) => c.id !== record.id)
+				if (selectedCase?.id === record.id) {
+					selectedCase = null
+				}
 			}
-		}
-	});
-
-	const filteredCases = $derived.by(() => {
-		if (activeFilter === 'all') return cases;
-		return cases.filter((c: ModerationCase) => c.state === activeFilter);
-	});
-
-	const caseStats = $derived.by(() => ({
-		open: cases.filter((c: ModerationCase) => c.state === 'open').length,
-		in_review: cases.filter((c: ModerationCase) => c.state === 'in_review').length,
-		escalated: cases.filter((c: ModerationCase) => c.state === 'escalated').length,
-		resolved: cases.filter((c: ModerationCase) => c.state === 'resolved').length
-	}));
-
-	function formatDate(date: string) {
-		return new Date(date).toLocaleString('en-US', {
-			month: 'short',
-			day: 'numeric',
-			hour: 'numeric',
-			minute: '2-digit'
-		});
+		})
+	} catch (error) {
+		console.error('Failed to subscribe to moderation cases:', error)
 	}
+})
 
-	function getStateIcon(state: string) {
-		switch (state) {
-			case 'open':
-				return AlertTriangle;
-			case 'in_review':
-				return Clock;
-			case 'escalated':
-				return XCircle;
-			case 'resolved':
-				return CheckCircle;
-			default:
-				return Shield;
-		}
-	}
-
-	function getStateColor(state: string) {
-		switch (state) {
-			case 'open':
-				return 'bg-yellow-100 text-yellow-800';
-			case 'in_review':
-				return 'bg-blue-100 text-blue-800';
-			case 'escalated':
-				return 'bg-red-100 text-red-800';
-			case 'resolved':
-				return 'bg-green-100 text-green-800';
-			default:
-				return 'bg-gray-100 text-gray-800';
-		}
-	}
-
-	function isSLABreached(caseRecord: ModerationCase): boolean {
-		const created = new Date(caseRecord.created);
-		const now = new Date();
-		const ageMinutes = (now.getTime() - created.getTime()) / (1000 * 60);
-		return caseRecord.state === 'open' && ageMinutes > 15;
-	}
-
-	async function handleResolve(caseId: string) {
+onDestroy(() => {
+	if (unsubscribe) {
 		try {
-			await pb.collection('moderation_cases').update(caseId, {
-				state: 'resolved'
-			});
-		} catch (error) {
-			console.error('Failed to resolve case:', error);
+			unsubscribe()
+		} catch {
+			/* ignore */
 		}
 	}
+})
 
-	async function handleEscalate(caseId: string) {
-		try {
-			await pb.collection('moderation_cases').update(caseId, {
-				state: 'escalated'
-			});
-		} catch (error) {
-			console.error('Failed to escalate case:', error);
-		}
-	}
+const filteredCases = $derived.by(() => {
+	if (activeFilter === 'all') return cases
+	return cases.filter((c: ModerationCase) => c.state === activeFilter)
+})
 
-	async function handleReview(caseId: string) {
-		try {
-			await pb.collection('moderation_cases').update(caseId, {
-				state: 'in_review'
-			});
-		} catch (error) {
-			console.error('Failed to update case:', error);
-		}
-	}
+const caseStats = $derived.by(() => ({
+	open: cases.filter((c: ModerationCase) => c.state === 'open').length,
+	in_review: cases.filter((c: ModerationCase) => c.state === 'in_review').length,
+	escalated: cases.filter((c: ModerationCase) => c.state === 'escalated').length,
+	resolved: cases.filter((c: ModerationCase) => c.state === 'resolved').length
+}))
 
-	function viewSource(caseRecord: ModerationCase) {
-		const { sourceType, sourceId } = caseRecord;
-		if (sourceType === 'message') {
-			// Navigate to the message thread
-			goto(`/messages/${sourceId}`);
-		} else if (sourceType === 'post') {
-			goto(`/feed#${sourceId}`);
-		} else if (sourceType === 'comment') {
-			goto(`/feed#comment-${sourceId}`);
-		}
+function formatDate(date: string) {
+	return new Date(date).toLocaleString('en-US', {
+		month: 'short',
+		day: 'numeric',
+		hour: 'numeric',
+		minute: '2-digit'
+	})
+}
+
+function getStateIcon(state: string) {
+	switch (state) {
+		case 'open':
+			return AlertTriangle
+		case 'in_review':
+			return Clock
+		case 'escalated':
+			return XCircle
+		case 'resolved':
+			return CheckCircle
+		default:
+			return Shield
 	}
+}
+
+function getStateColor(state: string) {
+	switch (state) {
+		case 'open':
+			return 'bg-yellow-100 text-yellow-800'
+		case 'in_review':
+			return 'bg-blue-100 text-blue-800'
+		case 'escalated':
+			return 'bg-red-100 text-red-800'
+		case 'resolved':
+			return 'bg-green-100 text-green-800'
+		default:
+			return 'bg-gray-100 text-gray-800'
+	}
+}
+
+function isSLABreached(caseRecord: ModerationCase): boolean {
+	const created = new Date(caseRecord.created)
+	const now = new Date()
+	const ageMinutes = (now.getTime() - created.getTime()) / (1000 * 60)
+	return caseRecord.state === 'open' && ageMinutes > 15
+}
+
+async function handleResolve(caseId: string) {
+	try {
+		await pb.collection('moderation_cases').update(caseId, {
+			state: 'resolved'
+		})
+	} catch (error) {
+		console.error('Failed to resolve case:', error)
+	}
+}
+
+async function handleEscalate(caseId: string) {
+	try {
+		await pb.collection('moderation_cases').update(caseId, {
+			state: 'escalated'
+		})
+	} catch (error) {
+		console.error('Failed to escalate case:', error)
+	}
+}
+
+async function handleReview(caseId: string) {
+	try {
+		await pb.collection('moderation_cases').update(caseId, {
+			state: 'in_review'
+		})
+	} catch (error) {
+		console.error('Failed to update case:', error)
+	}
+}
+
+function viewSource(caseRecord: ModerationCase) {
+	const { sourceType, sourceId } = caseRecord
+	if (sourceType === 'message') {
+		// Navigate to the message thread
+		goto(`/messages/${sourceId}`)
+	} else if (sourceType === 'post') {
+		goto(`/feed#${sourceId}`)
+	} else if (sourceType === 'comment') {
+		goto(`/feed#comment-${sourceId}`)
+	}
+}
 </script>
 
 <svelte:head>

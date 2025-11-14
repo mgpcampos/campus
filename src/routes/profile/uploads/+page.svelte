@@ -1,42 +1,42 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { currentUser, pb } from '$lib/pocketbase.js';
-	import * as Card from '$lib/components/ui/card/index.js';
-	import ImageAttachment from '$lib/components/media/ImageAttachment.svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Loader2 } from '@lucide/svelte';
-	import SkeletonLoader from '$lib/components/ui/SkeletonLoader.svelte';
+import { Loader2 } from '@lucide/svelte'
+import { onMount } from 'svelte'
+import ImageAttachment from '$lib/components/media/ImageAttachment.svelte'
+import { Button } from '$lib/components/ui/button/index.js'
+import * as Card from '$lib/components/ui/card/index.js'
+import SkeletonLoader from '$lib/components/ui/SkeletonLoader.svelte'
+import { currentUser, pb } from '$lib/pocketbase.js'
 
-	let loading = true;
-	let error: string | null = null;
-	let posts: any[] = [];
+let loading = true
+let error: string | null = null
+let posts: any[] = []
 
-	onMount(async () => {
-		if (!$currentUser) {
-			loading = false;
-			return;
-		}
-		try {
-			// Fetch posts by current user that have attachments
-			const result = await pb.collection('posts').getList(1, 50, {
-				filter: `author = "${$currentUser.id}" && attachments != ''`,
-				sort: '-created'
-			});
-			// Normalize attachments: PocketBase returns string for single file, array for multiple
-			posts = result.items
-				.filter((p) => p.attachments)
-				.map((p) => ({
-					...p,
-					attachments: Array.isArray(p.attachments) ? p.attachments : [p.attachments]
-				}))
-				.filter((p) => p.attachments.length > 0);
-		} catch (e: any) {
-			error = 'Failed to load uploads';
-			console.error(e);
-		} finally {
-			loading = false;
-		}
-	});
+onMount(async () => {
+	if (!$currentUser) {
+		loading = false
+		return
+	}
+	try {
+		// Fetch posts by current user that have attachments
+		const result = await pb.collection('posts').getList(1, 50, {
+			filter: `author = "${$currentUser.id}" && attachments != ''`,
+			sort: '-created'
+		})
+		// Normalize attachments: PocketBase returns string for single file, array for multiple
+		posts = result.items
+			.filter((p) => p.attachments)
+			.map((p) => ({
+				...p,
+				attachments: Array.isArray(p.attachments) ? p.attachments : [p.attachments]
+			}))
+			.filter((p) => p.attachments.length > 0)
+	} catch (e: any) {
+		error = 'Failed to load uploads'
+		console.error(e)
+	} finally {
+		loading = false
+	}
+})
 </script>
 
 <div class="mx-auto max-w-4xl space-y-6 py-8">

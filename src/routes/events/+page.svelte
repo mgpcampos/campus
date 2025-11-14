@@ -1,57 +1,57 @@
 <script lang="ts">
-	import { Calendar, MapPin, Users, Clock } from '@lucide/svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import * as Card from '$lib/components/ui/card/index.js';
-	import * as Tabs from '$lib/components/ui/tabs/index.js';
-	import { t } from '$lib/i18n';
+import { Calendar, Clock, MapPin, Users } from '@lucide/svelte'
+import { Button } from '$lib/components/ui/button/index.js'
+import * as Card from '$lib/components/ui/card/index.js'
+import * as Tabs from '$lib/components/ui/tabs/index.js'
+import { t } from '$lib/i18n'
 
-	let { data }: { data: any } = $props();
+let { data }: { data: any } = $props()
 
-	function formatDate(dateString: string) {
-		const date = new Date(dateString);
-		return date.toLocaleDateString('pt-BR', {
-			weekday: 'short',
-			year: 'numeric',
-			month: 'short',
-			day: 'numeric'
-		});
+function formatDate(dateString: string) {
+	const date = new Date(dateString)
+	return date.toLocaleDateString('pt-BR', {
+		weekday: 'short',
+		year: 'numeric',
+		month: 'short',
+		day: 'numeric'
+	})
+}
+
+function formatTime(dateString: string) {
+	const date = new Date(dateString)
+	return date.toLocaleTimeString('pt-BR', {
+		hour: 'numeric',
+		minute: '2-digit'
+	})
+}
+
+function getEventDuration(start: string, end: string) {
+	const startDate = new Date(start)
+	const endDate = new Date(end)
+	const diffMs = endDate.getTime() - startDate.getTime()
+	const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+	const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
+
+	if (diffHours > 0) {
+		return `${diffHours}h ${diffMins}m`
 	}
+	return `${diffMins}m`
+}
 
-	function formatTime(dateString: string) {
-		const date = new Date(dateString);
-		return date.toLocaleTimeString('pt-BR', {
-			hour: 'numeric',
-			minute: '2-digit'
-		});
+function getScopeLabel(event: any): string {
+	switch (event.scopeType) {
+		case 'global':
+			return t('events.campusWide')
+		case 'space':
+			return t('events.spaceEvent')
+		case 'group':
+			return t('events.groupEvent')
+		case 'course':
+			return t('events.courseEvent')
+		default:
+			return t('events.event')
 	}
-
-	function getEventDuration(start: string, end: string) {
-		const startDate = new Date(start);
-		const endDate = new Date(end);
-		const diffMs = endDate.getTime() - startDate.getTime();
-		const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-		const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-
-		if (diffHours > 0) {
-			return `${diffHours}h ${diffMins}m`;
-		}
-		return `${diffMins}m`;
-	}
-
-	function getScopeLabel(event: any): string {
-		switch (event.scopeType) {
-			case 'global':
-				return t('events.campusWide');
-			case 'space':
-				return t('events.spaceEvent');
-			case 'group':
-				return t('events.groupEvent');
-			case 'course':
-				return t('events.courseEvent');
-			default:
-				return t('events.event');
-		}
-	}
+}
 </script>
 
 <svelte:head>

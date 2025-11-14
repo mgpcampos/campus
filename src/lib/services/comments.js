@@ -1,6 +1,6 @@
 // Using relative import to avoid alias resolution issues in Vitest
-import { pb } from '../pocketbase.js';
-import { normalizeError } from '../utils/errors.js';
+import { pb } from '../pocketbase.js'
+import { normalizeError } from '../utils/errors.js'
 
 /**
  * @typedef {import('pocketbase').RecordModel} RecordModel
@@ -26,11 +26,11 @@ import { normalizeError } from '../utils/errors.js';
  */
 export async function createComment(postId, content, parentId) {
 	if (!pb.authStore.model?.id) {
-		throw new Error('User must be authenticated to comment');
+		throw new Error('User must be authenticated to comment')
 	}
 
 	if (!content.trim()) {
-		throw new Error('Comment content cannot be empty');
+		throw new Error('Comment content cannot be empty')
 	}
 
 	try {
@@ -40,34 +40,34 @@ export async function createComment(postId, content, parentId) {
 			post: postId,
 			author: pb.authStore.model.id,
 			content: content.trim()
-		};
+		}
 		if (parentId) {
 			// Basic server-side validation of parent linkage ownership to same post
 			try {
-				const parent = await pb.collection('comments').getOne(parentId);
+				const parent = await pb.collection('comments').getOne(parentId)
 				if (parent.post !== postId) {
-					throw new Error('Parent comment does not belong to the same post');
+					throw new Error('Parent comment does not belong to the same post')
 				}
-				createData.parent = parentId;
+				createData.parent = parentId
 			} catch (e) {
-				console.warn('Invalid parent comment supplied, ignoring:', e);
+				console.warn('Invalid parent comment supplied, ignoring:', e)
 			}
 		}
 
-		const comment = await pb.collection('comments').create(createData);
+		const comment = await pb.collection('comments').create(createData)
 
 		// Update post comment count
-		const post = await pb.collection('posts').getOne(postId);
-		const newCommentCount = (post.commentCount || 0) + 1;
-		await pb.collection('posts').update(postId, { commentCount: newCommentCount });
+		const post = await pb.collection('posts').getOne(postId)
+		const newCommentCount = (post.commentCount || 0) + 1
+		await pb.collection('posts').update(postId, { commentCount: newCommentCount })
 
 		// Return comment with expanded author
 		return await pb.collection('comments').getOne(comment.id, {
 			expand: 'author'
-		});
+		})
 	} catch (error) {
-		console.error('Error creating comment:', error);
-		throw normalizeError(error, { context: 'createComment' });
+		console.error('Error creating comment:', error)
+		throw normalizeError(error, { context: 'createComment' })
 	}
 }
 
@@ -91,70 +91,70 @@ export async function createComment(postId, content, parentId) {
  */
 export async function getComments(postId, options = {}) {
 	// Default includeReplies false to preserve previous behavior for existing tests
-	const { page = 1, perPage = 50, includeReplies = false } = /** @type {any} */ (options);
+	const { page = 1, perPage = 50, includeReplies = false } = /** @type {any} */ (options)
 
 	try {
 		// Backwards compatibility: when includeReplies is false preserve original filter semantics
 		const baseFilter = includeReplies
 			? `post = "${postId}" && (parent = null || parent = "")`
-			: `post = "${postId}"`;
+			: `post = "${postId}"`
 		const topLevel = await pb.collection('comments').getList(page, perPage, {
 			filter: baseFilter,
 			sort: 'created',
 			expand: 'author'
-		});
+		})
 
 		if (!includeReplies || topLevel.items.length === 0) {
-			return topLevel;
+			return topLevel
 		}
 
 		// Collect ids to fetch children for (1 level deep for now)
-		const ids = topLevel.items.map((c) => c.id);
-		if (ids.length === 0) return topLevel;
+		const ids = topLevel.items.map((c) => c.id)
+		if (ids.length === 0) return topLevel
 
-		let children = [];
-		const filter = `post = "${postId}" && parent != null && parent.id in [${ids.map((id) => '"' + id + '"').join(',')}]`;
-		const commentsCollection = pb.collection('comments');
+		let children = []
+		const filter = `post = "${postId}" && parent != null && parent.id in [${ids.map((id) => '"' + id + '"').join(',')}]`
+		const commentsCollection = pb.collection('comments')
 		if (typeof commentsCollection.getFullList === 'function') {
 			children = await commentsCollection.getFullList({
 				filter,
 				sort: 'created',
 				expand: 'author,parent'
-			});
+			})
 		} else {
 			// Fallback: page through using getList until fewer than perPage results
-			let childPage = 1;
-			const childPerPage = 50;
+			let childPage = 1
+			const childPerPage = 50
 			while (true) {
 				const batch = await /** @type {any} */ (commentsCollection).getList(
 					childPage,
 					childPerPage,
 					{ filter, sort: 'created', expand: 'author,parent' }
-				);
-				children.push(...batch.items);
-				if (batch.items.length < childPerPage) break;
-				childPage++;
-				if (childPage > 10) break; // safety cap
+				)
+				children.push(...batch.items)
+				if (batch.items.length < childPerPage) break
+				childPage++
+				if (childPage > 10) break // safety cap
 			}
 		}
 
 		// Attach children array to each parent
 		/** @type {Record<string, any[]>} */
-		const childrenByParent = {};
+		const childrenByParent = {}
 		for (const child of children) {
-			const p = child.parent || child.expand?.parent?.id;
-			if (!p) continue;
-			if (!childrenByParent[p]) childrenByParent[p] = [];
-			childrenByParent[p].push(child);
+			const p = child.parent || child.expand?.parent?.id
+			if (!p) continue
+			if (!childrenByParent[p]) childrenByParent[p] = []
+			childrenByParent[p].push(child)
 		}
 		for (const item of topLevel.items) {
-			item /** @type {any} */.replies = childrenByParent[item.id] || [];
+			item /** @type {any} */.replies = childrenByParent[item.id] || []
 		}
 
-		return topLevel;
+		return topLevel
 	} catch (error) {
-		console.error('Error getting comments:', error);
-		throw normalizeError(error, { context: 'getComments' });
+		console.error('Error getting comments:', error)
+		throw normalizeError(error, { context: 'getComments' })
 	}
 }
 
@@ -166,16 +166,16 @@ export async function getComments(postId, options = {}) {
  */
 export async function updateComment(commentId, content) {
 	if (!content.trim()) {
-		throw new Error('Comment content cannot be empty');
+		throw new Error('Comment content cannot be empty')
 	}
 
 	try {
 		return await pb.collection('comments').update(commentId, {
 			content: content.trim()
-		});
+		})
 	} catch (error) {
-		console.error('Error updating comment:', error);
-		throw normalizeError(error, { context: 'updateComment' });
+		console.error('Error updating comment:', error)
+		throw normalizeError(error, { context: 'updateComment' })
 	}
 }
 
@@ -188,17 +188,17 @@ export async function updateComment(commentId, content) {
 export async function deleteComment(commentId, postId) {
 	try {
 		// Delete the comment
-		await pb.collection('comments').delete(commentId);
+		await pb.collection('comments').delete(commentId)
 
 		// Update post comment count
-		const post = await pb.collection('posts').getOne(postId);
-		const newCommentCount = Math.max(0, (post.commentCount || 0) - 1);
-		await pb.collection('posts').update(postId, { commentCount: newCommentCount });
+		const post = await pb.collection('posts').getOne(postId)
+		const newCommentCount = Math.max(0, (post.commentCount || 0) - 1)
+		await pb.collection('posts').update(postId, { commentCount: newCommentCount })
 
-		return true;
+		return true
 	} catch (error) {
-		console.error('Error deleting comment:', error);
-		throw normalizeError(error, { context: 'deleteComment' });
+		console.error('Error deleting comment:', error)
+		throw normalizeError(error, { context: 'deleteComment' })
 	}
 }
 
@@ -217,11 +217,11 @@ export async function getCommentCount(postId) {
 		const result = await pb.collection('comments').getList(1, 1, {
 			filter: `post = "${postId}"`,
 			totalCount: true
-		});
-		return result.totalItems;
+		})
+		return result.totalItems
 	} catch (error) {
-		console.error('Error getting comment count:', error);
-		normalizeError(error, { context: 'getCommentCount' }); // normalized for potential future logging
-		return 0;
+		console.error('Error getting comment count:', error)
+		normalizeError(error, { context: 'getCommentCount' }) // normalized for potential future logging
+		return 0
 	}
 }

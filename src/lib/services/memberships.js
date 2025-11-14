@@ -1,5 +1,5 @@
-import { pb } from '../pocketbase.js';
-import { normalizeError } from '../utils/errors.js';
+import { pb } from '../pocketbase.js'
+import { normalizeError } from '../utils/errors.js'
 
 /**
  * @typedef {{ pb?: import('pocketbase').default }} ServiceOptions
@@ -10,7 +10,7 @@ import { normalizeError } from '../utils/errors.js';
  * @returns {import('pocketbase').default}
  */
 function resolveClient(provided) {
-	return provided ?? pb;
+	return provided ?? pb
 }
 
 /** Join a space (creates membership)
@@ -18,16 +18,16 @@ function resolveClient(provided) {
  */
 export async function joinSpace(spaceId, serviceOptions = /** @type {ServiceOptions} */ ({})) {
 	try {
-		const client = resolveClient(serviceOptions.pb);
-		if (!client.authStore.model?.id) throw new Error('Not authenticated');
+		const client = resolveClient(serviceOptions.pb)
+		if (!client.authStore.model?.id) throw new Error('Not authenticated')
 		return await client.collection('space_members').create({
 			space: spaceId,
 			user: client.authStore.model.id,
 			role: 'member'
-		});
+		})
 	} catch (error) {
-		console.error('Error joining space:', error);
-		throw normalizeError(error, { context: 'joinSpace' });
+		console.error('Error joining space:', error)
+		throw normalizeError(error, { context: 'joinSpace' })
 	}
 }
 
@@ -36,18 +36,18 @@ export async function joinSpace(spaceId, serviceOptions = /** @type {ServiceOpti
  */
 export async function leaveSpace(spaceId, serviceOptions = /** @type {ServiceOptions} */ ({})) {
 	try {
-		const client = resolveClient(serviceOptions.pb);
-		if (!client.authStore.model?.id) throw new Error('Not authenticated');
+		const client = resolveClient(serviceOptions.pb)
+		if (!client.authStore.model?.id) throw new Error('Not authenticated')
 		// Find membership record id first
 		const list = await client.collection('space_members').getList(1, 1, {
 			filter: `space = "${spaceId}" && user = "${client.authStore.model.id}"`
-		});
-		if (list.items.length === 0) return false;
-		await client.collection('space_members').delete(list.items[0].id);
-		return true;
+		})
+		if (list.items.length === 0) return false
+		await client.collection('space_members').delete(list.items[0].id)
+		return true
 	} catch (error) {
-		console.error('Error leaving space:', error);
-		throw normalizeError(error, { context: 'leaveSpace' });
+		console.error('Error leaving space:', error)
+		throw normalizeError(error, { context: 'leaveSpace' })
 	}
 }
 
@@ -56,16 +56,16 @@ export async function leaveSpace(spaceId, serviceOptions = /** @type {ServiceOpt
  */
 export async function isMember(spaceId, serviceOptions = /** @type {ServiceOptions} */ ({})) {
 	try {
-		const client = resolveClient(serviceOptions.pb);
-		if (!client.authStore.model?.id) return false;
+		const client = resolveClient(serviceOptions.pb)
+		if (!client.authStore.model?.id) return false
 		const list = await client.collection('space_members').getList(1, 1, {
 			filter: `space = "${spaceId}" && user = "${client.authStore.model.id}"`
-		});
-		return list.items.length > 0;
+		})
+		return list.items.length > 0
 	} catch (error) {
-		console.error('Error checking membership:', error);
-		normalizeError(error, { context: 'isMember' }); // swallow
-		return false;
+		console.error('Error checking membership:', error)
+		normalizeError(error, { context: 'isMember' }) // swallow
+		return false
 	}
 }
 
@@ -77,15 +77,15 @@ export async function getMembershipRole(
 	serviceOptions = /** @type {ServiceOptions} */ ({})
 ) {
 	try {
-		const client = resolveClient(serviceOptions.pb);
-		if (!client.authStore.model?.id) return null;
+		const client = resolveClient(serviceOptions.pb)
+		if (!client.authStore.model?.id) return null
 		const list = await client.collection('space_members').getList(1, 1, {
 			filter: `space = "${spaceId}" && user = "${client.authStore.model.id}"`
-		});
-		return list.items[0]?.role || null;
+		})
+		return list.items[0]?.role || null
 	} catch (error) {
-		console.error('Error getting membership role:', error);
-		normalizeError(error, { context: 'getMembershipRole' }); // swallow
-		return null;
+		console.error('Error getting membership role:', error)
+		normalizeError(error, { context: 'getMembershipRole' }) // swallow
+		return null
 	}
 }

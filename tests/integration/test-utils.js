@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { vi } from 'vitest'
 
 // Mock the PocketBase client for integration tests
 class MockPocketBase {
@@ -9,9 +9,9 @@ class MockPocketBase {
 			isValid: false,
 			clear: vi.fn(),
 			save: vi.fn()
-		};
-		this.collections = new Map();
-		this._setupMockCollections();
+		}
+		this.collections = new Map()
+		this._setupMockCollections()
 	}
 
 	_setupMockCollections() {
@@ -23,7 +23,7 @@ class MockPocketBase {
 			requestPasswordReset: vi.fn(),
 			update: vi.fn(),
 			delete: vi.fn()
-		});
+		})
 
 		// Mock posts collection
 		this.collections.set('posts', {
@@ -32,7 +32,7 @@ class MockPocketBase {
 			getOne: vi.fn(),
 			update: vi.fn(),
 			delete: vi.fn()
-		});
+		})
 
 		// Mock spaces collection
 		this.collections.set('spaces', {
@@ -41,28 +41,28 @@ class MockPocketBase {
 			getFirstListItem: vi.fn(),
 			update: vi.fn(),
 			delete: vi.fn()
-		});
+		})
 
 		// Mock likes collection
 		this.collections.set('likes', {
 			create: vi.fn(),
 			getFirstListItem: vi.fn(),
 			delete: vi.fn()
-		});
+		})
 
 		// Mock comments collection
 		this.collections.set('comments', {
 			create: vi.fn(),
 			getList: vi.fn(),
 			delete: vi.fn()
-		});
+		})
 	}
 
 	/**
 	 * @param {any} name
 	 */
 	collection(name) {
-		return this.collections.get(name);
+		return this.collections.get(name)
 	}
 
 	// Add helper methods for test setup
@@ -70,27 +70,27 @@ class MockPocketBase {
 	 * @param {any} userData
 	 */
 	mockUser(userData) {
-		this.authStore.model = userData;
-		this.authStore.isValid = true;
-		this.authStore.token = 'mock-token';
-		return userData;
+		this.authStore.model = userData
+		this.authStore.isValid = true
+		this.authStore.token = 'mock-token'
+		return userData
 	}
 
 	clearAuth() {
-		this.authStore.model = null;
-		this.authStore.isValid = false;
-		this.authStore.token = '';
+		this.authStore.model = null
+		this.authStore.isValid = false
+		this.authStore.token = ''
 	}
 }
 
 // Mock the global PocketBase instance
 vi.mock('$lib/pocketbase.js', () => {
-	const mockPb = new MockPocketBase();
+	const mockPb = new MockPocketBase()
 	return {
 		default: mockPb,
 		pb: mockPb,
 		currentUser: { subscribe: vi.fn() }
-	};
-});
+	}
+})
 
-export { MockPocketBase };
+export { MockPocketBase }

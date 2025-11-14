@@ -13,7 +13,7 @@
  * - Case resolution: ≤ 2 hours
  */
 
-import { pb } from '$lib/pocketbase.js';
+import { pb } from '$lib/pocketbase.js'
 
 /**
  * @typedef {Object} MessageSLAMetric
@@ -62,7 +62,7 @@ const SLA_THRESHOLDS = {
 	MODERATION_RESOLUTION_MINUTES: 120, // 2 hours to case resolution
 	UPTIME_TARGET_PERCENT: 99.5, // 99.5% uptime requirement
 	ESCALATION_THRESHOLD_MINUTES: 15 // Auto-escalate after 15 minutes
-};
+}
 
 /**
  * Track message delivery latency
@@ -72,7 +72,7 @@ const SLA_THRESHOLDS = {
  */
 export async function trackMessageDelivery(messageId: string, threadId: string, latencyMs: number) {
 	try {
-		const withinSLA = latencyMs <= SLA_THRESHOLDS.MESSAGE_DELIVERY_MS;
+		const withinSLA = latencyMs <= SLA_THRESHOLDS.MESSAGE_DELIVERY_MS
 
 		await pb.collection('analytics_events').create({
 			event_type: 'message_delivery',
@@ -84,13 +84,13 @@ export async function trackMessageDelivery(messageId: string, threadId: string, 
 				withinSLA,
 				threshold: SLA_THRESHOLDS.MESSAGE_DELIVERY_MS
 			})
-		});
+		})
 
 		if (!withinSLA) {
-			console.warn(`[SLA] Message delivery exceeded SLA: ${latencyMs}ms for message ${messageId}`);
+			console.warn(`[SLA] Message delivery exceeded SLA: ${latencyMs}ms for message ${messageId}`)
 		}
 	} catch (error) {
-		console.error('Failed to track message delivery:', error);
+		console.error('Failed to track message delivery:', error)
 	}
 }
 
@@ -110,19 +110,19 @@ export async function trackModerationCase(
 	try {
 		const responseTimeMinutes = firstResponseAt
 			? (firstResponseAt.getTime() - createdAt.getTime()) / (1000 * 60)
-			: null;
+			: null
 
 		const resolutionTimeMinutes = resolvedAt
 			? (resolvedAt.getTime() - createdAt.getTime()) / (1000 * 60)
-			: null;
+			: null
 
 		const responseWithinSLA = responseTimeMinutes
 			? responseTimeMinutes <= SLA_THRESHOLDS.MODERATION_RESPONSE_MINUTES
-			: false;
+			: false
 
 		const resolutionWithinSLA = resolutionTimeMinutes
 			? resolutionTimeMinutes <= SLA_THRESHOLDS.MODERATION_RESOLUTION_MINUTES
-			: false;
+			: false
 
 		await pb.collection('analytics_events').create({
 			event_type: 'moderation_case_timing',
@@ -138,22 +138,22 @@ export async function trackModerationCase(
 					resolution: SLA_THRESHOLDS.MODERATION_RESOLUTION_MINUTES
 				}
 			})
-		});
+		})
 
 		// Log SLA breaches
 		if (responseTimeMinutes && !responseWithinSLA) {
 			console.warn(
 				`[SLA] Moderation response SLA breach: ${responseTimeMinutes.toFixed(1)}min for case ${caseId}`
-			);
+			)
 		}
 
 		if (resolutionTimeMinutes && !resolutionWithinSLA) {
 			console.warn(
 				`[SLA] Moderation resolution SLA breach: ${resolutionTimeMinutes.toFixed(1)}min for case ${caseId}`
-			);
+			)
 		}
 	} catch (error) {
-		console.error('Failed to track moderation case:', error);
+		console.error('Failed to track moderation case:', error)
 	}
 }
 
@@ -163,26 +163,26 @@ export async function trackModerationCase(
  */
 export async function checkEscalationNeeded() {
 	try {
-		const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+		const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000)
 
 		// Find open cases older than 15 minutes
 		const cases = await pb.collection('moderation_cases').getFullList({
 			filter: `state = "open" && created < "${fifteenMinutesAgo.toISOString()}"`,
 			sort: 'created'
-		});
+		})
 
 		return cases.map((c) => {
-			const ageMinutes = (Date.now() - new Date(c.created).getTime()) / (1000 * 60);
+			const ageMinutes = (Date.now() - new Date(c.created).getTime()) / (1000 * 60)
 			return {
 				caseId: c.id,
 				ageMinutes: Math.round(ageMinutes),
 				sourceType: c.sourceType,
 				sourceId: c.sourceId
-			};
-		});
+			}
+		})
 	} catch (error) {
-		console.error('Failed to check escalation:', error);
-		return [];
+		console.error('Failed to check escalation:', error)
+		return []
 	}
 }
 
@@ -193,70 +193,70 @@ export async function checkEscalationNeeded() {
  */
 export async function generateDailySLAReport(date = new Date(Date.now() - 24 * 60 * 60 * 1000)) {
 	try {
-		const startOfDay = new Date(date);
-		startOfDay.setHours(0, 0, 0, 0);
+		const startOfDay = new Date(date)
+		startOfDay.setHours(0, 0, 0, 0)
 
-		const endOfDay = new Date(date);
-		endOfDay.setHours(23, 59, 59, 999);
+		const endOfDay = new Date(date)
+		endOfDay.setHours(23, 59, 59, 999)
 
 		// Query message delivery events
 		const deliveryEvents = await pb.collection('analytics_events').getFullList({
 			filter: `event_type = "message_delivery" && created >= "${startOfDay.toISOString()}" && created <= "${endOfDay.toISOString()}"`
-		});
+		})
 
 		// Parse delivery metrics
 		const deliveryLatencies = deliveryEvents.map((e) => {
-			const meta = JSON.parse(e.metadata);
-			return meta.latencyMs;
-		});
+			const meta = JSON.parse(e.metadata)
+			return meta.latencyMs
+		})
 
 		const messagesWithinSLA = deliveryEvents.filter((e) => {
-			const meta = JSON.parse(e.metadata);
-			return meta.withinSLA;
-		}).length;
+			const meta = JSON.parse(e.metadata)
+			return meta.withinSLA
+		}).length
 
 		// Query moderation case events
 		const caseEvents = await pb.collection('analytics_events').getFullList({
 			filter: `event_type = "moderation_case_timing" && created >= "${startOfDay.toISOString()}" && created <= "${endOfDay.toISOString()}"`
-		});
+		})
 
 		// Parse case metrics
-		let totalResponseTime = 0;
-		let totalResolutionTime = 0;
-		let casesWithResponse = 0;
-		let casesWithResolution = 0;
-		let casesWithinSLA = 0;
-		let escalatedCount = 0;
+		let totalResponseTime = 0
+		let totalResolutionTime = 0
+		let casesWithResponse = 0
+		let casesWithResolution = 0
+		let casesWithinSLA = 0
+		let escalatedCount = 0
 
 		for (const event of caseEvents) {
-			const meta = JSON.parse(event.metadata);
+			const meta = JSON.parse(event.metadata)
 
 			if (meta.responseTimeMinutes !== null) {
-				totalResponseTime += meta.responseTimeMinutes;
-				casesWithResponse++;
+				totalResponseTime += meta.responseTimeMinutes
+				casesWithResponse++
 			}
 
 			if (meta.resolutionTimeMinutes !== null) {
-				totalResolutionTime += meta.resolutionTimeMinutes;
-				casesWithResolution++;
+				totalResolutionTime += meta.resolutionTimeMinutes
+				casesWithResolution++
 			}
 
 			if (meta.responseWithinSLA && meta.resolutionWithinSLA) {
-				casesWithinSLA++;
+				casesWithinSLA++
 			}
 
 			if (
 				meta.responseTimeMinutes &&
 				meta.responseTimeMinutes > SLA_THRESHOLDS.ESCALATION_THRESHOLD_MINUTES
 			) {
-				escalatedCount++;
+				escalatedCount++
 			}
 		}
 
 		// Calculate percentiles for delivery latency
-		const sortedLatencies = deliveryLatencies.sort((a, b) => a - b);
-		const p95Index = Math.floor(sortedLatencies.length * 0.95);
-		const p99Index = Math.floor(sortedLatencies.length * 0.99);
+		const sortedLatencies = deliveryLatencies.sort((a, b) => a - b)
+		const p95Index = Math.floor(sortedLatencies.length * 0.95)
+		const p99Index = Math.floor(sortedLatencies.length * 0.99)
 
 		const report = {
 			reportDate: date,
@@ -276,19 +276,19 @@ export async function generateDailySLAReport(date = new Date(Date.now() - 24 * 6
 			avgResolutionTimeMinutes:
 				casesWithResolution > 0 ? totalResolutionTime / casesWithResolution : 0,
 			escalatedCases: escalatedCount
-		};
+		}
 
 		// Store report
 		await pb.collection('analytics_events').create({
 			event_type: 'sla_daily_report',
 			user: null,
 			metadata: JSON.stringify(report)
-		});
+		})
 
-		return report;
+		return report
 	} catch (error) {
-		console.error('Failed to generate SLA report:', error);
-		throw error;
+		console.error('Failed to generate SLA report:', error)
+		throw error
 	}
 }
 
@@ -298,29 +298,29 @@ export async function generateDailySLAReport(date = new Date(Date.now() - 24 * 6
  */
 export async function getDashboardMetrics() {
 	try {
-		const now = new Date();
-		const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+		const now = new Date()
+		const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000)
 
 		// Open cases
 		const openCases = await pb.collection('moderation_cases').getFullList({
 			filter: 'state = "open" || state = "in_review"'
-		});
+		})
 
 		// Cases needing escalation
-		const needsEscalation = await checkEscalationNeeded();
+		const needsEscalation = await checkEscalationNeeded()
 
 		// Recent delivery events
 		const recentDeliveries = await pb.collection('analytics_events').getFullList({
 			filter: `event_type = "message_delivery" && created >= "${last24Hours.toISOString()}"`,
 			sort: '-created',
 			$autoCancel: false
-		});
+		})
 
 		const recentCases = await pb.collection('analytics_events').getFullList({
 			filter: `event_type = "moderation_case_timing" && created >= "${last24Hours.toISOString()}"`,
 			sort: '-created',
 			$autoCancel: false
-		});
+		})
 
 		// Calculate current metrics
 		const deliverySuccessRate =
@@ -328,15 +328,15 @@ export async function getDashboardMetrics() {
 				? (recentDeliveries.filter((e) => JSON.parse(e.metadata).withinSLA).length /
 						recentDeliveries.length) *
 					100
-				: 100;
+				: 100
 
 		const avgCaseResponseTime =
 			recentCases.length > 0
 				? recentCases.reduce((sum, e) => {
-						const meta = JSON.parse(e.metadata);
-						return sum + (meta.responseTimeMinutes || 0);
+						const meta = JSON.parse(e.metadata)
+						return sum + (meta.responseTimeMinutes || 0)
 					}, 0) / recentCases.length
-				: 0;
+				: 0
 
 		return {
 			timestamp: now,
@@ -349,10 +349,10 @@ export async function getDashboardMetrics() {
 			slaStatus:
 				deliverySuccessRate >= SLA_THRESHOLDS.UPTIME_TARGET_PERCENT ? 'healthy' : 'degraded',
 			needsEscalation: needsEscalation
-		};
+		}
 	} catch (error) {
-		console.error('Failed to get dashboard metrics:', error);
-		throw error;
+		console.error('Failed to get dashboard metrics:', error)
+		throw error
 	}
 }
 
@@ -371,15 +371,15 @@ export async function trackSLABreach(type: string, details: Record<string, unkno
 				timestamp: new Date().toISOString(),
 				...details
 			})
-		});
+		})
 
 		// Log to console for immediate visibility
-		console.error(`[SLA BREACH] ${type}:`, details);
+		console.error(`[SLA BREACH] ${type}:`, details)
 
 		// TODO: Trigger alerts (email, Slack, PagerDuty, etc.)
 	} catch (error) {
-		console.error('Failed to track SLA breach:', error);
+		console.error('Failed to track SLA breach:', error)
 	}
 }
 
-export { SLA_THRESHOLDS };
+export { SLA_THRESHOLDS }

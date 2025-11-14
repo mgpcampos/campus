@@ -1,53 +1,53 @@
 <script lang="ts">
-	import * as Dialog from '$lib/components/ui/dialog/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { X } from '@lucide/svelte';
+import { X } from '@lucide/svelte'
+import { Button } from '$lib/components/ui/button/index.js'
+import * as Dialog from '$lib/components/ui/dialog/index.js'
 
-	let {
-		open = false,
-		title = '',
-		description = '',
-		children,
-		onOpenChange = (open: boolean) => {},
-		onClose = () => {},
-		class: className = '',
-		size = 'default',
-		showCloseButton = true,
-		closeOnOutsideClick = true,
-		closeOnEscape = true
-	}: {
-		open?: boolean;
-		title?: string;
-		description?: string;
-		children?: any;
-		onOpenChange?: (open: boolean) => void;
-		onClose?: () => void;
-		class?: string;
-		size?: 'sm' | 'default' | 'lg' | 'xl' | 'full';
-		showCloseButton?: boolean;
-		closeOnOutsideClick?: boolean;
-		closeOnEscape?: boolean;
-	} = $props();
+let {
+	open = false,
+	title = '',
+	description = '',
+	children,
+	onOpenChange = (open: boolean) => {},
+	onClose = () => {},
+	class: className = '',
+	size = 'default',
+	showCloseButton = true,
+	closeOnOutsideClick = true,
+	closeOnEscape = true
+}: {
+	open?: boolean
+	title?: string
+	description?: string
+	children?: any
+	onOpenChange?: (open: boolean) => void
+	onClose?: () => void
+	class?: string
+	size?: 'sm' | 'default' | 'lg' | 'xl' | 'full'
+	showCloseButton?: boolean
+	closeOnOutsideClick?: boolean
+	closeOnEscape?: boolean
+} = $props()
 
-	const sizeClasses = {
-		sm: 'max-w-md',
-		default: 'max-w-lg',
-		lg: 'max-w-2xl',
-		xl: 'max-w-4xl',
-		full: 'max-w-[95vw] max-h-[95vh]'
-	};
+const sizeClasses = {
+	sm: 'max-w-md',
+	default: 'max-w-lg',
+	lg: 'max-w-2xl',
+	xl: 'max-w-4xl',
+	full: 'max-w-[95vw] max-h-[95vh]'
+}
 
-	function handleOpenChange(newOpen: boolean) {
-		if (!newOpen) {
-			onClose();
-		}
-		onOpenChange(newOpen);
+function handleOpenChange(newOpen: boolean) {
+	if (!newOpen) {
+		onClose()
 	}
+	onOpenChange(newOpen)
+}
 
-	function handleClose() {
-		open = false;
-		onClose();
-	}
+function handleClose() {
+	open = false
+	onClose()
+}
 </script>
 
 <Dialog.Root bind:open onOpenChange={handleOpenChange}>

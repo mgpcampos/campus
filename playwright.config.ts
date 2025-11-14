@@ -1,10 +1,10 @@
-import { defineConfig, devices } from '@playwright/test';
-import type { Project } from '@playwright/test';
+import type { Project } from '@playwright/test'
+import { defineConfig, devices } from '@playwright/test'
 
 /**
  * @see https://playwright.dev/docs/test-configuration
  */
-const includeWebkit = Boolean(process.env.CI || process.env.PLAYWRIGHT_ENABLE_WEBKIT === '1');
+const includeWebkit = Boolean(process.env.CI || process.env.PLAYWRIGHT_ENABLE_WEBKIT === '1')
 
 const projects: Project[] = [
 	{
@@ -20,7 +20,7 @@ const projects: Project[] = [
 		name: 'Mobile Chrome',
 		use: { ...devices['Pixel 5'] }
 	}
-];
+]
 
 if (includeWebkit) {
 	projects.push(
@@ -32,13 +32,13 @@ if (includeWebkit) {
 			name: 'Mobile Safari',
 			use: { ...devices['iPhone 12'] }
 		}
-	);
+	)
 } else {
 	if (!process.env.PLAYWRIGHT_SKIP_WEBKIT_NOTICE) {
 		console.warn(
 			'Skipping WebKit-based Playwright projects; set PLAYWRIGHT_ENABLE_WEBKIT=1 to include them locally.'
-		);
-		process.env.PLAYWRIGHT_SKIP_WEBKIT_NOTICE = '1';
+		)
+		process.env.PLAYWRIGHT_SKIP_WEBKIT_NOTICE = '1'
 	}
 }
 
@@ -75,4 +75,4 @@ export default defineConfig({
 	},
 	/* Global setup and teardown */ globalSetup: './tests/global-setup.ts',
 	globalTeardown: './tests/global-teardown.ts'
-});
+})

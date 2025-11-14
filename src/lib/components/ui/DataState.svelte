@@ -1,43 +1,41 @@
 <script lang="ts">
-	import SkeletonLoader from './SkeletonLoader.svelte';
-	import ErrorBoundary from './ErrorBoundary.svelte';
-	import EmptyState from './EmptyState.svelte';
+import EmptyState from './EmptyState.svelte'
+import ErrorBoundary from './ErrorBoundary.svelte'
+import SkeletonLoader from './SkeletonLoader.svelte'
 
-	let {
-		loading = false,
-		error = null,
-		data = null,
-		loadingVariant = 'default',
-		loadingCount = 3,
-		emptyIcon = null,
-		emptyTitle = 'No data found',
-		emptyDescription = 'There is nothing here yet.',
-		emptyAction = '',
-		emptyActionHref = '',
-		onEmptyAction = () => {},
-		onRetry = () => {},
-		children,
-		class: className = ''
-	}: {
-		loading?: boolean;
-		error?: any | null;
-		data?: any;
-		loadingVariant?: 'default' | 'card' | 'post' | 'profile' | 'list';
-		loadingCount?: number;
-		emptyIcon?: any;
-		emptyTitle?: string;
-		emptyDescription?: string;
-		emptyAction?: string;
-		emptyActionHref?: string;
-		onEmptyAction?: () => void;
-		onRetry?: () => void;
-		children?: any;
-		class?: string;
-	} = $props();
+let {
+	loading = false,
+	error = null,
+	data = null,
+	loadingVariant = 'default',
+	loadingCount = 3,
+	emptyIcon = null,
+	emptyTitle = 'No data found',
+	emptyDescription = 'There is nothing here yet.',
+	emptyAction = '',
+	emptyActionHref = '',
+	onEmptyAction = () => {},
+	onRetry = () => {},
+	children,
+	class: className = ''
+}: {
+	loading?: boolean
+	error?: any | null
+	data?: any
+	loadingVariant?: 'default' | 'card' | 'post' | 'profile' | 'list'
+	loadingCount?: number
+	emptyIcon?: any
+	emptyTitle?: string
+	emptyDescription?: string
+	emptyAction?: string
+	emptyActionHref?: string
+	onEmptyAction?: () => void
+	onRetry?: () => void
+	children?: any
+	class?: string
+} = $props()
 
-	let isEmpty = $derived(
-		!loading && !error && (!data || (Array.isArray(data) && data.length === 0))
-	);
+let isEmpty = $derived(!loading && !error && (!data || (Array.isArray(data) && data.length === 0)))
 </script>
 
 <div class={className}>
