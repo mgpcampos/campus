@@ -25,7 +25,6 @@
 			"!**/bun.lock",
 			"!**/bun.lockb",
 			"!./static/",
-			"!.vite-inspect.json",
 			"!src/lib/server/notifications/templates",
 			"!src/lib/server/notifications/templates/**"
 		]

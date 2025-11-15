@@ -1,7 +1,7 @@
 import path from 'node:path'
 import { sveltekit } from '@sveltejs/kit/vite'
 import tailwindcss from '@tailwindcss/vite'
-import { defineConfig } from 'vitest/config'
+import { defineConfig } from 'vite'
 
 export default defineConfig(({ mode }) => {
 	const isProduction = mode === 'production'
@@ -45,25 +45,6 @@ export default defineConfig(({ mode }) => {
 		esbuild: {
 			legalComments: 'none',
 			drop: isProduction ? ['console', 'debugger'] : []
-		},
-		test: {
-			include: ['src/**/*.{test,spec}.{js,ts}'],
-			environment: 'jsdom',
-			setupFiles: ['src/setupTests.js'],
-			globals: true,
-			// Clear cache issues when aliases previously failed
-			clearMocks: true,
-			projects: [
-				{
-					extends: './vite.config.ts',
-					test: {
-						name: 'server',
-						environment: 'node',
-						include: ['src/**/*.{test,spec}.{js,ts}'],
-						exclude: ['src/**/*.svelte.{test,spec}.{js,ts}']
-					}
-				}
-			]
 		}
 	}
 })

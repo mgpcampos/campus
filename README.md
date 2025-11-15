@@ -111,14 +111,6 @@ Owners and moderators can edit the description at `/spaces/[id]/manage`.
 
 When on a Space page, new posts created via the post form are automatically scoped to that Space.
 
-## Testing
-
-Vitest is configured for unit and integration tests. Added tests cover membership service logic (join, leave, role retrieval). Run:
-
-```sh
-npm test
-```
-
 ## Development
 
 - `npm run dev` - Start development server
@@ -177,12 +169,6 @@ Next recommendations for production scale:
 - Add bundle analyzer and track JS payload budgets (<150KB gzipped initial route).
 - Implement image format negotiation (WebP/AVIF) and add width-based placeholder (LQIP) pipeline.
 - Add Service Worker for offline caching of shell & last feed snapshot.
-
-Testing:
-
-- `cache.test.js` validates LRU + TTL semantics and getOrSet helper.
-- `images.test.js` covers URL & srcset generation.
-- Additional feed / route benchmarks can be added using Vitest + synthetic timers or Playwright traces.
 
 ## Monitoring & Analytics
 
