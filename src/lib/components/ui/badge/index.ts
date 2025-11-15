@@ -1,4 +1,2 @@
-export { default as Root, badgeVariants } from './badge.svelte'
-export { default as Badge } from './badge.svelte'
-export type { BadgeProps, BadgeVariant } from './badge.svelte'
-export type { BadgeProps as Props } from './badge.svelte'
+export type { BadgeProps, BadgeProps as Props, BadgeVariant } from './badge.svelte'
+export { badgeVariants, default as Root, default as Badge } from './badge.svelte'

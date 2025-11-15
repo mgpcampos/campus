@@ -14,8 +14,11 @@ export function trapFocus(container: HTMLElement): () => void {
 		return () => undefined
 	}
 
-	const firstElement = focusableElements[0]!
-	const lastElement = focusableElements[focusableElements.length - 1]!
+	const firstElement = focusableElements.item(0)
+	const lastElement = focusableElements.item(focusableElements.length - 1)
+	if (!firstElement || !lastElement) {
+		return () => undefined
+	}
 
 	function handleKeydown(event: KeyboardEvent) {
 		if (event.key !== 'Tab') return

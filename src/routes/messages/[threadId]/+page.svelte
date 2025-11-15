@@ -23,13 +23,14 @@ let messageTimelineElement = $state<HTMLDivElement | null>(null)
 
 // Set up realtime updates
 $effect(() => {
-	if (!data.thread) return
+	const threadId = data.thread?.id
+	if (!threadId) return
 
 	// Poll for new messages every 5 seconds
 	// In a production app, you'd use WebSockets or SSE
 	const interval = setInterval(async () => {
 		try {
-			const response = await fetch(`/api/threads/${data.thread!.id}/messages?page=1&perPage=100`)
+			const response = await fetch(`/api/threads/${threadId}/messages?page=1&perPage=100`)
 			if (response.ok) {
 				const newData = await response.json()
 				messages = newData.items
@@ -74,7 +75,9 @@ function handleFlagMessage(messageId: string) {
 async function handleMessageSent() {
 	// Refresh messages
 	try {
-		const response = await fetch(`/api/threads/${data.thread!.id}/messages?page=1&perPage=100`)
+		const threadId = data.thread?.id
+		if (!threadId) return
+		const response = await fetch(`/api/threads/${threadId}/messages?page=1&perPage=100`)
 		if (response.ok) {
 			const newData = await response.json()
 			messages = newData.items

@@ -112,7 +112,9 @@ export async function getComments(postId, options = {}) {
 		if (ids.length === 0) return topLevel
 
 		let children = []
-		const filter = `post = "${postId}" && parent != null && parent.id in [${ids.map((id) => '"' + id + '"').join(',')}]`
+		const filter = `post = "${postId}" && parent != null && parent.id in [${ids
+			.map((id) => `"${id}"`)
+			.join(',')}]`
 		const commentsCollection = pb.collection('comments')
 		if (typeof commentsCollection.getFullList === 'function') {
 			children = await commentsCollection.getFullList({

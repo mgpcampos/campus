@@ -22,8 +22,8 @@ export async function GET({ params, locals, url }) {
 	}
 
 	const postId = params.id
-	const page = parseInt(url.searchParams.get('page') || '1')
-	const perPage = Math.min(parseInt(url.searchParams.get('perPage') || '50'), 100)
+	const page = parseInt(url.searchParams.get('page') || '1', 10)
+	const perPage = Math.min(parseInt(url.searchParams.get('perPage') || '50', 10), 100)
 
 	try {
 		const comments = await locals.pb.collection('comments').getList(page, perPage, {

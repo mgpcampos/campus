@@ -1,4 +1,5 @@
 <script lang="ts">
+import type { Tabs as TabsPrimitiveType } from 'bits-ui'
 import { Tabs as TabsPrimitive } from 'bits-ui'
 import { cn } from '$lib/utils.js'
 
@@ -7,7 +8,7 @@ let {
 	value = $bindable(''),
 	class: className,
 	...restProps
-}: TabsPrimitive.RootProps = $props()
+}: TabsPrimitiveType.RootProps = $props()
 </script>
 
 <TabsPrimitive.Root

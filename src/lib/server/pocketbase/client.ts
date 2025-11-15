@@ -12,7 +12,7 @@ export const getPocketBaseUrl = () =>
 export const getAuthCookieOptions = (pathname?: string, secureOverride?: boolean) => {
 	const securityCritical = pathname?.startsWith('/auth') || pathname?.startsWith('/api/auth')
 	const sameSite = securityCritical ? 'strict' : 'lax'
-	const defaultSecure = dev ? false : true
+	const defaultSecure = !dev
 	const secure = secureOverride ?? defaultSecure
 
 	return {

@@ -30,6 +30,11 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		return error(401, 'Authentication required')
 	}
 
+	const user = locals.user
+	if (!user) {
+		return error(401, 'User not found in session')
+	}
+
 	try {
 		// Parse query parameters for filtering
 		const scopeType = url.searchParams.get('scopeType')
@@ -38,7 +43,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		const to = url.searchParams.get('to')
 
 		// Build filter - only show events created by the current user
-		let filter = `createdBy = "${locals.user!.id}"`
+		let filter = `createdBy = "${user.id}"`
 
 		if (scopeType) {
 			filter += ` && scopeType = "${scopeType}"`
@@ -71,7 +76,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			events,
 			createForm,
 			rsvpForm,
-			user: locals.user
+			user
 		}
 	} catch (err) {
 		const normalized = normalizeError(err, { context: 'load calendar' })
@@ -84,6 +89,11 @@ export const actions: Actions = {
 	createEvent: async ({ request, locals }) => {
 		if (!locals.pb.authStore.isValid) {
 			return fail(401, { message: 'Authentication required' })
+		}
+
+		const user = locals.user
+		if (!user) {
+			return fail(401, { message: 'User not found in session' })
 		}
 
 		try {
@@ -119,7 +129,7 @@ export const actions: Actions = {
 				end: toUTC(endDate.toISOString()),
 				location: undefined, // No location
 				reminderLeadMinutes: 30, // Default 30 minute reminder
-				createdBy: locals.user!.id
+				createdBy: user.id
 			})
 
 			return { createForm, success: true }
@@ -139,6 +149,11 @@ export const actions: Actions = {
 			return fail(401, { message: 'Authentication required' })
 		}
 
+		const user = locals.user
+		if (!user) {
+			return fail(401, { message: 'User not found in session' })
+		}
+
 		try {
 			const rsvpForm = await superValidate(request, withZod(rsvpSchema))
 
@@ -150,7 +165,7 @@ export const actions: Actions = {
 
 			// Check if participant already exists
 			const existingParticipants = await locals.pb.collection('event_participants').getFullList({
-				filter: `event = "${eventId}" && user = "${locals.user!.id}"`
+				filter: `event = "${eventId}" && user = "${user.id}"`
 			})
 
 			const [existingParticipant] = existingParticipants
@@ -163,7 +178,7 @@ export const actions: Actions = {
 				// Create new RSVP
 				await locals.pb.collection('event_participants').create({
 					event: eventId,
-					user: locals.user!.id,
+					user: user.id,
 					status
 				})
 			}
@@ -185,6 +200,11 @@ export const actions: Actions = {
 			return fail(401, { message: 'Authentication required' })
 		}
 
+		const user = locals.user
+		if (!user) {
+			return fail(401, { message: 'User not found in session' })
+		}
+
 		try {
 			const formData = await request.formData()
 			const eventId = formData.get('eventId') as string
@@ -196,7 +216,7 @@ export const actions: Actions = {
 			// Fetch event to check ownership
 			const event = await locals.pb.collection('events').getOne(eventId)
 
-			if (event.createdBy !== locals.user!.id) {
+			if (event.createdBy !== user.id) {
 				return fail(403, { message: 'You do not have permission to delete this event' })
 			}
 

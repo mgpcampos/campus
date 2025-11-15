@@ -9,9 +9,11 @@ const mentionRegex = /@([a-zA-Z0-9_]{3,30})/g
  */
 export function extractMentions(content) {
 	const matches = new Set()
-	let m
-	while ((m = mentionRegex.exec(content)) !== null) {
-		matches.add(m[1])
+	mentionRegex.lastIndex = 0
+	while (true) {
+		const match = mentionRegex.exec(content)
+		if (!match) break
+		matches.add(match[1])
 	}
 	return Array.from(matches)
 }

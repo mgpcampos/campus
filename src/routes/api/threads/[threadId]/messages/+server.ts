@@ -131,7 +131,7 @@ export async function POST({ params, request, locals }) {
 		}
 
 		if (validatedData.attachments) {
-			validatedData.attachments.forEach((file, index) => {
+			validatedData.attachments.forEach((file) => {
 				messageFormData.append(`attachments`, file)
 			})
 		}

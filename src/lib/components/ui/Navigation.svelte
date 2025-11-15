@@ -41,7 +41,7 @@ function handleKeydown(event: KeyboardEvent, item: NavigationItem) {
 	}
 }
 
-function getVariantClasses(item: NavigationItem, active: boolean) {
+function getVariantClasses(_item: NavigationItem, active: boolean) {
 	const base =
 		'transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
 

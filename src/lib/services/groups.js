@@ -130,10 +130,7 @@ export async function getGroupMembers(
 		const filtered = result.items.filter((/** @type {any} */ m) => {
 			const u = m.expand?.user
 			if (!u) return false
-			return (
-				(u.username && u.username.toLowerCase().includes(s)) ||
-				(u.name && u.name.toLowerCase().includes(s))
-			)
+			return u.username?.toLowerCase().includes(s) || u.name?.toLowerCase().includes(s)
 		})
 		return {
 			...result,

@@ -34,7 +34,7 @@ $: if (src !== currentSrc) {
 	currentSrc = src
 	loaded = false
 	hasError = false
-	if (imageEl && imageEl.complete) {
+	if (imageEl?.complete) {
 		if (imageEl.naturalWidth > 0 && imageEl.naturalHeight > 0) {
 			handleLoad()
 		} else {

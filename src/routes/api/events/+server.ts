@@ -67,6 +67,11 @@ export async function POST({ request, locals }) {
 		return error(401, 'Authentication required')
 	}
 
+	const user = locals.user
+	if (!user) {
+		return error(401, 'User not found in session')
+	}
+
 	try {
 		const body = await request.json()
 
@@ -137,7 +142,7 @@ export async function POST({ request, locals }) {
 			end: toUTC(end),
 			location: eventData.location ? JSON.stringify(eventData.location) : undefined,
 			reminderLeadMinutes: eventData.reminderLeadMinutes || 30,
-			createdBy: locals.user!.id
+			createdBy: user.id
 		})
 
 		return json(

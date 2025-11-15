@@ -6,10 +6,14 @@ import type { EventLocation, EventRecord } from '../../../../../types/events'
  * Generates an iCalendar (ICS) file for an event
  * RFC 5545 compliant format
  */
+function formatDate(value: string | Date): string {
+	return `${new Date(value).toISOString().replace(/[-:]/g, '').split('.')[0]}Z`
+}
+
 function generateICS(event: EventRecord): string {
-	const now = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
-	const start = new Date(event.start).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
-	const end = new Date(event.end).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
+	const now = formatDate(new Date())
+	const start = formatDate(event.start)
+	const end = formatDate(event.end)
 
 	// Parse location if present
 	let locationStr = ''
@@ -60,7 +64,7 @@ function generateICS(event: EventRecord): string {
 	]
 
 	// Filter out empty lines
-	return lines.filter((line) => line).join('\r\n') + '\r\n'
+	return `${lines.filter((line) => line).join('\r\n')}\r\n`
 }
 
 /**

@@ -22,7 +22,6 @@ export async function POST({ params, request, locals }) {
 			expand: 'thread'
 		})
 
-		// @ts-ignore - expanded relation
 		const thread = message.expand?.thread
 
 		if (!thread || !thread.members.includes(locals.user.id)) {

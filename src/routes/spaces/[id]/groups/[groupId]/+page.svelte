@@ -55,7 +55,7 @@ let working = $state(false)
 async function action(name: string) {
 	working = true
 	const fd = new FormData()
-	const res = await fetch('?/' + name, { method: 'POST', body: fd })
+	const res = await fetch(`?/${name}`, { method: 'POST', body: fd })
 	if (res.ok) location.reload()
 	working = false
 }

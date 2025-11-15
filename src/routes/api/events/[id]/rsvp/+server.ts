@@ -8,6 +8,11 @@ export async function POST({ params, request, locals }) {
 		return error(401, 'Authentication required')
 	}
 
+	const user = locals.user
+	if (!user) {
+		return error(401, 'User not found in session')
+	}
+
 	try {
 		const body = await request.json()
 		const status = body.status as ParticipantStatus
@@ -21,10 +26,10 @@ export async function POST({ params, request, locals }) {
 
 		// Check if participant already exists
 		const existingParticipants = await locals.pb.collection('event_participants').getFullList({
-			filter: `event = "${params.id}" && user = "${locals.user!.id}"`
+			filter: `event = "${params.id}" && user = "${user.id}"`
 		})
 
-		let participant
+		let participant: Record<string, unknown> | null = null
 
 		const [existingParticipant] = existingParticipants
 
@@ -37,9 +42,13 @@ export async function POST({ params, request, locals }) {
 			// Create new RSVP
 			participant = await locals.pb.collection('event_participants').create({
 				event: params.id,
-				user: locals.user!.id,
+				user: user.id,
 				status
 			})
+		}
+
+		if (!participant) {
+			return json({ error: 'Failed to update RSVP' }, { status: 500 })
 		}
 
 		return json({
@@ -59,10 +68,15 @@ export async function DELETE({ params, locals }) {
 		return error(401, 'Authentication required')
 	}
 
+	const user = locals.user
+	if (!user) {
+		return error(401, 'User not found in session')
+	}
+
 	try {
 		// Find existing RSVP
 		const existingParticipants = await locals.pb.collection('event_participants').getFullList({
-			filter: `event = "${params.id}" && user = "${locals.user!.id}"`
+			filter: `event = "${params.id}" && user = "${user.id}"`
 		})
 
 		const [existingParticipant] = existingParticipants

@@ -225,7 +225,7 @@ export async function getPosts(
 								const commentCount = p.commentCount || 0
 								const createdMs = Date.parse(p.created)
 								const ageHours = Math.max(1, (now - createdMs) / 3_600_000)
-								const score = (likeCount * 2 + commentCount * 3) / Math.pow(ageHours, 0.6)
+								const score = (likeCount * 2 + commentCount * 3) / ageHours ** 0.6
 								return { p, score }
 							})
 							.sort((a, b) => b.score - a.score)

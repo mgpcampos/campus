@@ -196,11 +196,13 @@ const validateMediaPayload = (data, ctx) => {
 	if (!data.mediaType) {
 		return
 	}
+	/** @type {Required<Pick<MediaPayload, 'mediaType' | 'attachments'>> & MediaPayload} */
 	const payload = {
 		...data,
+		mediaType: data.mediaType,
 		attachments: data.attachments ?? []
 	}
-	const validator = MEDIA_VALIDATORS[data.mediaType]
+	const validator = MEDIA_VALIDATORS[payload.mediaType]
 	validator?.(payload, ctx)
 }
 
@@ -303,11 +305,11 @@ export const updatePostSchema = z
 		}
 
 		const mediaFieldsProvided =
-				data.mediaType !== undefined ||
-				data.attachments !== undefined ||
-				data.mediaAltText !== undefined ||
-				data.videoPoster !== undefined ||
-				data.videoDuration !== undefined
+			data.mediaType !== undefined ||
+			data.attachments !== undefined ||
+			data.mediaAltText !== undefined ||
+			data.videoPoster !== undefined ||
+			data.videoDuration !== undefined
 
 		if (!mediaFieldsProvided) {
 			return

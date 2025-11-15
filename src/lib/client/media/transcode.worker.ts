@@ -326,5 +326,3 @@ workerContext.onmessage = (event: MessageEvent<TranscodeWorkerMessage>) => {
 			break
 	}
 }
-
-export {}

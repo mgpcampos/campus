@@ -4,7 +4,7 @@ import { createRovingTabindex } from '$lib/utils/accessibility.js'
 
 let {
 	container,
-	selector = '[role="option"], [role="menuitem"], [role="tab"], button:not([disabled]), a[href]',
+	selector = `[role="option"], [role="menuitem"], [role="tab"], button:not([disabled]), a[href]`,
 	direction = 'both',
 	wrap = true,
 	class: className = '',
@@ -33,8 +33,10 @@ onMount(() => {
 })
 
 function handleKeydown(event: KeyboardEvent) {
-	const items = containerElement.querySelectorAll(selector) as NodeListOf<HTMLElement>
-	const currentIndex = Array.from(items).findIndex((item) => item === document.activeElement)
+	const nodeList = containerElement.querySelectorAll(selector) as NodeListOf<HTMLElement>
+	const items = Array.from(nodeList)
+	const activeElement = document.activeElement as HTMLElement | null
+	const currentIndex = activeElement ? items.indexOf(activeElement) : -1
 
 	if (currentIndex === -1) return
 

@@ -11,13 +11,18 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		return error(401, 'Authentication required')
 	}
 
+	const user = locals.user
+	if (!user) {
+		return error(401, 'User not found in session')
+	}
+
 	try {
 		// Build search form from query params
 		const queryParams = Object.fromEntries(url.searchParams)
 		const searchForm = await superValidate(queryParams, withZod(materialSearchSchema))
 
 		// Build PocketBase filter - only show current user's materials
-		const filters: string[] = [`uploader = "${locals.user!.id}"`]
+		const filters: string[] = [`uploader = "${user.id}"`]
 
 		// Text search across searchTerms field
 		if (searchForm.data.q) {
@@ -67,6 +72,11 @@ export const actions: Actions = {
 			return fail(401, { message: 'Authentication required' })
 		}
 
+		const user = locals.user
+		if (!user) {
+			return fail(401, { message: 'User not found in session' })
+		}
+
 		const uploadForm = await superValidate(request, withZod(materialCreateSchema), {
 			allowFiles: true
 		})
@@ -78,7 +88,7 @@ export const actions: Actions = {
 		try {
 			// Simple: just prepare form data with title, description, and file
 			const formData = new FormData()
-			formData.append('uploader', locals.user!.id)
+			formData.append('uploader', user.id)
 			formData.append('title', uploadForm.data.title as string)
 			formData.append('format', 'document') // Default format
 			formData.append('visibility', 'public') // Default visibility

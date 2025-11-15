@@ -83,7 +83,7 @@ const { form, errors, enhance, submitting, message } = superForm(formData, {
 		} else if (result.type === 'failure') {
 			const failureMessage =
 				(typeof result.data?.error === 'string' && result.data.error) ||
-				(result.data?.form?.message && result.data.form.message.text) ||
+				result.data?.form?.message?.text ||
 				undefined
 			if (failureMessage) {
 				$generalError = failureMessage
@@ -207,7 +207,9 @@ function handleImageSelect(event: Event) {
 	const { valid, errors: validationErrors } = validateImages(merged)
 	if (!valid) {
 		$uploadError = validationErrors[0] ?? 'Unable to add images'
-		validationErrors.slice(0, 3).forEach((message) => toast.error(message))
+		validationErrors.slice(0, 3).forEach((message) => {
+			toast.error(message)
+		})
 		target.value = ''
 		return
 	}
@@ -256,7 +258,9 @@ async function handleVideoSelect(event: Event) {
 	const { valid, errors: validationErrors } = validateVideo(file, duration ?? undefined)
 	if (!valid) {
 		$uploadError = validationErrors[0] ?? 'Video upload failed'
-		validationErrors.slice(0, 3).forEach((message) => toast.error(message))
+		validationErrors.slice(0, 3).forEach((message) => {
+			toast.error(message)
+		})
 		target.value = ''
 		return
 	}

@@ -12,7 +12,11 @@ import type { PageData } from './$types'
 
 const { data } = $props<{ data: PageData }>()
 
-let feedComponent: InstanceType<typeof Feed> | null = null
+type FeedComponentInstance = InstanceType<
+	typeof import('$lib/components/feed/Feed.svelte')['default']
+>
+
+let feedComponent: FeedComponentInstance | null = null
 
 let refreshTrigger = $state(0)
 

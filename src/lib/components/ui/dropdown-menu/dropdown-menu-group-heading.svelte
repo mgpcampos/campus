@@ -3,6 +3,8 @@ import { DropdownMenu as DropdownMenuPrimitive } from 'bits-ui'
 import type { ComponentProps } from 'svelte'
 import { cn } from '$lib/utils.js'
 
+const DropdownMenuGroupHeading = DropdownMenuPrimitive.GroupHeading
+
 let {
 	ref = $bindable(null),
 	class: className,
@@ -13,7 +15,7 @@ let {
 } = $props()
 </script>
 
-<DropdownMenuPrimitive.GroupHeading
+<DropdownMenuGroupHeading
 	bind:ref
 	data-slot="dropdown-menu-group-heading"
 	data-inset={inset}

@@ -31,7 +31,7 @@ let loading = false
 let loadingMore = false
 let hasMore = true
 let currentPage = 1
-let error: string | undefined = undefined
+let error: string | undefined
 let lastQueryKey = ''
 
 const perPage = 20

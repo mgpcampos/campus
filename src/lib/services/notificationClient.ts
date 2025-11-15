@@ -99,7 +99,7 @@ export function describeNotification(n: NotificationRecord) {
 	let actorName = 'Someone'
 	if (actorRaw && typeof actorRaw === 'object') {
 		const obj = actorRaw as Record<string, unknown>
-		const nameVal = obj['name']
+		const nameVal = obj.name
 		if (typeof nameVal === 'string' && nameVal.trim().length > 0) {
 			actorName = nameVal
 		}

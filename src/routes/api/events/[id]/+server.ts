@@ -29,12 +29,17 @@ export async function PATCH({ params, request, locals }) {
 		return error(401, 'Authentication required')
 	}
 
+	const user = locals.user
+	if (!user) {
+		return error(401, 'User not found in session')
+	}
+
 	try {
 		// Fetch existing event
 		const existingEvent = await locals.pb.collection('events').getOne(params.id)
 
 		// Check ownership
-		if (existingEvent.createdBy !== locals.user!.id) {
+		if (existingEvent.createdBy !== user.id) {
 			return error(403, 'You do not have permission to update this event')
 		}
 
@@ -129,12 +134,17 @@ export async function DELETE({ params, locals }) {
 		return error(401, 'Authentication required')
 	}
 
+	const user = locals.user
+	if (!user) {
+		return error(401, 'User not found in session')
+	}
+
 	try {
 		// Fetch existing event
 		const existingEvent = await locals.pb.collection('events').getOne(params.id)
 
 		// Check ownership
-		if (existingEvent.createdBy !== locals.user!.id) {
+		if (existingEvent.createdBy !== user.id) {
 			return error(403, 'You do not have permission to delete this event')
 		}
 

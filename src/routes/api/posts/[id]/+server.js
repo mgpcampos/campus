@@ -3,6 +3,8 @@ import { updatePostSchema } from '$lib/schemas/post.js'
 import { deletePost, getPost, updatePost } from '$lib/services/posts.js'
 import { normalizeError, toErrorPayload } from '$lib/utils/errors.ts'
 
+/** @typedef {import('$types/pocketbase').PostsResponse} PostRecord */
+
 /** @type {import('./$types').RequestHandler} */
 export async function GET({ params, locals }) {
 	try {
@@ -15,11 +17,10 @@ export async function GET({ params, locals }) {
 }
 
 /**
- * @param {any} post
+ * @param {PostRecord} post
  * @param {string | undefined | null} userId
  */
 async function assertOwnership(post, userId) {
-	// @ts-ignore PocketBase record typing
 	if (post.author !== userId) {
 		throw error(403, 'You can only edit your own posts')
 	}
@@ -34,6 +35,7 @@ async function handleUpdate({ params, request, locals }) {
 	}
 
 	try {
+		/** @type {PostRecord} */
 		const existingPost = await getPost(params.id, { pb: locals.pb })
 		await assertOwnership(existingPost, locals.pb.authStore.model?.id)
 
@@ -70,10 +72,10 @@ export async function DELETE({ params, locals }) {
 
 	try {
 		// Get the existing post to check ownership
+		/** @type {PostRecord} */
 		const existingPost = await getPost(params.id, { pb: locals.pb })
 
 		// Check if user owns the post
-		// @ts-ignore - PocketBase record type
 		if (existingPost.author !== locals.pb.authStore.model?.id) {
 			return error(403, 'You can only delete your own posts')
 		}

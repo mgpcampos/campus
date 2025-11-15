@@ -17,7 +17,7 @@ function renderTemplate(template, variables) {
 	}
 
 	// Handle conditional blocks {{#if variable}}...{{/if}}
-	rendered = rendered.replaceAll(/{{#if\s+(\w+)}}([\s\S]*?){{\/if}}/g, (match, key, content) => {
+	rendered = rendered.replaceAll(/{{#if\s+(\w+)}}([\s\S]*?){{\/if}}/g, (_match, key, content) => {
 		return variables[key] ? content : ''
 	})
 
@@ -85,7 +85,7 @@ function generateFallbackEmail(templateName, variables) {
  */
 export function renderMessageFlaggedEmail({
 	caseId,
-	threadId,
+	threadId: _threadId,
 	threadTitle,
 	reporterName,
 	reason,

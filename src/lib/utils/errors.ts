@@ -308,7 +308,7 @@ export async function withRetry<T>(fn: () => Promise<T>, options: RetryOptions =
 				throw normalized
 			}
 			onAttempt?.(normalized, i + 1)
-			const delay = baseDelay * Math.pow(factor, i)
+			const delay = baseDelay * factor ** i
 			await new Promise((resolve) => setTimeout(resolve, delay))
 		}
 	}

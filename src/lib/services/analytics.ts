@@ -343,7 +343,9 @@ export function initAnalytics() {
 		if (browser) {
 			document.removeEventListener('visibilitychange', handleVisibilityChange)
 		}
-		disconnectors.forEach((disconnect) => disconnect())
+		disconnectors.forEach((disconnect) => {
+			disconnect()
+		})
 		if (userUnsubscribe) {
 			userUnsubscribe()
 			userUnsubscribe = null

@@ -1,5 +1,6 @@
 <script lang="ts">
 import XIcon from '@lucide/svelte/icons/x'
+import type { Dialog as DialogPrimitiveType } from 'bits-ui'
 import { Dialog as DialogPrimitive } from 'bits-ui'
 import type { Snippet } from 'svelte'
 import { cn, type WithoutChildrenOrChild } from '$lib/utils.js'
@@ -12,8 +13,8 @@ let {
 	children,
 	showCloseButton = true,
 	...restProps
-}: WithoutChildrenOrChild<DialogPrimitive.ContentProps> & {
-	portalProps?: DialogPrimitive.PortalProps
+}: WithoutChildrenOrChild<DialogPrimitiveType.ContentProps> & {
+	portalProps?: DialogPrimitiveType.PortalProps
 	children: Snippet
 	showCloseButton?: boolean
 } = $props()

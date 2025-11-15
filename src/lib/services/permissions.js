@@ -1,5 +1,7 @@
 import { pb } from '../pocketbase.js'
 
+/** @typedef {import('$types/pocketbase').PostsResponse} PostRecord */
+
 /** Helper to ensure auth */
 function currentUserId() {
 	return pb.authStore.model?.id || null
@@ -34,10 +36,6 @@ export async function isGroupModerator(groupId) {
 	if (group.moderators?.includes?.(uid)) return true
 	return await isSpaceModerator(group.space)
 }
-
-/** Determine if user can moderate a post (delete) */
-/** @typedef {{id:string; author?:string; space?:string; group?:string; expand?:any}} PostRecord */
-export {}
 /** @param {PostRecord} post */
 export async function canModeratePost(post) {
 	const uid = currentUserId()
