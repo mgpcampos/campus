@@ -1,24 +1,24 @@
 <script lang="ts">
-import type { ComponentType } from 'svelte'
-import { Button } from '$lib/components/ui/button/index.js'
+	import type { ComponentType } from 'svelte'
+	import { Button } from '$lib/components/ui/button/index.js'
 
-let {
-	icon,
-	title,
-	description,
-	actionText = '',
-	actionHref = '',
-	onAction = () => undefined,
-	class: className = ''
-}: {
-	icon?: ComponentType
-	title: string
-	description: string
-	actionText?: string
-	actionHref?: string
-	onAction?: () => void
-	class?: string
-} = $props()
+	let {
+		icon,
+		title,
+		description,
+		actionText = '',
+		actionHref = '',
+		onAction = () => undefined,
+		class: className = ''
+	}: {
+		icon?: ComponentType
+		title: string
+		description: string
+		actionText?: string
+		actionHref?: string
+		onAction?: () => void
+		class?: string
+	} = $props()
 </script>
 
 <div class="flex flex-col items-center justify-center py-12 text-center {className}">

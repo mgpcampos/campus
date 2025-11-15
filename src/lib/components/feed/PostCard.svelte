@@ -1,190 +1,190 @@
 <script lang="ts">
-import { formatDistanceToNow } from 'date-fns'
-import type { Match as LinkifyMatch } from 'linkify-it'
-import linkifyIt from 'linkify-it'
-import { Edit, Heart, MessageCircle, MoreHorizontal, Trash2 } from 'lucide-svelte'
-import { createEventDispatcher, onMount } from 'svelte'
-import ImageAttachment from '$lib/components/media/ImageAttachment.svelte'
-import VideoAttachment from '$lib/components/media/VideoAttachment.svelte'
-import { Button } from '$lib/components/ui/button/index.js'
-import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js'
-import { currentUser, pb } from '$lib/pocketbase.js'
-import { hasUserLikedPost, toggleLike } from '$lib/services/likes.js'
-import { canModeratePost } from '$lib/services/permissions.js'
-import { reportContent } from '$lib/services/reports.js'
-import type { FeedAuthor, FeedPost } from './types.js'
+	import { formatDistanceToNow } from 'date-fns'
+	import type { Match as LinkifyMatch } from 'linkify-it'
+	import linkifyIt from 'linkify-it'
+	import { Edit, Heart, MessageCircle, MoreHorizontal, Trash2 } from 'lucide-svelte'
+	import { createEventDispatcher, onMount } from 'svelte'
+	import ImageAttachment from '$lib/components/media/ImageAttachment.svelte'
+	import VideoAttachment from '$lib/components/media/VideoAttachment.svelte'
+	import { Button } from '$lib/components/ui/button/index.js'
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js'
+	import { currentUser, pb } from '$lib/pocketbase.js'
+	import { hasUserLikedPost, toggleLike } from '$lib/services/likes.js'
+	import { canModeratePost } from '$lib/services/permissions.js'
+	import { reportContent } from '$lib/services/reports.js'
+	import type { FeedAuthor, FeedPost } from './types.js'
 
-type CommentSectionModule = typeof import('./CommentSection.svelte')
-type CommentSectionComponent = CommentSectionModule['default']
+	type CommentSectionModule = typeof import('./CommentSection.svelte')
+	type CommentSectionComponent = CommentSectionModule['default']
 
-// Lazy loaded comment section to reduce initial bundle size
-let commentSectionPromise: Promise<CommentSectionModule> | null = null
-let commentSectionComponent: CommentSectionComponent | null = null
-async function loadCommentSection() {
-	if (!commentSectionPromise) {
-		commentSectionPromise = import('./CommentSection.svelte').then((module) => {
-			commentSectionComponent = module.default
-			return module
-		})
-	}
-	return commentSectionPromise
-}
-
-import { toast } from 'svelte-sonner'
-import { t } from '$lib/i18n'
-import { notifyError } from '$lib/utils/errors.ts'
-
-export let post: FeedPost
-export let showActions = true
-
-const dispatch = createEventDispatcher<{
-	like: { postId: string; liked: boolean; likeCount: number }
-	comment: { postId: string }
-	edit: { post: FeedPost }
-	delete: { postId: string }
-}>()
-const linkify = new linkifyIt()
-
-let isLiked = false
-let likeCount = post.likeCount || 0
-let commentCount = post.commentCount || 0
-let likePending = false
-
-let author: FeedAuthor | undefined
-let isOwner = false
-$: author = post.expand?.author as FeedAuthor | undefined
-$: isOwner = Boolean($currentUser && author && $currentUser.id === author.id)
-let canModerate = false
-
-onMount(async () => {
-	if ($currentUser) {
-		try {
-			canModerate = await canModeratePost(post)
-		} catch (e) {
-			console.warn('perm check failed', e)
+	// Lazy loaded comment section to reduce initial bundle size
+	let commentSectionPromise: Promise<CommentSectionModule> | null = null
+	let commentSectionComponent: CommentSectionComponent | null = null
+	async function loadCommentSection() {
+		if (!commentSectionPromise) {
+			commentSectionPromise = import('./CommentSection.svelte').then((module) => {
+				commentSectionComponent = module.default
+				return module
+			})
 		}
+		return commentSectionPromise
 	}
-})
-$: formattedDate = formatDistanceToNow(new Date(post.created), { addSuffix: true })
-$: linkedContent = linkifyContent(post.content)
-$: canInteract = $currentUser !== null
-$: canDelete = Boolean(isOwner || canModerate)
 
-onMount(() => {
-	let unsubscribeFn: () => void = () => undefined
-	;(async () => {
+	import { toast } from 'svelte-sonner'
+	import { t } from '$lib/i18n'
+	import { notifyError } from '$lib/utils/errors.ts'
+
+	export let post: FeedPost
+	export let showActions = true
+
+	const dispatch = createEventDispatcher<{
+		like: { postId: string; liked: boolean; likeCount: number }
+		comment: { postId: string }
+		edit: { post: FeedPost }
+		delete: { postId: string }
+	}>()
+	const linkify = new linkifyIt()
+
+	let isLiked = false
+	let likeCount = post.likeCount || 0
+	let commentCount = post.commentCount || 0
+	let likePending = false
+
+	let author: FeedAuthor | undefined
+	let isOwner = false
+	$: author = post.expand?.author as FeedAuthor | undefined
+	$: isOwner = Boolean($currentUser && author && $currentUser.id === author.id)
+	let canModerate = false
+
+	onMount(async () => {
 		if ($currentUser) {
 			try {
-				isLiked = await hasUserLikedPost(post.id)
-			} catch (error) {
-				console.error('Error checking like status:', error)
+				canModerate = await canModeratePost(post)
+			} catch (e) {
+				console.warn('perm check failed', e)
 			}
 		}
-		const unsub = await pb.collection('posts').subscribe(post.id, (e) => {
-			if (e.action === 'update') {
-				likeCount = e.record.likeCount || 0
-				commentCount = e.record.commentCount || 0
+	})
+	$: formattedDate = formatDistanceToNow(new Date(post.created), { addSuffix: true })
+	$: linkedContent = linkifyContent(post.content)
+	$: canInteract = $currentUser !== null
+	$: canDelete = Boolean(isOwner || canModerate)
+
+	onMount(() => {
+		let unsubscribeFn: () => void = () => undefined
+		;(async () => {
+			if ($currentUser) {
+				try {
+					isLiked = await hasUserLikedPost(post.id)
+				} catch (error) {
+					console.error('Error checking like status:', error)
+				}
 			}
-		})
-		unsubscribeFn = () => {
-			try {
-				unsub()
-			} catch {
-				// ignore unsubscribe errors
+			const unsub = await pb.collection('posts').subscribe(post.id, (e) => {
+				if (e.action === 'update') {
+					likeCount = e.record.likeCount || 0
+					commentCount = e.record.commentCount || 0
+				}
+			})
+			unsubscribeFn = () => {
+				try {
+					unsub()
+				} catch {
+					// ignore unsubscribe errors
+				}
+				try {
+					pb.collection('posts').unsubscribe(post.id)
+				} catch {
+					// ignore unsubscribe errors
+				}
 			}
-			try {
-				pb.collection('posts').unsubscribe(post.id)
-			} catch {
-				// ignore unsubscribe errors
-			}
+		})()
+		if (showActions) {
+			loadCommentSection().catch((error) => console.error('comment preload failed', error))
 		}
-	})()
-	if (showActions) {
-		loadCommentSection().catch((error) => console.error('comment preload failed', error))
-	}
-	return () => unsubscribeFn()
-})
-
-function linkifyContent(content: string) {
-	const matches = linkify.match(content)
-	if (!matches) return content
-
-	let result = content
-	let offset = 0
-
-	matches.forEach((match: LinkifyMatch) => {
-		const before = result.slice(0, match.index + offset)
-		const after = result.slice(match.lastIndex + offset)
-		const link = `<a href="${match.url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">${match.text}</a>`
-
-		result = before + link + after
-		offset += link.length - match.text.length
+		return () => unsubscribeFn()
 	})
 
-	return result
-}
+	function linkifyContent(content: string) {
+		const matches = linkify.match(content)
+		if (!matches) return content
 
-async function handleLike() {
-	if (!canInteract || likePending) return
+		let result = content
+		let offset = 0
 
-	// Optimistic update
-	const wasLiked = isLiked
-	const oldCount = likeCount
+		matches.forEach((match: LinkifyMatch) => {
+			const before = result.slice(0, match.index + offset)
+			const after = result.slice(match.lastIndex + offset)
+			const link = `<a href="${match.url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">${match.text}</a>`
 
-	isLiked = !isLiked
-	likeCount = isLiked ? likeCount + 1 : Math.max(0, likeCount - 1)
-	likePending = true
+			result = before + link + after
+			offset += link.length - match.text.length
+		})
 
-	try {
-		const result = await toggleLike(post.id)
-		isLiked = result.liked
-		likeCount = result.likeCount
-	} catch (error) {
-		// Revert optimistic update on error
-		isLiked = wasLiked
-		likeCount = oldCount
-		await notifyError(error, { context: 'toggleLike' })
-	} finally {
-		likePending = false
+		return result
 	}
 
-	dispatch('like', { postId: post.id, liked: isLiked, likeCount })
-}
+	async function handleLike() {
+		if (!canInteract || likePending) return
 
-function handleComment() {
-	loadCommentSection()
-	dispatch('comment', { postId: post.id })
-}
+		// Optimistic update
+		const wasLiked = isLiked
+		const oldCount = likeCount
 
-function handleEdit() {
-	dispatch('edit', { post })
-}
+		isLiked = !isLiked
+		likeCount = isLiked ? likeCount + 1 : Math.max(0, likeCount - 1)
+		likePending = true
 
-function handleDelete() {
-	if (confirm('Are you sure you want to delete this post?')) {
-		dispatch('delete', { postId: post.id })
+		try {
+			const result = await toggleLike(post.id)
+			isLiked = result.liked
+			likeCount = result.likeCount
+		} catch (error) {
+			// Revert optimistic update on error
+			isLiked = wasLiked
+			likeCount = oldCount
+			await notifyError(error, { context: 'toggleLike' })
+		} finally {
+			likePending = false
+		}
+
+		dispatch('like', { postId: post.id, liked: isLiked, likeCount })
 	}
-}
 
-function handleCommentCountChanged(event: CustomEvent<{ count: number }>) {
-	commentCount = event.detail.count
-}
+	function handleComment() {
+		loadCommentSection()
+		dispatch('comment', { postId: post.id })
+	}
 
-function getFileUrl(filename: string) {
-	return pb.files.getURL(post, filename)
-}
+	function handleEdit() {
+		dispatch('edit', { post })
+	}
 
-// Normalize attachments to always be an array
-// PocketBase returns a string for single file, array for multiple
-$: attachments = (() => {
-	if (!post.attachments) return [] as string[]
-	if (Array.isArray(post.attachments)) return post.attachments as string[]
-	return [post.attachments]
-})()
+	function handleDelete() {
+		if (confirm('Are you sure you want to delete this post?')) {
+			dispatch('delete', { postId: post.id })
+		}
+	}
 
-$: mediaType = post.mediaType || 'text'
-$: isVideoPost = mediaType === 'video'
-$: isImagePost = mediaType === 'images' || (!isVideoPost && attachments.length > 0)
+	function handleCommentCountChanged(event: CustomEvent<{ count: number }>) {
+		commentCount = event.detail.count
+	}
+
+	function getFileUrl(filename: string) {
+		return pb.files.getURL(post, filename)
+	}
+
+	// Normalize attachments to always be an array
+	// PocketBase returns a string for single file, array for multiple
+	$: attachments = (() => {
+		if (!post.attachments) return [] as string[]
+		if (Array.isArray(post.attachments)) return post.attachments as string[]
+		return [post.attachments]
+	})()
+
+	$: mediaType = post.mediaType || 'text'
+	$: isVideoPost = mediaType === 'video'
+	$: isImagePost = mediaType === 'images' || (!isVideoPost && attachments.length > 0)
 </script>
 
 <article

@@ -1,60 +1,60 @@
 <svelte:options runes />
 
 <script lang="ts">
-import { ImagePlus, Loader2 } from 'lucide-svelte'
-import { enhance } from '$app/forms'
-import { Button } from '$lib/components/ui/button/index.js'
-import * as Card from '$lib/components/ui/card/index.js'
-import { Input } from '$lib/components/ui/input/index.js'
-import { Label } from '$lib/components/ui/label/index.js'
-import { Switch } from '$lib/components/ui/switch/index.js'
-import { Textarea } from '$lib/components/ui/textarea/index.js'
-import { t } from '$lib/i18n'
-import type { PageProps } from './$types'
+	import { ImagePlus, Loader2 } from 'lucide-svelte'
+	import { enhance } from '$app/forms'
+	import { Button } from '$lib/components/ui/button/index.js'
+	import * as Card from '$lib/components/ui/card/index.js'
+	import { Input } from '$lib/components/ui/input/index.js'
+	import { Label } from '$lib/components/ui/label/index.js'
+	import { Switch } from '$lib/components/ui/switch/index.js'
+	import { Textarea } from '$lib/components/ui/textarea/index.js'
+	import { t } from '$lib/i18n'
+	import type { PageProps } from './$types'
 
-let { data, form }: PageProps = $props()
+	let { data, form }: PageProps = $props()
 
-let name = $state('')
-let slug = $state('')
-let description = $state('')
-let isPublic = $state(true)
-let avatarFile = $state<File | null>(null)
-let avatarPreview = $state<string | null>(null)
-let isSubmitting = $state(false)
+	let name = $state('')
+	let slug = $state('')
+	let description = $state('')
+	let isPublic = $state(true)
+	let avatarFile = $state<File | null>(null)
+	let avatarPreview = $state<string | null>(null)
+	let isSubmitting = $state(false)
 
-// Auto-generate slug from name (only if slug is empty)
-let autoSlug = $derived(
-	name
-		.toLowerCase()
-		.replace(/[^a-z0-9]+/g, '-')
-		.replace(/^-|-$/g, '')
-)
+	// Auto-generate slug from name (only if slug is empty)
+	let autoSlug = $derived(
+		name
+			.toLowerCase()
+			.replace(/[^a-z0-9]+/g, '-')
+			.replace(/^-|-$/g, '')
+	)
 
-// Update slug if it's empty and we have an auto-generated one
-$effect(() => {
-	if (!slug && autoSlug) {
-		slug = autoSlug
-	}
-})
-
-function handleAvatarChange(event: Event) {
-	const target = event.target as HTMLInputElement
-	const file = target.files?.[0]
-
-	if (file) {
-		avatarFile = file
-		const reader = new FileReader()
-		reader.onload = (e) => {
-			avatarPreview = e.target?.result as string
+	// Update slug if it's empty and we have an auto-generated one
+	$effect(() => {
+		if (!slug && autoSlug) {
+			slug = autoSlug
 		}
-		reader.readAsDataURL(file)
-	}
-}
+	})
 
-function clearAvatar() {
-	avatarFile = null
-	avatarPreview = null
-}
+	function handleAvatarChange(event: Event) {
+		const target = event.target as HTMLInputElement
+		const file = target.files?.[0]
+
+		if (file) {
+			avatarFile = file
+			const reader = new FileReader()
+			reader.onload = (e) => {
+				avatarPreview = e.target?.result as string
+			}
+			reader.readAsDataURL(file)
+		}
+	}
+
+	function clearAvatar() {
+		avatarFile = null
+		avatarPreview = null
+	}
 </script>
 
 <svelte:head>

@@ -16,7 +16,10 @@ export const registerSchema = z
 		password: passwordSchema,
 		passwordConfirm: z.string(),
 		username: usernameSchema,
-		name: z.string().min(1, 'Name is required').max(100, 'Name must be no more than 100 characters')
+		name: z
+			.string()
+			.min(1, 'Name is required')
+			.max(100, 'Name must be no more than 100 characters')
 	})
 	.refine((data) => data.password === data.passwordConfirm, {
 		message: "Passwords don't match",
@@ -31,7 +34,10 @@ export const loginSchema = z.object({
 
 // Profile update schema
 export const profileSchema = z.object({
-	name: z.string().min(1, 'Name is required').max(100, 'Name must be no more than 100 characters'),
+	name: z
+		.string()
+		.min(1, 'Name is required')
+		.max(100, 'Name must be no more than 100 characters'),
 	username: usernameSchema,
 	bio: z.string().max(500, 'Bio must be no more than 500 characters').optional()
 })

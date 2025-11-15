@@ -66,8 +66,7 @@ export async function updateReportStatus(reportId, newStatus) {
 	try {
 		if (!pb.authStore.model?.id) throw new Error('Not authenticated')
 		const report = await pb.collection('reports').getOne(reportId, {
-			expand:
-				'post,post.space,post.group,post.group.space,comment,comment.post,comment.post.space,comment.post.group,comment.post.group.space'
+			expand: 'post,post.space,post.group,post.group.space,comment,comment.post,comment.post.space,comment.post.group,comment.post.group.space'
 		})
 		if (!report) throw new Error('Report not found')
 		// Check permission via target
@@ -87,7 +86,9 @@ export async function updateReportStatus(reportId, newStatus) {
 			allowed = await canModeratePost(post)
 		}
 		if (!allowed && report.targetType === 'comment' && report.targetId) {
-			const comment = await pb.collection('comments').getOne(report.targetId, { expand: 'post' })
+			const comment = await pb
+				.collection('comments')
+				.getOne(report.targetId, { expand: 'post' })
 			allowed = await canModerateComment(comment)
 		}
 		if (!allowed) throw new Error('Not authorized to modify report')

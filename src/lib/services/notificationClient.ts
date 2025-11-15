@@ -46,9 +46,13 @@ export async function subscribeNotifications() {
 			const me = get(currentUser) as unknown as { id?: string } | null
 			if (!me || e.record.user !== me.id) return
 			if (e.action === 'create') {
-				notifications.update((list) => [e.record as NotificationRecord, ...list].slice(0, 50))
+				notifications.update((list) =>
+					[e.record as NotificationRecord, ...list].slice(0, 50)
+				)
 			} else if (e.action === 'update') {
-				notifications.update((list) => list.map((n) => (n.id === e.record.id ? e.record : n)))
+				notifications.update((list) =>
+					list.map((n) => (n.id === e.record.id ? e.record : n))
+				)
 			} else if (e.action === 'delete') {
 				notifications.update((list) => list.filter((n) => n.id !== e.record.id))
 			}

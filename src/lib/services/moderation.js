@@ -197,7 +197,8 @@ export async function deleteCommentModerated(commentId) {
 	try {
 		if (!pb.authStore.model?.id) throw new Error('Not authenticated')
 		const comment = await pb.collection('comments').getOne(commentId)
-		if (!(await canModerateComment(comment))) throw new Error('Not authorized to delete comment')
+		if (!(await canModerateComment(comment)))
+			throw new Error('Not authorized to delete comment')
 		await pb.collection('comments').delete(commentId)
 		await pb.collection('moderation_logs').create({
 			actor: pb.authStore.model.id,

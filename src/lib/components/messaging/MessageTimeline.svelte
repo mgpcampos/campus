@@ -1,68 +1,68 @@
 <script lang="ts">
-import { AlertCircle, Download, FileText, Flag, Loader2 } from '@lucide/svelte'
-import { formatDistanceToNow } from 'date-fns'
-import { Badge } from '$lib/components/ui/badge/index.js'
-import { Button } from '$lib/components/ui/button/index.js'
-import * as Card from '$lib/components/ui/card/index.js'
-import type { MessageWithDetails } from '$types/messaging'
+	import { AlertCircle, Download, FileText, Flag, Loader2 } from '@lucide/svelte'
+	import { formatDistanceToNow } from 'date-fns'
+	import { Badge } from '$lib/components/ui/badge/index.js'
+	import { Button } from '$lib/components/ui/button/index.js'
+	import * as Card from '$lib/components/ui/card/index.js'
+	import type { MessageWithDetails } from '$types/messaging'
 
-interface Props {
-	messages: MessageWithDetails[]
-	currentUserId: string
-	onFlagMessage?: (messageId: string) => void
-	loading?: boolean
-	error?: string | null
-}
+	interface Props {
+		messages: MessageWithDetails[]
+		currentUserId: string
+		onFlagMessage?: (messageId: string) => void
+		loading?: boolean
+		error?: string | null
+	}
 
-let { messages, currentUserId, onFlagMessage, loading = false, error = null }: Props = $props()
+	let { messages, currentUserId, onFlagMessage, loading = false, error = null }: Props = $props()
 
-function formatTimestamp(dateString: string): string {
-	try {
-		const date = new Date(dateString)
-		const now = new Date()
-		const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60)
+	function formatTimestamp(dateString: string): string {
+		try {
+			const date = new Date(dateString)
+			const now = new Date()
+			const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60)
 
-		if (diffInHours < 24) {
-			return formatDistanceToNow(date, { addSuffix: true })
+			if (diffInHours < 24) {
+				return formatDistanceToNow(date, { addSuffix: true })
+			}
+
+			return date.toLocaleDateString('en-US', {
+				month: 'short',
+				day: 'numeric',
+				hour: '2-digit',
+				minute: '2-digit'
+			})
+		} catch {
+			return 'recently'
 		}
-
-		return date.toLocaleDateString('en-US', {
-			month: 'short',
-			day: 'numeric',
-			hour: '2-digit',
-			minute: '2-digit'
-		})
-	} catch {
-		return 'recently'
 	}
-}
 
-function getAttachmentIcon(filename: string) {
-	const ext = filename.split('.').pop()?.toLowerCase()
-	// Could expand with more specific icons per file type
-	return FileText
-}
-
-function getAttachmentUrl(messageId: string, filename: string): string {
-	// PocketBase file URL pattern
-	return `/api/files/messages/${messageId}/${filename}`
-}
-
-function getMessageStatus(status: string): {
-	label: string
-	variant: 'default' | 'destructive' | 'secondary'
-} {
-	switch (status) {
-		case 'visible':
-			return { label: '', variant: 'default' }
-		case 'pending_review':
-			return { label: 'Under review', variant: 'secondary' }
-		case 'removed':
-			return { label: 'Removed', variant: 'destructive' }
-		default:
-			return { label: status, variant: 'default' }
+	function getAttachmentIcon(filename: string) {
+		const ext = filename.split('.').pop()?.toLowerCase()
+		// Could expand with more specific icons per file type
+		return FileText
 	}
-}
+
+	function getAttachmentUrl(messageId: string, filename: string): string {
+		// PocketBase file URL pattern
+		return `/api/files/messages/${messageId}/${filename}`
+	}
+
+	function getMessageStatus(status: string): {
+		label: string
+		variant: 'default' | 'destructive' | 'secondary'
+	} {
+		switch (status) {
+			case 'visible':
+				return { label: '', variant: 'default' }
+			case 'pending_review':
+				return { label: 'Under review', variant: 'secondary' }
+			case 'removed':
+				return { label: 'Removed', variant: 'destructive' }
+			default:
+				return { label: status, variant: 'default' }
+		}
+	}
 </script>
 
 <div class="flex flex-col space-y-4" role="log" aria-live="polite" aria-label="Messages">

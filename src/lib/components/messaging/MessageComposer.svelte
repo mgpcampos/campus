@@ -1,107 +1,107 @@
 <script lang="ts">
-import { Loader2, Paperclip, Send, X } from '@lucide/svelte'
-import { toast } from 'svelte-sonner'
-import { Button } from '$lib/components/ui/button/index.js'
-import { Label } from '$lib/components/ui/label/index.js'
-import { Textarea } from '$lib/components/ui/textarea/index.js'
+	import { Loader2, Paperclip, Send, X } from '@lucide/svelte'
+	import { toast } from 'svelte-sonner'
+	import { Button } from '$lib/components/ui/button/index.js'
+	import { Label } from '$lib/components/ui/label/index.js'
+	import { Textarea } from '$lib/components/ui/textarea/index.js'
 
-interface Props {
-	threadId: string
-	disabled?: boolean
-	onMessageSent?: () => void
-}
-
-let { threadId, disabled = false, onMessageSent }: Props = $props()
-
-let body = $state('')
-let files = $state<File[]>([])
-let fileInput: HTMLInputElement | null = $state(null)
-let isSubmitting = $state(false)
-
-const MAX_FILES = 5
-const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
-
-function handleFileSelect(event: Event) {
-	const input = event.target as HTMLInputElement
-	if (!input.files) return
-
-	const newFiles = Array.from(input.files)
-
-	// Check file count
-	if (files.length + newFiles.length > MAX_FILES) {
-		toast.error(`Maximum ${MAX_FILES} files allowed`)
-		return
+	interface Props {
+		threadId: string
+		disabled?: boolean
+		onMessageSent?: () => void
 	}
 
-	// Check file sizes
-	const oversizedFiles = newFiles.filter((f) => f.size > MAX_FILE_SIZE)
-	if (oversizedFiles.length > 0) {
-		toast.error(`Files must be smaller than 10MB`)
-		return
-	}
+	let { threadId, disabled = false, onMessageSent }: Props = $props()
 
-	files = [...files, ...newFiles]
+	let body = $state('')
+	let files = $state<File[]>([])
+	let fileInput: HTMLInputElement | null = $state(null)
+	let isSubmitting = $state(false)
 
-	// Reset input so the same file can be selected again if removed
-	if (fileInput) fileInput.value = ''
-}
+	const MAX_FILES = 5
+	const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 
-function removeFile(index: number) {
-	files = files.filter((_, i) => i !== index)
-}
+	function handleFileSelect(event: Event) {
+		const input = event.target as HTMLInputElement
+		if (!input.files) return
 
-function formatFileSize(bytes: number): string {
-	if (bytes < 1024) return `${bytes} B`
-	if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-	return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
+		const newFiles = Array.from(input.files)
 
-async function handleSubmit(event: Event) {
-	event.preventDefault()
-
-	// Validation
-	const trimmedBody = body.trim()
-	if (!trimmedBody && files.length === 0) {
-		toast.error('Please enter a message or attach files')
-		return
-	}
-
-	isSubmitting = true
-
-	try {
-		const formData = new FormData()
-		if (trimmedBody) {
-			formData.append('body', trimmedBody)
+		// Check file count
+		if (files.length + newFiles.length > MAX_FILES) {
+			toast.error(`Maximum ${MAX_FILES} files allowed`)
+			return
 		}
 
-		files.forEach((file) => {
-			formData.append('attachments', file)
-		})
-
-		const response = await fetch(`/api/threads/${threadId}/messages`, {
-			method: 'POST',
-			body: formData
-		})
-
-		if (!response.ok) {
-			const errorData = await response.json()
-			throw new Error(errorData.message || 'Failed to send message')
+		// Check file sizes
+		const oversizedFiles = newFiles.filter((f) => f.size > MAX_FILE_SIZE)
+		if (oversizedFiles.length > 0) {
+			toast.error(`Files must be smaller than 10MB`)
+			return
 		}
 
-		// Reset form
-		body = ''
-		files = []
+		files = [...files, ...newFiles]
 
-		toast.success('Message sent')
-
-		onMessageSent?.()
-	} catch (error) {
-		console.error('Failed to send message:', error)
-		toast.error(error instanceof Error ? error.message : 'Failed to send message')
-	} finally {
-		isSubmitting = false
+		// Reset input so the same file can be selected again if removed
+		if (fileInput) fileInput.value = ''
 	}
-}
+
+	function removeFile(index: number) {
+		files = files.filter((_, i) => i !== index)
+	}
+
+	function formatFileSize(bytes: number): string {
+		if (bytes < 1024) return `${bytes} B`
+		if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+		return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+	}
+
+	async function handleSubmit(event: Event) {
+		event.preventDefault()
+
+		// Validation
+		const trimmedBody = body.trim()
+		if (!trimmedBody && files.length === 0) {
+			toast.error('Please enter a message or attach files')
+			return
+		}
+
+		isSubmitting = true
+
+		try {
+			const formData = new FormData()
+			if (trimmedBody) {
+				formData.append('body', trimmedBody)
+			}
+
+			files.forEach((file) => {
+				formData.append('attachments', file)
+			})
+
+			const response = await fetch(`/api/threads/${threadId}/messages`, {
+				method: 'POST',
+				body: formData
+			})
+
+			if (!response.ok) {
+				const errorData = await response.json()
+				throw new Error(errorData.message || 'Failed to send message')
+			}
+
+			// Reset form
+			body = ''
+			files = []
+
+			toast.success('Message sent')
+
+			onMessageSent?.()
+		} catch (error) {
+			console.error('Failed to send message:', error)
+			toast.error(error instanceof Error ? error.message : 'Failed to send message')
+		} finally {
+			isSubmitting = false
+		}
+	}
 </script>
 
 <form onsubmit={handleSubmit} class="space-y-4">

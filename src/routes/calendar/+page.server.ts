@@ -164,9 +164,11 @@ export const actions: Actions = {
 			const { eventId, status } = rsvpForm.data as RSVPData
 
 			// Check if participant already exists
-			const existingParticipants = await locals.pb.collection('event_participants').getFullList({
-				filter: `event = "${eventId}" && user = "${user.id}"`
-			})
+			const existingParticipants = await locals.pb
+				.collection('event_participants')
+				.getFullList({
+					filter: `event = "${eventId}" && user = "${user.id}"`
+				})
 
 			const [existingParticipant] = existingParticipants
 			if (existingParticipant) {

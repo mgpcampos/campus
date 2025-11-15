@@ -1,67 +1,67 @@
 <script lang="ts">
-import type { ComponentType } from 'svelte'
-import { page } from '$app/stores'
+	import type { ComponentType } from 'svelte'
+	import { page } from '$app/stores'
 
-interface NavigationItem {
-	href: string
-	label: string
-	icon?: ComponentType
-	badge?: string | number
-	disabled?: boolean
-}
-
-let {
-	items = [],
-	orientation = 'horizontal',
-	variant = 'default',
-	class: className = '',
-	onNavigate = () => undefined
-}: {
-	items: NavigationItem[]
-	orientation?: 'horizontal' | 'vertical'
-	variant?: 'default' | 'pills' | 'underline'
-	class?: string
-	onNavigate?: (item: NavigationItem) => void
-} = $props()
-
-function isActive(href: string): boolean {
-	if (href === '/') {
-		return $page.url.pathname === '/'
+	interface NavigationItem {
+		href: string
+		label: string
+		icon?: ComponentType
+		badge?: string | number
+		disabled?: boolean
 	}
-	return $page.url.pathname.startsWith(href)
-}
 
-function handleKeydown(event: KeyboardEvent, item: NavigationItem) {
-	// Handle keyboard navigation
-	if (event.key === 'Enter' || event.key === ' ') {
-		event.preventDefault()
-		if (!item.disabled) {
-			onNavigate(item)
+	let {
+		items = [],
+		orientation = 'horizontal',
+		variant = 'default',
+		class: className = '',
+		onNavigate = () => undefined
+	}: {
+		items: NavigationItem[]
+		orientation?: 'horizontal' | 'vertical'
+		variant?: 'default' | 'pills' | 'underline'
+		class?: string
+		onNavigate?: (item: NavigationItem) => void
+	} = $props()
+
+	function isActive(href: string): boolean {
+		if (href === '/') {
+			return $page.url.pathname === '/'
+		}
+		return $page.url.pathname.startsWith(href)
+	}
+
+	function handleKeydown(event: KeyboardEvent, item: NavigationItem) {
+		// Handle keyboard navigation
+		if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault()
+			if (!item.disabled) {
+				onNavigate(item)
+			}
 		}
 	}
-}
 
-function getVariantClasses(_item: NavigationItem, active: boolean) {
-	const base =
-		'transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+	function getVariantClasses(_item: NavigationItem, active: boolean) {
+		const base =
+			'transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
 
-	if (variant === 'pills') {
+		if (variant === 'pills') {
+			return active
+				? `${base} bg-primary text-primary-foreground hover:bg-primary/90`
+				: `${base} hover:bg-accent hover:text-accent-foreground`
+		}
+
+		if (variant === 'underline') {
+			return active
+				? `${base} border-b-2 border-primary text-primary`
+				: `${base} border-b-2 border-transparent hover:border-border hover:text-foreground`
+		}
+
+		// default variant
 		return active
-			? `${base} bg-primary text-primary-foreground hover:bg-primary/90`
-			: `${base} hover:bg-accent hover:text-accent-foreground`
+			? `${base} bg-accent text-accent-foreground`
+			: `${base} hover:bg-accent/50 hover:text-accent-foreground`
 	}
-
-	if (variant === 'underline') {
-		return active
-			? `${base} border-b-2 border-primary text-primary`
-			: `${base} border-b-2 border-transparent hover:border-border hover:text-foreground`
-	}
-
-	// default variant
-	return active
-		? `${base} bg-accent text-accent-foreground`
-		: `${base} hover:bg-accent/50 hover:text-accent-foreground`
-}
 </script>
 
 <nav

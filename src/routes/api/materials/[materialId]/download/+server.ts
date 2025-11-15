@@ -79,6 +79,9 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 	} catch (err) {
 		const normalized = normalizeError(err, { context: 'download material' })
 		console.error('Error downloading material:', normalized)
-		return error(normalized.status || 500, normalized.userMessage || 'Failed to download material')
+		return error(
+			normalized.status || 500,
+			normalized.userMessage || 'Failed to download material'
+		)
 	}
 }

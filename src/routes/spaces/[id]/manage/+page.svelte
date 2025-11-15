@@ -1,53 +1,53 @@
 <svelte:options runes />
 
 <script lang="ts">
-import { ArrowLeft, ImagePlus, Loader2, Save, Settings, Users } from 'lucide-svelte'
-import { enhance } from '$app/forms'
-import { Button } from '$lib/components/ui/button/index.js'
-import * as Card from '$lib/components/ui/card/index.js'
-import { Input } from '$lib/components/ui/input/index.js'
-import { Label } from '$lib/components/ui/label/index.js'
-import { Switch } from '$lib/components/ui/switch/index.js'
-import * as Tabs from '$lib/components/ui/tabs/index.js'
-import { Textarea } from '$lib/components/ui/textarea/index.js'
-import { t } from '$lib/i18n'
-import type { PageProps } from './$types'
+	import { ArrowLeft, ImagePlus, Loader2, Save, Settings, Users } from 'lucide-svelte'
+	import { enhance } from '$app/forms'
+	import { Button } from '$lib/components/ui/button/index.js'
+	import * as Card from '$lib/components/ui/card/index.js'
+	import { Input } from '$lib/components/ui/input/index.js'
+	import { Label } from '$lib/components/ui/label/index.js'
+	import { Switch } from '$lib/components/ui/switch/index.js'
+	import * as Tabs from '$lib/components/ui/tabs/index.js'
+	import { Textarea } from '$lib/components/ui/textarea/index.js'
+	import { t } from '$lib/i18n'
+	import type { PageProps } from './$types'
 
-let { data, form }: PageProps = $props()
-let { space, role } = data
+	let { data, form }: PageProps = $props()
+	let { space, role } = data
 
-let name = $state(space.name || '')
-let description = $state(space.description || '')
-let isPublic = $state(space.isPublic ?? true)
-let avatarFile = $state<File | null>(null)
-let avatarPreview = $state<string | null>(null)
-let isSubmitting = $state(false)
+	let name = $state(space.name || '')
+	let description = $state(space.description || '')
+	let isPublic = $state(space.isPublic ?? true)
+	let avatarFile = $state<File | null>(null)
+	let avatarPreview = $state<string | null>(null)
+	let isSubmitting = $state(false)
 
-// Show current avatar if exists
-$effect(() => {
-	if (space.avatar) {
-		avatarPreview = `/api/files/spaces/${space.id}/${space.avatar}`
-	}
-})
-
-function handleAvatarChange(event: Event) {
-	const target = event.target as HTMLInputElement
-	const file = target.files?.[0]
-
-	if (file) {
-		avatarFile = file
-		const reader = new FileReader()
-		reader.onload = (e) => {
-			avatarPreview = e.target?.result as string
+	// Show current avatar if exists
+	$effect(() => {
+		if (space.avatar) {
+			avatarPreview = `/api/files/spaces/${space.id}/${space.avatar}`
 		}
-		reader.readAsDataURL(file)
-	}
-}
+	})
 
-function clearAvatar() {
-	avatarFile = null
-	avatarPreview = null
-}
+	function handleAvatarChange(event: Event) {
+		const target = event.target as HTMLInputElement
+		const file = target.files?.[0]
+
+		if (file) {
+			avatarFile = file
+			const reader = new FileReader()
+			reader.onload = (e) => {
+				avatarPreview = e.target?.result as string
+			}
+			reader.readAsDataURL(file)
+		}
+	}
+
+	function clearAvatar() {
+		avatarFile = null
+		avatarPreview = null
+	}
 </script>
 
 <svelte:head>

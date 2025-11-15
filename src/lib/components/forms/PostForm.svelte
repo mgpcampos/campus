@@ -1,306 +1,311 @@
 <svelte:options runes />
 
 <script lang="ts">
-import { FileVideo, ImagePlus, Loader2, MessageSquare, Video, X } from '@lucide/svelte'
-import { createEventDispatcher, onDestroy } from 'svelte'
-import { writable } from 'svelte/store'
-import { toast } from 'svelte-sonner'
-import type { SuperValidated } from 'sveltekit-superforms'
-import { superForm } from 'sveltekit-superforms/client'
-import type { z } from 'zod'
-import { ariaValidity } from '$lib/actions/ariaValidity'
-import type { FeedPost } from '$lib/components/feed/types'
-import { Button } from '$lib/components/ui/button/index.js'
-import { Label } from '$lib/components/ui/label/index.js'
-import { Textarea } from '$lib/components/ui/textarea/index.js'
-import { t } from '$lib/i18n'
-import { createPostSchema } from '$lib/schemas/post.js'
-import { MAX_ATTACHMENTS, validateImages, validateVideo } from '$lib/utils/media.js'
-import { createClientFormOptions } from '$lib/validation'
+	import { FileVideo, ImagePlus, Loader2, MessageSquare, Video, X } from '@lucide/svelte'
+	import { createEventDispatcher, onDestroy } from 'svelte'
+	import { writable } from 'svelte/store'
+	import { toast } from 'svelte-sonner'
+	import type { SuperValidated } from 'sveltekit-superforms'
+	import { superForm } from 'sveltekit-superforms/client'
+	import type { z } from 'zod'
+	import { ariaValidity } from '$lib/actions/ariaValidity'
+	import type { FeedPost } from '$lib/components/feed/types'
+	import { Button } from '$lib/components/ui/button/index.js'
+	import { Label } from '$lib/components/ui/label/index.js'
+	import { Textarea } from '$lib/components/ui/textarea/index.js'
+	import { t } from '$lib/i18n'
+	import { createPostSchema } from '$lib/schemas/post.js'
+	import { MAX_ATTACHMENTS, validateImages, validateVideo } from '$lib/utils/media.js'
+	import { createClientFormOptions } from '$lib/validation'
 
-type PostFormMessage = {
-	type: 'success' | 'error'
-	text: string
-	post?: FeedPost
-}
-type PostFormData = SuperValidated<z.infer<typeof createPostSchema>, PostFormMessage>
-type AttachmentPreview = { file: File; url: string }
-
-const MEDIA_OPTIONS = [
-	{
-		value: /** @type {'text'} */ ('text'),
-		label: t('postForm.text'),
-		helper: t('postForm.textHelper'),
-		icon: MessageSquare
-	},
-	{
-		value: /** @type {'images'} */ ('images'),
-		label: t('postForm.images'),
-		helper: t('postForm.imagesHelper', { count: MAX_ATTACHMENTS }),
-		icon: ImagePlus
-	},
-	{
-		value: /** @type {'video'} */ ('video'),
-		label: t('postForm.video'),
-		helper: t('postForm.videoHelper'),
-		icon: Video
+	type PostFormMessage = {
+		type: 'success' | 'error'
+		text: string
+		post?: FeedPost
 	}
-] as const
+	type PostFormData = SuperValidated<z.infer<typeof createPostSchema>, PostFormMessage>
+	type AttachmentPreview = { file: File; url: string }
 
-let { formData, disabled = false } = $props<{ formData: PostFormData; disabled?: boolean }>()
+	const MEDIA_OPTIONS = [
+		{
+			value: /** @type {'text'} */ ('text'),
+			label: t('postForm.text'),
+			helper: t('postForm.textHelper'),
+			icon: MessageSquare
+		},
+		{
+			value: /** @type {'images'} */ ('images'),
+			label: t('postForm.images'),
+			helper: t('postForm.imagesHelper', { count: MAX_ATTACHMENTS }),
+			icon: ImagePlus
+		},
+		{
+			value: /** @type {'video'} */ ('video'),
+			label: t('postForm.video'),
+			helper: t('postForm.videoHelper'),
+			icon: Video
+		}
+	] as const
 
-const dispatch = createEventDispatcher<{ postCreated: FeedPost }>()
+	let { formData, disabled = false } = $props<{ formData: PostFormData; disabled?: boolean }>()
 
-const attachments = writable<AttachmentPreview[]>([])
-const uploadError = writable<string | null>(null)
-const generalError = writable<string | null>(null)
-const videoDurationDisplay = writable<number | null>(null)
+	const dispatch = createEventDispatcher<{ postCreated: FeedPost }>()
 
-const { form, errors, enhance, submitting, message } = superForm(formData, {
-	...createClientFormOptions(createPostSchema),
-	applyAction: true,
-	resetForm: false,
-	delayMs: 120,
-	onSubmit: () => {
+	const attachments = writable<AttachmentPreview[]>([])
+	const uploadError = writable<string | null>(null)
+	const generalError = writable<string | null>(null)
+	const videoDurationDisplay = writable<number | null>(null)
+
+	const { form, errors, enhance, submitting, message } = superForm(formData, {
+		...createClientFormOptions(createPostSchema),
+		applyAction: true,
+		resetForm: false,
+		delayMs: 120,
+		onSubmit: () => {
+			$uploadError = null
+			$generalError = null
+		},
+		onResult: ({ result }) => {
+			if (result.type === 'success') {
+				const actionForm = /** @type {PostFormData | undefined} */ (result.data?.form)
+				const actionMessage = actionForm?.message
+				if (actionMessage?.type === 'success') {
+					toast.success(actionMessage.text)
+					if (actionMessage.post) {
+						dispatch('postCreated', actionMessage.post)
+					}
+					$form.content = ''
+					clearMediaState()
+				} else if (actionMessage?.type === 'error') {
+					$uploadError = actionMessage.text
+					toast.error(actionMessage.text)
+				}
+			} else if (result.type === 'failure') {
+				const failureMessage =
+					(typeof result.data?.error === 'string' && result.data.error) ||
+					result.data?.form?.message?.text ||
+					undefined
+				if (failureMessage) {
+					$generalError = failureMessage
+					toast.error(failureMessage)
+				}
+			}
+		}
+	})
+
+	const errorIds = {
+		content: 'post-content-error'
+	} as const
+
+	const nativeInvalid = $state({
+		content: false
+	})
+
+	const contentInvalid = $derived.by(
+		() =>
+			(Array.isArray($errors.content) && $errors.content.length > 0) || nativeInvalid.content
+	)
+
+	let contentField = $state<HTMLTextAreaElement | null>(null)
+
+	$effect(() => {
+		if (!contentField) return
+		const action = ariaValidity(contentField, {
+			invalid: contentInvalid,
+			errorId: errorIds.content
+		})
+		return () => action.destroy()
+	})
+
+	function handleNativeInvalid(field: 'content') {
+		nativeInvalid[field] = true
+	}
+
+	function handleNativeInput(field: 'content') {
+		if (nativeInvalid[field]) {
+			nativeInvalid[field] = false
+		}
+	}
+
+	let imageInput = $state<HTMLInputElement | null>(null)
+	let videoInput = $state<HTMLInputElement | null>(null)
+
+	$effect(() => {
+		if ($message?.type === 'error') {
+			$generalError = $message.text
+		} else if ($message?.type === 'success') {
+			$generalError = null
+		}
+	})
+
+	onDestroy(() => {
+		clearPreviews($attachments)
+	})
+
+	function revokePreview(preview: AttachmentPreview | null) {
+		if (!preview) return
+		URL.revokeObjectURL(preview.url)
+	}
+
+	function clearPreviews(list: AttachmentPreview[]) {
+		for (const preview of list) revokePreview(preview)
+	}
+
+	function syncFileInput(input: HTMLInputElement | null, files: File[]) {
+		if (!input) return
+		const dt = new DataTransfer()
+		for (const file of files) dt.items.add(file)
+		input.files = dt.files
+	}
+
+	function resetAttachments() {
+		clearPreviews($attachments)
+		$attachments = []
+		$form.attachments = []
+		syncFileInput(imageInput, [])
+		syncFileInput(videoInput, [])
+	}
+
+	function resetVideoMetadata() {
+		$form.videoPoster = undefined
+		$form.videoDuration = undefined
+		$videoDurationDisplay = null
+	}
+
+	function clearMediaState() {
+		resetAttachments()
+		resetVideoMetadata()
+		$form.mediaAltText = ''
+		$form.mediaType = 'text'
+		$uploadError = null
+	}
+
+	function selectMediaType(type: 'text' | 'images' | 'video') {
+		if ($form.mediaType === type) return
+		if (type === 'text') {
+			clearMediaState()
+		} else if (type === 'images') {
+			resetVideoMetadata()
+			resetAttachments()
+		} else if (type === 'video') {
+			resetAttachments()
+			resetVideoMetadata()
+		}
+		$form.mediaType = type
+		$uploadError = null
+	}
+
+	function handleImageSelect(event: Event) {
+		const target = event.target as HTMLInputElement
+		const selectedFiles = Array.from(target.files ?? [])
+		if (selectedFiles.length === 0) {
+			target.value = ''
+			return
+		}
+
+		const existingFiles = $attachments.map((preview: AttachmentPreview) => preview.file)
+		const merged = [...existingFiles, ...selectedFiles]
+		const { valid, errors: validationErrors } = validateImages(merged)
+		if (!valid) {
+			$uploadError = validationErrors[0] ?? 'Unable to add images'
+			validationErrors.slice(0, 3).forEach((message) => {
+				toast.error(message)
+			})
+			target.value = ''
+			return
+		}
+
+		const currentPreviews: AttachmentPreview[] = $attachments
+		const nextPreviews = merged.map((file) => {
+			const existing = currentPreviews.find(
+				(preview: AttachmentPreview) => preview.file === file
+			)
+			return existing ?? { file, url: URL.createObjectURL(file) }
+		})
+		currentPreviews
+			.filter((preview: AttachmentPreview) => !merged.includes(preview.file))
+			.forEach(revokePreview)
+		$attachments = nextPreviews
+		$form.attachments = nextPreviews.map((preview: AttachmentPreview) => preview.file)
+		target.value = ''
+		syncFileInput(imageInput, $form.attachments as File[])
+		$uploadError = null
+	}
+
+	async function extractVideoDuration(file: File) {
+		return await new Promise<number | null>((resolve) => {
+			const el = document.createElement('video')
+			el.preload = 'metadata'
+			el.onloadedmetadata = () => {
+				const duration = Number.isFinite(el.duration) ? Math.round(el.duration) : null
+				URL.revokeObjectURL(el.src)
+				resolve(duration)
+			}
+			el.onerror = () => {
+				URL.revokeObjectURL(el.src)
+				resolve(null)
+			}
+			el.src = URL.createObjectURL(file)
+		})
+	}
+
+	async function handleVideoSelect(event: Event) {
+		const target = event.target as HTMLInputElement
+		const [file] = Array.from(target.files ?? [])
+		if (!file) {
+			target.value = ''
+			return
+		}
+
+		const duration = await extractVideoDuration(file)
+		const { valid, errors: validationErrors } = validateVideo(file, duration ?? undefined)
+		if (!valid) {
+			$uploadError = validationErrors[0] ?? 'Video upload failed'
+			validationErrors.slice(0, 3).forEach((message) => {
+				toast.error(message)
+			})
+			target.value = ''
+			return
+		}
+
+		resetAttachments()
+		const preview: AttachmentPreview = { file, url: URL.createObjectURL(file) }
+		$attachments = [preview]
+		$form.attachments = [file]
+		target.value = ''
+		syncFileInput(videoInput, [file])
+		$form.mediaType = 'video'
+		$form.videoDuration = duration ?? undefined
+		$videoDurationDisplay = duration ?? null
 		$uploadError = null
 		$generalError = null
-	},
-	onResult: ({ result }) => {
-		if (result.type === 'success') {
-			const actionForm = /** @type {PostFormData | undefined} */ (result.data?.form)
-			const actionMessage = actionForm?.message
-			if (actionMessage?.type === 'success') {
-				toast.success(actionMessage.text)
-				if (actionMessage.post) {
-					dispatch('postCreated', actionMessage.post)
-				}
-				$form.content = ''
-				clearMediaState()
-			} else if (actionMessage?.type === 'error') {
-				$uploadError = actionMessage.text
-				toast.error(actionMessage.text)
-			}
-		} else if (result.type === 'failure') {
-			const failureMessage =
-				(typeof result.data?.error === 'string' && result.data.error) ||
-				result.data?.form?.message?.text ||
-				undefined
-			if (failureMessage) {
-				$generalError = failureMessage
-				toast.error(failureMessage)
-			}
+	}
+
+	function removeAttachment(index: number) {
+		const current = $attachments.slice()
+		const [removed] = current.splice(index, 1)
+		if (removed) revokePreview(removed)
+		$attachments = current
+		const currentFiles = current.map((preview: AttachmentPreview) => preview.file)
+		$form.attachments = currentFiles
+		const targetInput = $form.mediaType === 'video' ? videoInput : imageInput
+		syncFileInput(targetInput, currentFiles)
+		if ($form.mediaType === 'video') {
+			resetVideoMetadata()
+			$form.mediaType = 'text'
 		}
 	}
-})
 
-const errorIds = {
-	content: 'post-content-error'
-} as const
-
-const nativeInvalid = $state({
-	content: false
-})
-
-const contentInvalid = $derived.by(
-	() => (Array.isArray($errors.content) && $errors.content.length > 0) || nativeInvalid.content
-)
-
-let contentField = $state<HTMLTextAreaElement | null>(null)
-
-$effect(() => {
-	if (!contentField) return
-	const action = ariaValidity(contentField, {
-		invalid: contentInvalid,
-		errorId: errorIds.content
-	})
-	return () => action.destroy()
-})
-
-function handleNativeInvalid(field: 'content') {
-	nativeInvalid[field] = true
-}
-
-function handleNativeInput(field: 'content') {
-	if (nativeInvalid[field]) {
-		nativeInvalid[field] = false
-	}
-}
-
-let imageInput = $state<HTMLInputElement | null>(null)
-let videoInput = $state<HTMLInputElement | null>(null)
-
-$effect(() => {
-	if ($message?.type === 'error') {
-		$generalError = $message.text
-	} else if ($message?.type === 'success') {
-		$generalError = null
-	}
-})
-
-onDestroy(() => {
-	clearPreviews($attachments)
-})
-
-function revokePreview(preview: AttachmentPreview | null) {
-	if (!preview) return
-	URL.revokeObjectURL(preview.url)
-}
-
-function clearPreviews(list: AttachmentPreview[]) {
-	for (const preview of list) revokePreview(preview)
-}
-
-function syncFileInput(input: HTMLInputElement | null, files: File[]) {
-	if (!input) return
-	const dt = new DataTransfer()
-	for (const file of files) dt.items.add(file)
-	input.files = dt.files
-}
-
-function resetAttachments() {
-	clearPreviews($attachments)
-	$attachments = []
-	$form.attachments = []
-	syncFileInput(imageInput, [])
-	syncFileInput(videoInput, [])
-}
-
-function resetVideoMetadata() {
-	$form.videoPoster = undefined
-	$form.videoDuration = undefined
-	$videoDurationDisplay = null
-}
-
-function clearMediaState() {
-	resetAttachments()
-	resetVideoMetadata()
-	$form.mediaAltText = ''
-	$form.mediaType = 'text'
-	$uploadError = null
-}
-
-function selectMediaType(type: 'text' | 'images' | 'video') {
-	if ($form.mediaType === type) return
-	if (type === 'text') {
-		clearMediaState()
-	} else if (type === 'images') {
-		resetVideoMetadata()
-		resetAttachments()
-	} else if (type === 'video') {
-		resetAttachments()
-		resetVideoMetadata()
-	}
-	$form.mediaType = type
-	$uploadError = null
-}
-
-function handleImageSelect(event: Event) {
-	const target = event.target as HTMLInputElement
-	const selectedFiles = Array.from(target.files ?? [])
-	if (selectedFiles.length === 0) {
-		target.value = ''
-		return
+	function currentMediaHelper() {
+		const current = MEDIA_OPTIONS.find((option) => option.value === $form.mediaType)
+		return current?.helper ?? ''
 	}
 
-	const existingFiles = $attachments.map((preview: AttachmentPreview) => preview.file)
-	const merged = [...existingFiles, ...selectedFiles]
-	const { valid, errors: validationErrors } = validateImages(merged)
-	if (!valid) {
-		$uploadError = validationErrors[0] ?? 'Unable to add images'
-		validationErrors.slice(0, 3).forEach((message) => {
-			toast.error(message)
-		})
-		target.value = ''
-		return
-	}
+	const canSubmit = $derived.by(
+		() => $form.content.trim().length > 0 && !disabled && !$submitting
+	)
 
-	const currentPreviews: AttachmentPreview[] = $attachments
-	const nextPreviews = merged.map((file) => {
-		const existing = currentPreviews.find((preview: AttachmentPreview) => preview.file === file)
-		return existing ?? { file, url: URL.createObjectURL(file) }
-	})
-	currentPreviews
-		.filter((preview: AttachmentPreview) => !merged.includes(preview.file))
-		.forEach(revokePreview)
-	$attachments = nextPreviews
-	$form.attachments = nextPreviews.map((preview: AttachmentPreview) => preview.file)
-	target.value = ''
-	syncFileInput(imageInput, $form.attachments as File[])
-	$uploadError = null
-}
-
-async function extractVideoDuration(file: File) {
-	return await new Promise<number | null>((resolve) => {
-		const el = document.createElement('video')
-		el.preload = 'metadata'
-		el.onloadedmetadata = () => {
-			const duration = Number.isFinite(el.duration) ? Math.round(el.duration) : null
-			URL.revokeObjectURL(el.src)
-			resolve(duration)
-		}
-		el.onerror = () => {
-			URL.revokeObjectURL(el.src)
-			resolve(null)
-		}
-		el.src = URL.createObjectURL(file)
-	})
-}
-
-async function handleVideoSelect(event: Event) {
-	const target = event.target as HTMLInputElement
-	const [file] = Array.from(target.files ?? [])
-	if (!file) {
-		target.value = ''
-		return
-	}
-
-	const duration = await extractVideoDuration(file)
-	const { valid, errors: validationErrors } = validateVideo(file, duration ?? undefined)
-	if (!valid) {
-		$uploadError = validationErrors[0] ?? 'Video upload failed'
-		validationErrors.slice(0, 3).forEach((message) => {
-			toast.error(message)
-		})
-		target.value = ''
-		return
-	}
-
-	resetAttachments()
-	const preview: AttachmentPreview = { file, url: URL.createObjectURL(file) }
-	$attachments = [preview]
-	$form.attachments = [file]
-	target.value = ''
-	syncFileInput(videoInput, [file])
-	$form.mediaType = 'video'
-	$form.videoDuration = duration ?? undefined
-	$videoDurationDisplay = duration ?? null
-	$uploadError = null
-	$generalError = null
-}
-
-function removeAttachment(index: number) {
-	const current = $attachments.slice()
-	const [removed] = current.splice(index, 1)
-	if (removed) revokePreview(removed)
-	$attachments = current
-	const currentFiles = current.map((preview: AttachmentPreview) => preview.file)
-	$form.attachments = currentFiles
-	const targetInput = $form.mediaType === 'video' ? videoInput : imageInput
-	syncFileInput(targetInput, currentFiles)
-	if ($form.mediaType === 'video') {
-		resetVideoMetadata()
-		$form.mediaType = 'text'
-	}
-}
-
-function currentMediaHelper() {
-	const current = MEDIA_OPTIONS.find((option) => option.value === $form.mediaType)
-	return current?.helper ?? ''
-}
-
-const canSubmit = $derived.by(() => $form.content.trim().length > 0 && !disabled && !$submitting)
-
-const ACCEPT_IMAGES = 'image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif'
+	const ACCEPT_IMAGES = 'image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif'
 </script>
 
 <form method="POST" use:enhance class="space-y-6" enctype="multipart/form-data">

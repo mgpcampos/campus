@@ -530,11 +530,13 @@ function prepareUpdatePayload(updateData) {
 		payload.scope = normalizeScope(updateData.scope)
 	}
 	if ('space' in updateData) {
-		const value = typeof updateData.space === 'string' && updateData.space ? updateData.space : null
+		const value =
+			typeof updateData.space === 'string' && updateData.space ? updateData.space : null
 		payload.space = value
 	}
 	if ('group' in updateData) {
-		const value = typeof updateData.group === 'string' && updateData.group ? updateData.group : null
+		const value =
+			typeof updateData.group === 'string' && updateData.group ? updateData.group : null
 		payload.group = value
 	}
 	if ('publishedAt' in updateData) {
@@ -701,7 +703,9 @@ async function handleApiResponse(response, context) {
 		return payload ?? {}
 	}
 	const message =
-		payload?.error?.message || payload?.message || `Request failed with status ${response.status}`
+		payload?.error?.message ||
+		payload?.message ||
+		`Request failed with status ${response.status}`
 	const error = new Error(message)
 	const enhancedError = /** @type {Error & { status?: number; response?: { data: unknown } }} */ (
 		error

@@ -36,7 +36,8 @@ export const config = {
 		version: '0.0.1',
 		origin: publicEnv.PUBLIC_SITE_URL || 'http://localhost:4173',
 		robots:
-			publicEnv.PUBLIC_ROBOTS || (publicEnv.PUBLIC_SITE_URL ? 'index,follow' : 'noindex, nofollow')
+			publicEnv.PUBLIC_ROBOTS ||
+			(publicEnv.PUBLIC_SITE_URL ? 'index,follow' : 'noindex, nofollow')
 	},
 
 	// File upload limits

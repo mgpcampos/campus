@@ -1,47 +1,47 @@
 <script>
-import { onMount } from 'svelte'
-import { superForm } from 'sveltekit-superforms/client'
-import { t } from '$lib/i18n'
-import { currentUser } from '$lib/pocketbase.js'
-import { getErrorMessage } from '$lib/utils/errors.ts'
-import { profileSchema } from '$lib/utils/validation.js'
-import { createClientFormOptions } from '$lib/validation'
+	import { onMount } from 'svelte'
+	import { superForm } from 'sveltekit-superforms/client'
+	import { t } from '$lib/i18n'
+	import { currentUser } from '$lib/pocketbase.js'
+	import { getErrorMessage } from '$lib/utils/errors.ts'
+	import { profileSchema } from '$lib/utils/validation.js'
+	import { createClientFormOptions } from '$lib/validation'
 
-let { data } = $props()
+	let { data } = $props()
 
-const { form, errors, enhance, submitting, message } = superForm(data.form, {
-	...createClientFormOptions(profileSchema),
-	resetForm: false
-})
+	const { form, errors, enhance, submitting, message } = superForm(data.form, {
+		...createClientFormOptions(profileSchema),
+		resetForm: false
+	})
 
-let generalError = $state('')
-let successMessage = $state('')
+	let generalError = $state('')
+	let successMessage = $state('')
 
-onMount(() => {
-	const defaults = data?.form?.data ?? {}
-	if (typeof defaults.name === 'string' && defaults.name.length && !$form.name) {
-		$form.name = defaults.name
-	}
-	if (typeof defaults.username === 'string' && defaults.username.length && !$form.username) {
-		$form.username = defaults.username
-	}
-	if (typeof defaults.bio === 'string' && defaults.bio.length && !$form.bio) {
-		$form.bio = defaults.bio
-	}
-})
-
-// Handle form updates
-$effect(() => {
-	if ($message) {
-		if ($message.type === 'success') {
-			successMessage = $message.text
-			generalError = ''
-		} else if ($message.type === 'error') {
-			generalError = $message.text
-			successMessage = ''
+	onMount(() => {
+		const defaults = data?.form?.data ?? {}
+		if (typeof defaults.name === 'string' && defaults.name.length && !$form.name) {
+			$form.name = defaults.name
 		}
-	}
-})
+		if (typeof defaults.username === 'string' && defaults.username.length && !$form.username) {
+			$form.username = defaults.username
+		}
+		if (typeof defaults.bio === 'string' && defaults.bio.length && !$form.bio) {
+			$form.bio = defaults.bio
+		}
+	})
+
+	// Handle form updates
+	$effect(() => {
+		if ($message) {
+			if ($message.type === 'success') {
+				successMessage = $message.text
+				generalError = ''
+			} else if ($message.type === 'error') {
+				generalError = $message.text
+				successMessage = ''
+			}
+		}
+	})
 </script>
 
 <svelte:head>

@@ -1,323 +1,330 @@
 <script lang="ts">
-import { MessageCircle, Send, Trash2 } from '@lucide/svelte'
-import { formatDistanceToNow } from 'date-fns'
-import type { ListResult, RecordModel, RecordSubscription } from 'pocketbase'
-import { createEventDispatcher, onDestroy, onMount } from 'svelte'
-import { toast } from 'svelte-sonner'
-import { Button } from '$lib/components/ui/button/index.js'
-import * as Card from '$lib/components/ui/card/index.js'
-import { Textarea } from '$lib/components/ui/textarea/index.js'
-import { t } from '$lib/i18n'
-import { currentUser, pb } from '$lib/pocketbase.js'
-import { createComment, deleteComment, getComments } from '$lib/services/comments.js'
-import { canModerateComment } from '$lib/services/permissions.js'
-import { reportContent } from '$lib/services/reports.js'
-import { withErrorToast } from '$lib/utils/errors.ts'
-import type { CommentsResponse } from '$types/pocketbase'
+	import { MessageCircle, Send, Trash2 } from '@lucide/svelte'
+	import { formatDistanceToNow } from 'date-fns'
+	import type { ListResult, RecordModel, RecordSubscription } from 'pocketbase'
+	import { createEventDispatcher, onDestroy, onMount } from 'svelte'
+	import { toast } from 'svelte-sonner'
+	import { Button } from '$lib/components/ui/button/index.js'
+	import * as Card from '$lib/components/ui/card/index.js'
+	import { Textarea } from '$lib/components/ui/textarea/index.js'
+	import { t } from '$lib/i18n'
+	import { currentUser, pb } from '$lib/pocketbase.js'
+	import { createComment, deleteComment, getComments } from '$lib/services/comments.js'
+	import { canModerateComment } from '$lib/services/permissions.js'
+	import { reportContent } from '$lib/services/reports.js'
+	import { withErrorToast } from '$lib/utils/errors.ts'
+	import type { CommentsResponse } from '$types/pocketbase'
 
-type CommentAuthor = RecordModel & {
-	name?: string
-	username?: string
-	email?: string
-	avatar?: string
-}
-
-type CommentRecord = CommentsResponse<{ author?: CommentAuthor }>
-
-export let postId: string
-export let initialCommentCount = 0
-
-const dispatch = createEventDispatcher<{
-	commentCountChanged: { count: number }
-}>()
-
-let comments: CommentRecord[] = []
-let commentCount = initialCommentCount ?? 0
-let showComments = false
-let loading = false
-let submitting = false
-let newCommentContent = ''
-let hasMore = false
-let page = 1
-let hasLoaded = false
-let canComment = false
-
-let realtimeUnsub: (() => void) | null = null
-let currentUserUnsub: (() => void) | null = null
-let destroyed = false
-
-const perPage = 20
-const pendingDeletionIds: Record<string, boolean> = {}
-
-function toCommentRecord(record: RecordModel | CommentRecord): CommentRecord {
-	return record as CommentRecord
-}
-
-onMount(() => {
-	currentUserUnsub = currentUser.subscribe((user) => {
-		canComment = Boolean(user)
-	})
-	setupRealtime()
-})
-
-onDestroy(() => {
-	destroyed = true
-	cleanup()
-})
-
-$: if (!hasLoaded) {
-	commentCount = initialCommentCount ?? 0
-}
-
-function cleanup() {
-	currentUserUnsub?.()
-	currentUserUnsub = null
-
-	if (realtimeUnsub) {
-		try {
-			realtimeUnsub()
-		} catch {
-			// ignore unsubscribe errors
-		}
-		try {
-			pb.collection('comments').unsubscribe('*')
-		} catch {
-			// ignore unsubscribe errors
-		}
-		realtimeUnsub = null
+	type CommentAuthor = RecordModel & {
+		name?: string
+		username?: string
+		email?: string
+		avatar?: string
 	}
-}
 
-async function setupRealtime() {
-	try {
-		const unsub = await pb.collection('comments').subscribe<CommentRecord>('*', async (event) => {
-			if (event?.record?.post !== postId) return
-			await handleRealtimeUpdate(event)
+	type CommentRecord = CommentsResponse<{ author?: CommentAuthor }>
+
+	export let postId: string
+	export let initialCommentCount = 0
+
+	const dispatch = createEventDispatcher<{
+		commentCountChanged: { count: number }
+	}>()
+
+	let comments: CommentRecord[] = []
+	let commentCount = initialCommentCount ?? 0
+	let showComments = false
+	let loading = false
+	let submitting = false
+	let newCommentContent = ''
+	let hasMore = false
+	let page = 1
+	let hasLoaded = false
+	let canComment = false
+
+	let realtimeUnsub: (() => void) | null = null
+	let currentUserUnsub: (() => void) | null = null
+	let destroyed = false
+
+	const perPage = 20
+	const pendingDeletionIds: Record<string, boolean> = {}
+
+	function toCommentRecord(record: RecordModel | CommentRecord): CommentRecord {
+		return record as CommentRecord
+	}
+
+	onMount(() => {
+		currentUserUnsub = currentUser.subscribe((user) => {
+			canComment = Boolean(user)
 		})
+		setupRealtime()
+	})
 
-		if (destroyed) {
+	onDestroy(() => {
+		destroyed = true
+		cleanup()
+	})
+
+	$: if (!hasLoaded) {
+		commentCount = initialCommentCount ?? 0
+	}
+
+	function cleanup() {
+		currentUserUnsub?.()
+		currentUserUnsub = null
+
+		if (realtimeUnsub) {
 			try {
-				unsub()
+				realtimeUnsub()
 			} catch {
 				// ignore unsubscribe errors
 			}
-			return
+			try {
+				pb.collection('comments').unsubscribe('*')
+			} catch {
+				// ignore unsubscribe errors
+			}
+			realtimeUnsub = null
+		}
+	}
+
+	async function setupRealtime() {
+		try {
+			const unsub = await pb
+				.collection('comments')
+				.subscribe<CommentRecord>('*', async (event) => {
+					if (event?.record?.post !== postId) return
+					await handleRealtimeUpdate(event)
+				})
+
+			if (destroyed) {
+				try {
+					unsub()
+				} catch {
+					// ignore unsubscribe errors
+				}
+				return
+			}
+
+			realtimeUnsub = unsub
+		} catch (error) {
+			console.warn('comments realtime subscription failed', error)
+		}
+	}
+
+	function setCommentCount(count: number) {
+		commentCount = count
+		dispatch('commentCountChanged', { count })
+	}
+
+	async function ensureExpandedComment(
+		record: CommentRecord | RecordModel
+	): Promise<CommentRecord> {
+		if (record?.expand?.author) {
+			return toCommentRecord(record)
+		}
+		try {
+			const expanded = await pb.collection('comments').getOne(record.id, { expand: 'author' })
+			return toCommentRecord(expanded)
+		} catch {
+			return toCommentRecord(record)
+		}
+	}
+
+	async function loadComments(options: { reset?: boolean } = {}) {
+		if (loading) return
+
+		const targetPage = options.reset ? 1 : page
+		loading = true
+
+		try {
+			const result = (await withErrorToast(
+				async () => await getComments(postId, { page: targetPage, perPage }),
+				{ context: 'getComments' }
+			)) as ListResult<CommentRecord> | undefined
+
+			if (!result) {
+				return
+			}
+
+			const items = Array.isArray(result.items) ? result.items.map(toCommentRecord) : []
+			const merged = options.reset
+				? items
+				: [
+						...comments,
+						...items.filter(
+							(item) => !comments.some((existing) => existing.id === item.id)
+						)
+					]
+
+			comments = merged
+			hasMore = result.page < result.totalPages
+			const totalItems =
+				typeof result.totalItems === 'number' ? result.totalItems : merged.length
+			setCommentCount(totalItems)
+			page = result.page + 1
+			hasLoaded = true
+		} finally {
+			loading = false
+		}
+	}
+
+	async function ensureCommentsLoaded() {
+		if (hasLoaded) return
+		await loadComments({ reset: true })
+	}
+
+	async function toggleComments() {
+		showComments = !showComments
+		if (showComments) {
+			await ensureCommentsLoaded()
+		}
+	}
+
+	async function loadMoreComments() {
+		if (!hasMore || loading) return
+		await loadComments()
+	}
+
+	async function submitComment() {
+		if (!canComment || !newCommentContent.trim() || submitting) return
+
+		submitting = true
+		try {
+			const trimmed = newCommentContent.trim()
+			const created = await withErrorToast(
+				async () => await createComment(postId, trimmed, undefined),
+				{ context: 'createComment' }
+			)
+
+			if (!created) {
+				return
+			}
+
+			if (hasLoaded) {
+				comments = [...comments, toCommentRecord(created)]
+			}
+
+			newCommentContent = ''
+			setCommentCount(commentCount + 1)
+			toast.success(t('feed.commentAdded'))
+		} finally {
+			submitting = false
+		}
+	}
+
+	async function handleDeleteComment(commentId: string) {
+		const confirmMessage = t('feed.deleteCommentConfirm')
+		if (!confirm(confirmMessage)) return
+
+		const previousComments = [...comments]
+		const previousCount = commentCount
+
+		if (hasLoaded) {
+			comments = comments.filter((comment) => comment.id !== commentId)
 		}
 
-		realtimeUnsub = unsub
-	} catch (error) {
-		console.warn('comments realtime subscription failed', error)
-	}
-}
+		const nextCount = Math.max(0, previousCount - 1)
+		setCommentCount(nextCount)
 
-function setCommentCount(count: number) {
-	commentCount = count
-	dispatch('commentCountChanged', { count })
-}
+		pendingDeletionIds[commentId] = true
 
-async function ensureExpandedComment(record: CommentRecord | RecordModel): Promise<CommentRecord> {
-	if (record?.expand?.author) {
-		return toCommentRecord(record)
-	}
-	try {
-		const expanded = await pb.collection('comments').getOne(record.id, { expand: 'author' })
-		return toCommentRecord(expanded)
-	} catch {
-		return toCommentRecord(record)
-	}
-}
-
-async function loadComments(options: { reset?: boolean } = {}) {
-	if (loading) return
-
-	const targetPage = options.reset ? 1 : page
-	loading = true
-
-	try {
-		const result = (await withErrorToast(
-			async () => await getComments(postId, { page: targetPage, perPage }),
-			{ context: 'getComments' }
-		)) as ListResult<CommentRecord> | undefined
-
-		if (!result) {
-			return
-		}
-
-		const items = Array.isArray(result.items) ? result.items.map(toCommentRecord) : []
-		const merged = options.reset
-			? items
-			: [
-					...comments,
-					...items.filter((item) => !comments.some((existing) => existing.id === item.id))
-				]
-
-		comments = merged
-		hasMore = result.page < result.totalPages
-		const totalItems = typeof result.totalItems === 'number' ? result.totalItems : merged.length
-		setCommentCount(totalItems)
-		page = result.page + 1
-		hasLoaded = true
-	} finally {
-		loading = false
-	}
-}
-
-async function ensureCommentsLoaded() {
-	if (hasLoaded) return
-	await loadComments({ reset: true })
-}
-
-async function toggleComments() {
-	showComments = !showComments
-	if (showComments) {
-		await ensureCommentsLoaded()
-	}
-}
-
-async function loadMoreComments() {
-	if (!hasMore || loading) return
-	await loadComments()
-}
-
-async function submitComment() {
-	if (!canComment || !newCommentContent.trim() || submitting) return
-
-	submitting = true
-	try {
-		const trimmed = newCommentContent.trim()
-		const created = await withErrorToast(
-			async () => await createComment(postId, trimmed, undefined),
-			{ context: 'createComment' }
+		const success = await withErrorToast(
+			async () => {
+				await deleteComment(commentId, postId)
+				return true
+			},
+			{ context: 'deleteComment' }
 		)
 
-		if (!created) {
-			return
-		}
-
-		if (hasLoaded) {
-			comments = [...comments, toCommentRecord(created)]
-		}
-
-		newCommentContent = ''
-		setCommentCount(commentCount + 1)
-		toast.success(t('feed.commentAdded'))
-	} finally {
-		submitting = false
-	}
-}
-
-async function handleDeleteComment(commentId: string) {
-	const confirmMessage = t('feed.deleteCommentConfirm')
-	if (!confirm(confirmMessage)) return
-
-	const previousComments = [...comments]
-	const previousCount = commentCount
-
-	if (hasLoaded) {
-		comments = comments.filter((comment) => comment.id !== commentId)
-	}
-
-	const nextCount = Math.max(0, previousCount - 1)
-	setCommentCount(nextCount)
-
-	pendingDeletionIds[commentId] = true
-
-	const success = await withErrorToast(
-		async () => {
-			await deleteComment(commentId, postId)
-			return true
-		},
-		{ context: 'deleteComment' }
-	)
-
-	if (!success) {
-		delete pendingDeletionIds[commentId]
-		if (hasLoaded) {
-			comments = previousComments
-		}
-		setCommentCount(previousCount)
-		return
-	}
-
-	toast.success(t('feed.commentDeleted'))
-}
-
-async function reportComment(commentId: string) {
-	await withErrorToast(
-		async () => {
-			await reportContent({
-				targetType: 'comment',
-				targetId: commentId,
-				reason: 'inappropriate'
-			})
-			toast.success(t('postCard.reported'))
-		},
-		{ context: 'reportComment' }
-	)
-}
-
-function handleKeydown(event: KeyboardEvent) {
-	if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
-		event.preventDefault()
-		submitComment()
-	}
-}
-
-function getAuthorAvatar(author: CommentAuthor | undefined) {
-	if (author?.avatar) {
-		return pb.files.getURL(author, author.avatar, { thumb: '32x32' })
-	}
-	return null
-}
-
-function formatCommentDate(value: string) {
-	return formatDistanceToNow(new Date(value), { addSuffix: true })
-}
-
-function getCommentLabel(count: number) {
-	if (count === 0) return t('feed.commentToggleZero')
-	if (count === 1) return t('feed.commentToggleOne')
-	return t('feed.commentToggleMany', { count })
-}
-
-async function handleRealtimeUpdate(event: RecordSubscription<CommentRecord>) {
-	if (!event?.record) return
-
-	if (event.action === 'create') {
-		const exists = comments.some((comment) => comment.id === event.record.id)
-		if (!exists) {
-			setCommentCount(commentCount + 1)
+		if (!success) {
+			delete pendingDeletionIds[commentId]
 			if (hasLoaded) {
-				const full = await ensureExpandedComment(event.record)
-				comments = [...comments, full]
+				comments = previousComments
 			}
-		}
-		return
-	}
-
-	if (event.action === 'update') {
-		if (!hasLoaded) return
-		const index = comments.findIndex((comment) => comment.id === event.record.id)
-		if (index === -1) return
-		const full = await ensureExpandedComment(event.record)
-		const next = [...comments]
-		next[index] = { ...next[index], ...full }
-		comments = next
-		return
-	}
-
-	if (event.action === 'delete') {
-		if (pendingDeletionIds[event.record.id]) {
-			delete pendingDeletionIds[event.record.id]
+			setCommentCount(previousCount)
 			return
 		}
 
-		if (hasLoaded) {
-			comments = comments.filter((comment) => comment.id !== event.record.id)
-		}
-		setCommentCount(Math.max(0, commentCount - 1))
+		toast.success(t('feed.commentDeleted'))
 	}
-}
+
+	async function reportComment(commentId: string) {
+		await withErrorToast(
+			async () => {
+				await reportContent({
+					targetType: 'comment',
+					targetId: commentId,
+					reason: 'inappropriate'
+				})
+				toast.success(t('postCard.reported'))
+			},
+			{ context: 'reportComment' }
+		)
+	}
+
+	function handleKeydown(event: KeyboardEvent) {
+		if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+			event.preventDefault()
+			submitComment()
+		}
+	}
+
+	function getAuthorAvatar(author: CommentAuthor | undefined) {
+		if (author?.avatar) {
+			return pb.files.getURL(author, author.avatar, { thumb: '32x32' })
+		}
+		return null
+	}
+
+	function formatCommentDate(value: string) {
+		return formatDistanceToNow(new Date(value), { addSuffix: true })
+	}
+
+	function getCommentLabel(count: number) {
+		if (count === 0) return t('feed.commentToggleZero')
+		if (count === 1) return t('feed.commentToggleOne')
+		return t('feed.commentToggleMany', { count })
+	}
+
+	async function handleRealtimeUpdate(event: RecordSubscription<CommentRecord>) {
+		if (!event?.record) return
+
+		if (event.action === 'create') {
+			const exists = comments.some((comment) => comment.id === event.record.id)
+			if (!exists) {
+				setCommentCount(commentCount + 1)
+				if (hasLoaded) {
+					const full = await ensureExpandedComment(event.record)
+					comments = [...comments, full]
+				}
+			}
+			return
+		}
+
+		if (event.action === 'update') {
+			if (!hasLoaded) return
+			const index = comments.findIndex((comment) => comment.id === event.record.id)
+			if (index === -1) return
+			const full = await ensureExpandedComment(event.record)
+			const next = [...comments]
+			next[index] = { ...next[index], ...full }
+			comments = next
+			return
+		}
+
+		if (event.action === 'delete') {
+			if (pendingDeletionIds[event.record.id]) {
+				delete pendingDeletionIds[event.record.id]
+				return
+			}
+
+			if (hasLoaded) {
+				comments = comments.filter((comment) => comment.id !== event.record.id)
+			}
+			setCommentCount(Math.max(0, commentCount - 1))
+		}
+	}
 </script>
 
 <div class="border-t pt-3">

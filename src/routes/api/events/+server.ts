@@ -89,7 +89,10 @@ export async function POST({ request, locals }) {
 			start = body.start
 			end = body.end
 		} else {
-			return json({ error: 'Either date or both start and end must be provided' }, { status: 400 })
+			return json(
+				{ error: 'Either date or both start and end must be provided' },
+				{ status: 400 }
+			)
 		}
 
 		const eventData: EventCreateInput = {

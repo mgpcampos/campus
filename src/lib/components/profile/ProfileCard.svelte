@@ -1,36 +1,36 @@
 <script lang="ts">
-import { Calendar, Edit, MapPin, User } from '@lucide/svelte'
-import { Button } from '$lib/components/ui/button/index.js'
-import * as Card from '$lib/components/ui/card/index.js'
-import { pb } from '$lib/pocketbase.js'
+	import { Calendar, Edit, MapPin, User } from '@lucide/svelte'
+	import { Button } from '$lib/components/ui/button/index.js'
+	import * as Card from '$lib/components/ui/card/index.js'
+	import { pb } from '$lib/pocketbase.js'
 
-interface UserProfile {
-	id: string
-	username: string
-	name: string
-	email?: string
-	avatar?: string
-	bio?: string
-	created: string
-	updated: string
-}
+	interface UserProfile {
+		id: string
+		username: string
+		name: string
+		email?: string
+		avatar?: string
+		bio?: string
+		created: string
+		updated: string
+	}
 
-let {
-	user,
-	isOwnProfile = false,
-	class: className = ''
-}: {
-	user: UserProfile
-	isOwnProfile?: boolean
-	class?: string
-} = $props()
+	let {
+		user,
+		isOwnProfile = false,
+		class: className = ''
+	}: {
+		user: UserProfile
+		isOwnProfile?: boolean
+		class?: string
+	} = $props()
 
-function formatDate(dateString: string): string {
-	return new Date(dateString).toLocaleDateString('en-US', {
-		year: 'numeric',
-		month: 'long'
-	})
-}
+	function formatDate(dateString: string): string {
+		return new Date(dateString).toLocaleDateString('en-US', {
+			year: 'numeric',
+			month: 'long'
+		})
+	}
 </script>
 
 <Card.Root class="w-full max-w-md {className}">

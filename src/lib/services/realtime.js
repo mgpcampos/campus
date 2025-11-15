@@ -33,7 +33,11 @@ async function ensureRealtimeEvents() {
 
 	try {
 		await pb.realtime.subscribe('PB_CONNECT', () => {
-			realtimeStatus.update((status) => ({ ...status, connected: true, lastEvent: Date.now() }))
+			realtimeStatus.update((status) => ({
+				...status,
+				connected: true,
+				lastEvent: Date.now()
+			}))
 		})
 	} catch (error) {
 		console.warn('Failed to subscribe to PB_CONNECT', error)

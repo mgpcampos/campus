@@ -1,64 +1,64 @@
 <svelte:options runes />
 
 <script lang="ts">
-import { t } from '$lib/i18n/index.js'
+	import { t } from '$lib/i18n/index.js'
 
-type GroupRecord = {
-	name?: string
-	description?: string
-	expand?: {
-		space?: {
-			name?: string
+	type GroupRecord = {
+		name?: string
+		description?: string
+		expand?: {
+			space?: {
+				name?: string
+			}
 		}
+	} & Record<string, unknown>
+
+	type GroupPost = {
+		created?: string
+		content?: string
+	} & Record<string, unknown>
+
+	type GroupPageData = {
+		group?: GroupRecord
+		memberCount?: number | null
+		member?: boolean
+		posts?: { items?: GroupPost[] }
 	}
-} & Record<string, unknown>
 
-type GroupPost = {
-	created?: string
-	content?: string
-} & Record<string, unknown>
+	let { data }: { data: GroupPageData } = $props()
+	const group = $derived.by<GroupRecord | undefined>(() => data?.group)
+	const memberCount = $derived.by<number | null>(() =>
+		typeof data?.memberCount === 'number' ? data.memberCount : null
+	)
+	const member = $derived.by<boolean>(() => Boolean(data?.member))
+	const postsItems = $derived.by<GroupPost[]>(() =>
+		Array.isArray(data?.posts?.items) ? data.posts.items : []
+	)
+	const spaceName = $derived.by<string | null>(() => {
+		const expandedSpace = group?.expand?.space
+		return expandedSpace?.name ?? null
+	})
+	const groupName = $derived.by<string>(() => group?.name ?? 'Group')
+	const groupDescription = $derived.by<string>(
+		() => group?.description ?? 'No description available.'
+	)
+	const numberFormatter = new Intl.NumberFormat()
+	const pageTitle = $derived.by<string>(() =>
+		spaceName ? `${groupName} • ${spaceName} | Campus` : `${groupName} | Campus`
+	)
+	const displayMemberCount = $derived.by<string>(() => {
+		if (memberCount === null) return 'Hidden'
+		return numberFormatter.format(memberCount)
+	})
+	let working = $state(false)
 
-type GroupPageData = {
-	group?: GroupRecord
-	memberCount?: number | null
-	member?: boolean
-	posts?: { items?: GroupPost[] }
-}
-
-let { data }: { data: GroupPageData } = $props()
-const group = $derived.by<GroupRecord | undefined>(() => data?.group)
-const memberCount = $derived.by<number | null>(() =>
-	typeof data?.memberCount === 'number' ? data.memberCount : null
-)
-const member = $derived.by<boolean>(() => Boolean(data?.member))
-const postsItems = $derived.by<GroupPost[]>(() =>
-	Array.isArray(data?.posts?.items) ? data.posts.items : []
-)
-const spaceName = $derived.by<string | null>(() => {
-	const expandedSpace = group?.expand?.space
-	return expandedSpace?.name ?? null
-})
-const groupName = $derived.by<string>(() => group?.name ?? 'Group')
-const groupDescription = $derived.by<string>(
-	() => group?.description ?? 'No description available.'
-)
-const numberFormatter = new Intl.NumberFormat()
-const pageTitle = $derived.by<string>(() =>
-	spaceName ? `${groupName} • ${spaceName} | Campus` : `${groupName} | Campus`
-)
-const displayMemberCount = $derived.by<string>(() => {
-	if (memberCount === null) return 'Hidden'
-	return numberFormatter.format(memberCount)
-})
-let working = $state(false)
-
-async function action(name: string) {
-	working = true
-	const fd = new FormData()
-	const res = await fetch(`?/${name}`, { method: 'POST', body: fd })
-	if (res.ok) location.reload()
-	working = false
-}
+	async function action(name: string) {
+		working = true
+		const fd = new FormData()
+		const res = await fetch(`?/${name}`, { method: 'POST', body: fd })
+		if (res.ok) location.reload()
+		working = false
+	}
 </script>
 
 <svelte:head>

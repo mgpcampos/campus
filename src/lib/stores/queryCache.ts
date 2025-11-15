@@ -56,10 +56,13 @@ export function useQuery<T>(
 
 	load()
 
-	return readable<{ data: T | null; loading: boolean; error: unknown | null }>(undefined, (set) => {
-		const unsub = state.subscribe(set)
-		return () => unsub()
-	})
+	return readable<{ data: T | null; loading: boolean; error: unknown | null }>(
+		undefined,
+		(set) => {
+			const unsub = state.subscribe(set)
+			return () => unsub()
+		}
+	)
 }
 
 export function invalidateQuery(key: string) {

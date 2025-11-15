@@ -83,7 +83,11 @@ class AnalyticsQueue {
 		const payload = { events: this.queue.splice(0, this.queue.length) }
 
 		try {
-			if (browser && navigator.sendBeacon && (immediate || document.visibilityState === 'hidden')) {
+			if (
+				browser &&
+				navigator.sendBeacon &&
+				(immediate || document.visibilityState === 'hidden')
+			) {
 				const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' })
 				navigator.sendBeacon(analytics.endpoint, blob)
 				return

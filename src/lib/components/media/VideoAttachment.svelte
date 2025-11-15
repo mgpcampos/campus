@@ -1,23 +1,23 @@
 <script lang="ts">
-import type { RecordModel } from 'pocketbase'
-import { pb } from '$lib/pocketbase.js'
+	import type { RecordModel } from 'pocketbase'
+	import { pb } from '$lib/pocketbase.js'
 
-export let post: RecordModel
-export let videoFile: string
-export let posterFile: string | undefined = undefined
-export let altText: string = ''
-export let className: string = ''
+	export let post: RecordModel
+	export let videoFile: string
+	export let posterFile: string | undefined = undefined
+	export let altText: string = ''
+	export let className: string = ''
 
-function getVideoUrl(filename: string) {
-	return pb.files.getURL(post, filename)
-}
+	function getVideoUrl(filename: string) {
+		return pb.files.getURL(post, filename)
+	}
 
-function getPosterUrl(filename: string) {
-	return pb.files.getURL(post, filename)
-}
+	function getPosterUrl(filename: string) {
+		return pb.files.getURL(post, filename)
+	}
 
-const videoUrl = getVideoUrl(videoFile)
-const posterUrl = posterFile ? getPosterUrl(posterFile) : undefined
+	const videoUrl = getVideoUrl(videoFile)
+	const posterUrl = posterFile ? getPosterUrl(posterFile) : undefined
 </script>
 
 <div class="video-container {className}">

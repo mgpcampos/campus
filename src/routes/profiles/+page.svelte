@@ -1,113 +1,113 @@
 <script lang="ts">
-import { BookOpen, Search, UserCircle } from '@lucide/svelte'
-import { goto, invalidateAll } from '$app/navigation'
-import { Button } from '$lib/components/ui/button/index.js'
-import * as Card from '$lib/components/ui/card/index.js'
-import * as Dialog from '$lib/components/ui/dialog/index.js'
-import { Input } from '$lib/components/ui/input/index.js'
-import { Label } from '$lib/components/ui/label/index.js'
-import { t } from '$lib/i18n'
-import { pb } from '$lib/pocketbase.js'
+	import { BookOpen, Search, UserCircle } from '@lucide/svelte'
+	import { goto, invalidateAll } from '$app/navigation'
+	import { Button } from '$lib/components/ui/button/index.js'
+	import * as Card from '$lib/components/ui/card/index.js'
+	import * as Dialog from '$lib/components/ui/dialog/index.js'
+	import { Input } from '$lib/components/ui/input/index.js'
+	import { Label } from '$lib/components/ui/label/index.js'
+	import { t } from '$lib/i18n'
+	import { pb } from '$lib/pocketbase.js'
 
-interface Profile {
-	id: string
-	displayName: string
-	role: string
-	department?: string
-	biography?: string
-	publicationCount?: number
-	expand?: {
-		user?: {
-			email?: string
+	interface Profile {
+		id: string
+		displayName: string
+		role: string
+		department?: string
+		biography?: string
+		publicationCount?: number
+		expand?: {
+			user?: {
+				email?: string
+			}
 		}
 	}
-}
 
-interface PageData {
-	profiles: Profile[]
-}
+	interface PageData {
+		profiles: Profile[]
+	}
 
-let { data }: { data: PageData } = $props()
+	let { data }: { data: PageData } = $props()
 
-let searchQuery = $state('')
-let selectedRole = $state('all')
-let selectedDepartment = $state('all')
-let createDialogOpen = $state(false)
-let creating = $state(false)
-let error = $state('')
+	let searchQuery = $state('')
+	let selectedRole = $state('all')
+	let selectedDepartment = $state('all')
+	let createDialogOpen = $state(false)
+	let creating = $state(false)
+	let error = $state('')
 
-// Form fields
-let displayName = $state('')
-let role = $state('student')
-let department = $state('')
-let biography = $state('')
+	// Form fields
+	let displayName = $state('')
+	let role = $state('student')
+	let department = $state('')
+	let biography = $state('')
 
-const filteredProfiles = $derived.by(() => {
-	let filtered: Profile[] = data.profiles
+	const filteredProfiles = $derived.by(() => {
+		let filtered: Profile[] = data.profiles
 
-	if (searchQuery) {
-		const query = searchQuery.toLowerCase()
-		filtered = filtered.filter(
-			(p: Profile) =>
-				p.displayName.toLowerCase().includes(query) ||
-				p.department?.toLowerCase().includes(query) ||
-				p.role?.toLowerCase().includes(query)
+		if (searchQuery) {
+			const query = searchQuery.toLowerCase()
+			filtered = filtered.filter(
+				(p: Profile) =>
+					p.displayName.toLowerCase().includes(query) ||
+					p.department?.toLowerCase().includes(query) ||
+					p.role?.toLowerCase().includes(query)
+			)
+		}
+
+		if (selectedRole !== 'all') {
+			filtered = filtered.filter((p: Profile) => p.role === selectedRole)
+		}
+
+		if (selectedDepartment !== 'all') {
+			filtered = filtered.filter((p: Profile) => p.department === selectedDepartment)
+		}
+
+		return filtered
+	})
+
+	const roles = $derived.by(() => {
+		const roleSet = new Set(data.profiles.map((p: Profile) => p.role))
+		return Array.from(roleSet).sort()
+	})
+
+	const departments = $derived.by(() => {
+		const deptSet = new Set(
+			data.profiles.map((p: Profile) => p.department).filter((d): d is string => Boolean(d))
 		)
+		return Array.from(deptSet).sort()
+	})
+
+	function handleProfileClick(profileId: string) {
+		goto(`/profiles/${profileId}`)
 	}
 
-	if (selectedRole !== 'all') {
-		filtered = filtered.filter((p: Profile) => p.role === selectedRole)
+	async function handleCreate() {
+		if (creating) return
+		creating = true
+		error = ''
+
+		try {
+			await pb.collection('profiles').create({
+				user: pb.authStore.model?.id,
+				displayName,
+				role,
+				department,
+				biography
+			})
+
+			createDialogOpen = false
+			displayName = ''
+			role = 'student'
+			department = ''
+			biography = ''
+			await invalidateAll()
+		} catch (err: unknown) {
+			error = err instanceof Error ? err.message : t('profiles.createFailed')
+		} finally {
+			creating = false
+		}
 	}
-
-	if (selectedDepartment !== 'all') {
-		filtered = filtered.filter((p: Profile) => p.department === selectedDepartment)
-	}
-
-	return filtered
-})
-
-const roles = $derived.by(() => {
-	const roleSet = new Set(data.profiles.map((p: Profile) => p.role))
-	return Array.from(roleSet).sort()
-})
-
-const departments = $derived.by(() => {
-	const deptSet = new Set(
-		data.profiles.map((p: Profile) => p.department).filter((d): d is string => Boolean(d))
-	)
-	return Array.from(deptSet).sort()
-})
-
-function handleProfileClick(profileId: string) {
-	goto(`/profiles/${profileId}`)
-}
-
-async function handleCreate() {
-	if (creating) return
-	creating = true
-	error = ''
-
-	try {
-		await pb.collection('profiles').create({
-			user: pb.authStore.model?.id,
-			displayName,
-			role,
-			department,
-			biography
-		})
-
-		createDialogOpen = false
-		displayName = ''
-		role = 'student'
-		department = ''
-		biography = ''
-		await invalidateAll()
-	} catch (err: unknown) {
-		error = err instanceof Error ? err.message : t('profiles.createFailed')
-	} finally {
-		creating = false
-	}
-}
 </script>
 
 <svelte:head>

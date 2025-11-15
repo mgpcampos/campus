@@ -1,202 +1,202 @@
 <script lang="ts">
-import { Loader2, RefreshCw } from '@lucide/svelte'
-import { createEventDispatcher, onMount } from 'svelte'
-import { toast } from 'svelte-sonner'
-import { Button } from '$lib/components/ui/button/index.js'
-import { t } from '$lib/i18n'
-import { deletePost, getPosts } from '$lib/services/posts.js'
-import {
-	disablePolling,
-	enablePolling,
-	feedPosts,
-	realtimeStatus,
-	subscribeFeed
-} from '$lib/services/realtime.js'
-import { getUserMessage, notifyError, withErrorToast } from '$lib/utils/errors.ts'
-import PostCard from './PostCard.svelte'
-import type { FeedPost, FeedPostList, FeedScope } from './types.js'
+	import { Loader2, RefreshCw } from '@lucide/svelte'
+	import { createEventDispatcher, onMount } from 'svelte'
+	import { toast } from 'svelte-sonner'
+	import { Button } from '$lib/components/ui/button/index.js'
+	import { t } from '$lib/i18n'
+	import { deletePost, getPosts } from '$lib/services/posts.js'
+	import {
+		disablePolling,
+		enablePolling,
+		feedPosts,
+		realtimeStatus,
+		subscribeFeed
+	} from '$lib/services/realtime.js'
+	import { getUserMessage, notifyError, withErrorToast } from '$lib/utils/errors.ts'
+	import PostCard from './PostCard.svelte'
+	import type { FeedPost, FeedPostList, FeedScope } from './types.js'
 
-export let scope: FeedScope = 'global'
-export let space: string | null = null
-export let group: string | null = null
-export let refreshTrigger = 0 // External trigger for refresh
-export let q: string = ''
-export let sort: 'new' | 'top' | 'trending' = 'new'
-export let timeframeHours: number = 48
+	export let scope: FeedScope = 'global'
+	export let space: string | null = null
+	export let group: string | null = null
+	export let refreshTrigger = 0 // External trigger for refresh
+	export let q: string = ''
+	export let sort: 'new' | 'top' | 'trending' = 'new'
+	export let timeframeHours: number = 48
 
-const dispatch = createEventDispatcher()
+	const dispatch = createEventDispatcher()
 
-let posts: FeedPost[] = []
-let loading = false
-let loadingMore = false
-let hasMore = true
-let currentPage = 1
-let error: string | undefined
-let lastQueryKey = ''
+	let posts: FeedPost[] = []
+	let loading = false
+	let loadingMore = false
+	let hasMore = true
+	let currentPage = 1
+	let error: string | undefined
+	let lastQueryKey = ''
 
-const perPage = 20
+	const perPage = 20
 
-onMount(() => {
-	loadPosts().then(() => {
-		// Subscribe realtime after initial load
-		subscribeFeed({ scope, space, group })
-	})
-	const unsub = realtimeStatus.subscribe((status) => {
-		if (!status.connected) {
-			enablePolling(async () => {
-				await refreshFeed()
-			})
-		} else {
-			disablePolling()
+	onMount(() => {
+		loadPosts().then(() => {
+			// Subscribe realtime after initial load
+			subscribeFeed({ scope, space, group })
+		})
+		const unsub = realtimeStatus.subscribe((status) => {
+			if (!status.connected) {
+				enablePolling(async () => {
+					await refreshFeed()
+				})
+			} else {
+				disablePolling()
+			}
+		})
+		// Keep posts in sync with feedPosts store (but only for realtime updates, not initial empty state)
+		let initialized = false
+		const unsubPosts = feedPosts.subscribe((fp) => {
+			// Skip the initial empty subscription callback
+			if (!initialized) {
+				initialized = true
+				return
+			}
+			// Only update if we have posts from realtime
+			if (fp.length > 0 || posts.length === 0) {
+				posts = fp
+			}
+		})
+		return () => {
+			unsub()
+			unsubPosts()
 		}
 	})
-	// Keep posts in sync with feedPosts store (but only for realtime updates, not initial empty state)
-	let initialized = false
-	const unsubPosts = feedPosts.subscribe((fp) => {
-		// Skip the initial empty subscription callback
-		if (!initialized) {
-			initialized = true
-			return
-		}
-		// Only update if we have posts from realtime
-		if (fp.length > 0 || posts.length === 0) {
-			posts = fp
-		}
-	})
-	return () => {
-		unsub()
-		unsubPosts()
-	}
-})
 
-// Watch for refresh trigger changes
-$: if (refreshTrigger > 0) {
-	refreshFeed()
-}
-
-// Reactive refresh when query parameters change
-$: {
-	const key = `${scope}|${space}|${group}|${q}|${sort}|${timeframeHours}`
-	if (key !== lastQueryKey && !loading && !loadingMore) {
-		lastQueryKey = key
-		// Avoid double initial load (onMount already loads)
-		if (posts.length > 0) {
-			refreshFeed()
-		}
-	}
-}
-
-async function loadPosts(page = 1, append = false) {
-	if (loading || loadingMore) return
-
-	if (append) {
-		loadingMore = true
-	} else {
-		loading = true
-		error = undefined
+	// Watch for refresh trigger changes
+	$: if (refreshTrigger > 0) {
+		refreshFeed()
 	}
 
-	try {
-		const result = (await getPosts({
-			page,
-			perPage,
-			scope,
-			space: space ?? undefined,
-			group: group ?? undefined,
-			q: q || undefined,
-			sort,
-			timeframeHours
-		})) as FeedPostList
+	// Reactive refresh when query parameters change
+	$: {
+		const key = `${scope}|${space}|${group}|${q}|${sort}|${timeframeHours}`
+		if (key !== lastQueryKey && !loading && !loadingMore) {
+			lastQueryKey = key
+			// Avoid double initial load (onMount already loads)
+			if (posts.length > 0) {
+				refreshFeed()
+			}
+		}
+	}
+
+	async function loadPosts(page = 1, append = false) {
+		if (loading || loadingMore) return
 
 		if (append) {
-			posts = [...posts, ...result.items]
+			loadingMore = true
 		} else {
-			posts = result.items
-			// Sync with feedPosts store for realtime updates
-			feedPosts.set(posts)
+			loading = true
+			error = undefined
 		}
 
-		hasMore = result.page < result.totalPages
-		currentPage = result.page
-	} catch (err) {
-		const normalized = await notifyError(err, { context: 'loadPosts' })
-		error = normalized?.userMessage ?? getUserMessage(err)
-	} finally {
-		loading = false
-		loadingMore = false
+		try {
+			const result = (await getPosts({
+				page,
+				perPage,
+				scope,
+				space: space ?? undefined,
+				group: group ?? undefined,
+				q: q || undefined,
+				sort,
+				timeframeHours
+			})) as FeedPostList
+
+			if (append) {
+				posts = [...posts, ...result.items]
+			} else {
+				posts = result.items
+				// Sync with feedPosts store for realtime updates
+				feedPosts.set(posts)
+			}
+
+			hasMore = result.page < result.totalPages
+			currentPage = result.page
+		} catch (err) {
+			const normalized = await notifyError(err, { context: 'loadPosts' })
+			error = normalized?.userMessage ?? getUserMessage(err)
+		} finally {
+			loading = false
+			loadingMore = false
+		}
 	}
-}
 
-async function loadMore() {
-	if (!hasMore || loadingMore) return
-	await loadPosts(currentPage + 1, true)
-}
-
-async function refreshFeed() {
-	currentPage = 1
-	hasMore = true
-	await loadPosts(1, false)
-}
-
-function handlePostAction(event: CustomEvent) {
-	const { type, detail } = event
-
-	switch (type) {
-		case 'like':
-			handleLike(detail.postId)
-			break
-		case 'comment':
-			handleComment(detail.postId)
-			break
-		case 'edit':
-			handleEdit(detail.post)
-			break
-		case 'delete':
-			handleDelete(detail.postId)
-			break
+	async function loadMore() {
+		if (!hasMore || loadingMore) return
+		await loadPosts(currentPage + 1, true)
 	}
-}
 
-function handleLike(postId: string) {
-	dispatch('like', { postId })
-}
+	async function refreshFeed() {
+		currentPage = 1
+		hasMore = true
+		await loadPosts(1, false)
+	}
 
-function handleComment(postId: string) {
-	dispatch('comment', { postId })
-}
+	function handlePostAction(event: CustomEvent) {
+		const { type, detail } = event
 
-function handleEdit(post: FeedPost) {
-	dispatch('edit', { post })
-}
+		switch (type) {
+			case 'like':
+				handleLike(detail.postId)
+				break
+			case 'comment':
+				handleComment(detail.postId)
+				break
+			case 'edit':
+				handleEdit(detail.post)
+				break
+			case 'delete':
+				handleDelete(detail.postId)
+				break
+		}
+	}
 
-async function handleDelete(postId: string) {
-	const previousPosts = [...posts]
-	posts = posts.filter((p) => p.id !== postId)
-	feedPosts.set(posts)
+	function handleLike(postId: string) {
+		dispatch('like', { postId })
+	}
 
-	const success = await withErrorToast(
-		async () => {
-			await deletePost(postId)
-			return true
-		},
-		{ context: 'deletePost' }
-	)
+	function handleComment(postId: string) {
+		dispatch('comment', { postId })
+	}
 
-	if (!success) {
-		posts = previousPosts
+	function handleEdit(post: FeedPost) {
+		dispatch('edit', { post })
+	}
+
+	async function handleDelete(postId: string) {
+		const previousPosts = [...posts]
+		posts = posts.filter((p) => p.id !== postId)
 		feedPosts.set(posts)
-		await refreshFeed()
-		return
+
+		const success = await withErrorToast(
+			async () => {
+				await deletePost(postId)
+				return true
+			},
+			{ context: 'deletePost' }
+		)
+
+		if (!success) {
+			posts = previousPosts
+			feedPosts.set(posts)
+			await refreshFeed()
+			return
+		}
+
+		dispatch('delete', { postId })
+		toast.success(t('feed.postDeleted'))
 	}
 
-	dispatch('delete', { postId })
-	toast.success(t('feed.postDeleted'))
-}
-
-// Public method to add new post to feed
-export function addPost(newPost: FeedPost) {
-	posts = [newPost, ...posts]
-}
+	// Public method to add new post to feed
+	export function addPost(newPost: FeedPost) {
+		posts = [newPost, ...posts]
+	}
 </script>
 
 <div class="space-y-4">

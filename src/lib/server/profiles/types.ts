@@ -195,11 +195,13 @@ export async function getProfilePublications(
 ): Promise<
 	Array<{ publication?: PublicationRecord; contributionRole?: ContributionRole; linkId: string }>
 > {
-	const links = await pb.collection('profile_publications').getFullList<PublicationLinkWithExpand>({
-		filter: `profile = "${profileId}"`,
-		expand: 'publication,publication.material',
-		sort: '-publication.year'
-	})
+	const links = await pb
+		.collection('profile_publications')
+		.getFullList<PublicationLinkWithExpand>({
+			filter: `profile = "${profileId}"`,
+			expand: 'publication,publication.material',
+			sort: '-publication.year'
+		})
 
 	return links.map((link) => ({
 		publication: link.expand?.publication,

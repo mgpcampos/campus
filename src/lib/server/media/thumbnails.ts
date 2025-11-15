@@ -40,7 +40,9 @@ async function runFfmpeg(
 	options: ThumbnailOptions
 ): Promise<void> {
 	const timestamp =
-		Number.isFinite(options.timestamp) && options.timestamp !== undefined ? options.timestamp : 1
+		Number.isFinite(options.timestamp) && options.timestamp !== undefined
+			? options.timestamp
+			: 1
 	const vf: string[] = []
 	if (options.width || options.height) {
 		const width = options.width ?? -1
@@ -69,7 +71,11 @@ async function runFfmpeg(
 			if (code === 0 && signal === null) {
 				resolve()
 			} else {
-				reject(new Error(`ffmpeg exited with code ${code ?? 'null'} signal ${signal ?? 'null'}`))
+				reject(
+					new Error(
+						`ffmpeg exited with code ${code ?? 'null'} signal ${signal ?? 'null'}`
+					)
+				)
 			}
 		}
 

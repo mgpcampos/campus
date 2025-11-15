@@ -63,16 +63,22 @@ export async function getSpaces(
 	const useCache = allowCache && page === 1 && !search // only cache first page unfiltered list
 	const cacheKey = `spaces:p${page}:pp${perPage}:f${filter || 'none'}`
 	if (!useCache) {
-		return await client.collection('spaces').getList(page, perPage, { filter, sort: '-created' })
+		return await client
+			.collection('spaces')
+			.getList(page, perPage, { filter, sort: '-created' })
 	}
 	if (!allowCache) {
-		return await client.collection('spaces').getList(page, perPage, { filter, sort: '-created' })
+		return await client
+			.collection('spaces')
+			.getList(page, perPage, { filter, sort: '-created' })
 	}
 	return await getOrSet(
 		serverCaches.lists,
 		cacheKey,
 		async () => {
-			return await client.collection('spaces').getList(page, perPage, { filter, sort: '-created' })
+			return await client
+				.collection('spaces')
+				.getList(page, perPage, { filter, sort: '-created' })
 		},
 		{ ttlMs: 30_000 }
 	)

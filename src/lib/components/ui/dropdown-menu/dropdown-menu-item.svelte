@@ -1,18 +1,18 @@
 <script lang="ts">
-import type { DropdownMenu as DropdownMenuPrimitiveType } from 'bits-ui'
-import { DropdownMenu as DropdownMenuPrimitive } from 'bits-ui'
-import { cn } from '$lib/utils.js'
+	import type { DropdownMenu as DropdownMenuPrimitiveType } from 'bits-ui'
+	import { DropdownMenu as DropdownMenuPrimitive } from 'bits-ui'
+	import { cn } from '$lib/utils.js'
 
-let {
-	ref = $bindable(null),
-	class: className,
-	inset,
-	variant = 'default',
-	...restProps
-}: DropdownMenuPrimitiveType.ItemProps & {
-	inset?: boolean
-	variant?: 'default' | 'destructive'
-} = $props()
+	let {
+		ref = $bindable(null),
+		class: className,
+		inset,
+		variant = 'default',
+		...restProps
+	}: DropdownMenuPrimitiveType.ItemProps & {
+		inset?: boolean
+		variant?: 'default' | 'destructive'
+	} = $props()
 </script>
 
 <DropdownMenuPrimitive.Item

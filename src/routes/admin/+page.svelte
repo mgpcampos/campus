@@ -1,84 +1,86 @@
 <script lang="ts">
-import { formatDistanceToNowStrict } from 'date-fns'
-import * as Card from '$lib/components/ui/card/index.js'
-import { t } from '$lib/i18n'
-import type { PageData } from './$types'
+	import { formatDistanceToNowStrict } from 'date-fns'
+	import * as Card from '$lib/components/ui/card/index.js'
+	import { t } from '$lib/i18n'
+	import type { PageData } from './$types'
 
-type AnalyticsSummary = PageData['analytics']
+	type AnalyticsSummary = PageData['analytics']
 
-let { data }: { data: PageData } = $props()
-let { admin, analytics, recentEvents, metrics, recentReports, recentModeration } = data
+	let { data }: { data: PageData } = $props()
+	let { admin, analytics, recentEvents, metrics, recentReports, recentModeration } = data
 
-const numberFormatter = new Intl.NumberFormat(undefined, {
-	maximumFractionDigits: 0
-})
+	const numberFormatter = new Intl.NumberFormat(undefined, {
+		maximumFractionDigits: 0
+	})
 
-const floatFormatter = new Intl.NumberFormat(undefined, {
-	maximumFractionDigits: 2
-})
+	const floatFormatter = new Intl.NumberFormat(undefined, {
+		maximumFractionDigits: 2
+	})
 
-const dateFormatter = new Intl.DateTimeFormat(undefined, {
-	month: 'short',
-	day: 'numeric'
-})
+	const dateFormatter = new Intl.DateTimeFormat(undefined, {
+		month: 'short',
+		day: 'numeric'
+	})
 
-const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
-	dateStyle: 'medium',
-	timeStyle: 'short'
-})
+	const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
+		dateStyle: 'medium',
+		timeStyle: 'short'
+	})
 
-const chartWidth = 260
-const chartHeight = 88
+	const chartWidth = 260
+	const chartHeight = 88
 
-function sparklinePath(summary: AnalyticsSummary, key: 'pageViews' | 'events') {
-	if (!summary?.timeSeries?.length) return ''
-	const points = summary.timeSeries
-	const maxValue = Math.max(...points.map((point) => point[key]), 1)
-	if (maxValue === 0) return ''
+	function sparklinePath(summary: AnalyticsSummary, key: 'pageViews' | 'events') {
+		if (!summary?.timeSeries?.length) return ''
+		const points = summary.timeSeries
+		const maxValue = Math.max(...points.map((point) => point[key]), 1)
+		if (maxValue === 0) return ''
 
-	return points
-		.map((point, index) => {
-			const x = points.length === 1 ? chartWidth : (index / (points.length - 1)) * chartWidth
-			const y = chartHeight - (point[key] / maxValue) * chartHeight
-			return `${index === 0 ? 'M' : 'L'}${x.toFixed(2)},${y.toFixed(2)}`
-		})
-		.join(' ')
-}
-
-function vitalStatus(name: 'lcp' | 'cls' | 'fid', value: number | null) {
-	if (value == null) return { label: t('adminDashboard.noData'), tone: 'text-muted-foreground' }
-	const thresholds = {
-		lcp: { good: 2.5, needs: 4 },
-		cls: { good: 0.1, needs: 0.25 },
-		fid: { good: 100, needs: 300 }
-	} as const
-
-	const { good, needs } = thresholds[name]
-	const goodLabel = name === 'cls' ? value <= good : value <= good
-	const needsLabel = name === 'cls' ? value <= needs : value <= needs
-	if (goodLabel)
-		return {
-			label: t('adminDashboard.vitalsGood'),
-			tone: 'text-emerald-600 dark:text-emerald-400'
-		}
-	if (needsLabel)
-		return {
-			label: t('adminDashboard.vitalsNeedsAttention'),
-			tone: 'text-amber-600 dark:text-amber-400'
-		}
-	return { label: t('adminDashboard.vitalsPoor'), tone: 'text-destructive' }
-}
-
-function eventTone(type: string) {
-	switch (type) {
-		case 'page':
-			return 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-200'
-		case 'vital':
-			return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200'
-		default:
-			return 'bg-muted text-muted-foreground'
+		return points
+			.map((point, index) => {
+				const x =
+					points.length === 1 ? chartWidth : (index / (points.length - 1)) * chartWidth
+				const y = chartHeight - (point[key] / maxValue) * chartHeight
+				return `${index === 0 ? 'M' : 'L'}${x.toFixed(2)},${y.toFixed(2)}`
+			})
+			.join(' ')
 	}
-}
+
+	function vitalStatus(name: 'lcp' | 'cls' | 'fid', value: number | null) {
+		if (value == null)
+			return { label: t('adminDashboard.noData'), tone: 'text-muted-foreground' }
+		const thresholds = {
+			lcp: { good: 2.5, needs: 4 },
+			cls: { good: 0.1, needs: 0.25 },
+			fid: { good: 100, needs: 300 }
+		} as const
+
+		const { good, needs } = thresholds[name]
+		const goodLabel = name === 'cls' ? value <= good : value <= good
+		const needsLabel = name === 'cls' ? value <= needs : value <= needs
+		if (goodLabel)
+			return {
+				label: t('adminDashboard.vitalsGood'),
+				tone: 'text-emerald-600 dark:text-emerald-400'
+			}
+		if (needsLabel)
+			return {
+				label: t('adminDashboard.vitalsNeedsAttention'),
+				tone: 'text-amber-600 dark:text-amber-400'
+			}
+		return { label: t('adminDashboard.vitalsPoor'), tone: 'text-destructive' }
+	}
+
+	function eventTone(type: string) {
+		switch (type) {
+			case 'page':
+				return 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-200'
+			case 'vital':
+				return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200'
+			default:
+				return 'bg-muted text-muted-foreground'
+		}
+	}
 </script>
 
 <svelte:head>

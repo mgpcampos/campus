@@ -52,9 +52,8 @@ export async function load({ url, params, locals }) {
 				throw error(403, 'You do not have access to this space.')
 			}
 		}
-		const normalized = /** @type {{ status?: number; userMessage?: string; message?: string }} */ (
-			err ?? {}
-		)
+		const normalized =
+			/** @type {{ status?: number; userMessage?: string; message?: string }} */ (err ?? {})
 		const status = normalized.status ?? 500
 		const message = normalized.userMessage || normalized.message || 'Failed to load space.'
 		throw error(status, message)

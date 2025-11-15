@@ -37,7 +37,9 @@ export async function subscribeNotifications() {
 		if (e.action === 'create') {
 			notifications.update((list) => [{ ...e.record }, ...list].slice(0, 50))
 		} else if (e.action === 'update') {
-			notifications.update((list) => list.map((n) => (n.id === e.record.id ? { ...e.record } : n)))
+			notifications.update((list) =>
+				list.map((n) => (n.id === e.record.id ? { ...e.record } : n))
+			)
 		} else if (e.action === 'delete') {
 			notifications.update((list) => list.filter((n) => n.id !== e.record.id))
 		}

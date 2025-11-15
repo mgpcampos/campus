@@ -87,7 +87,9 @@ export async function trackMessageDelivery(messageId: string, threadId: string, 
 		})
 
 		if (!withinSLA) {
-			console.warn(`[SLA] Message delivery exceeded SLA: ${latencyMs}ms for message ${messageId}`)
+			console.warn(
+				`[SLA] Message delivery exceeded SLA: ${latencyMs}ms for message ${messageId}`
+			)
 		}
 	} catch (error) {
 		console.error('Failed to track message delivery:', error)
@@ -272,7 +274,8 @@ export async function generateDailySLAReport(date = new Date(Date.now() - 24 * 6
 			p99DeliveryLatencyMs: sortedLatencies[p99Index] || 0,
 			totalCases: caseEvents.length,
 			casesWithinSLA,
-			avgResponseTimeMinutes: casesWithResponse > 0 ? totalResponseTime / casesWithResponse : 0,
+			avgResponseTimeMinutes:
+				casesWithResponse > 0 ? totalResponseTime / casesWithResponse : 0,
 			avgResolutionTimeMinutes:
 				casesWithResolution > 0 ? totalResolutionTime / casesWithResolution : 0,
 			escalatedCases: escalatedCount
@@ -347,7 +350,9 @@ export async function getDashboardMetrics() {
 			messagesLast24h: recentDeliveries.length,
 			casesLast24h: recentCases.length,
 			slaStatus:
-				deliverySuccessRate >= SLA_THRESHOLDS.UPTIME_TARGET_PERCENT ? 'healthy' : 'degraded',
+				deliverySuccessRate >= SLA_THRESHOLDS.UPTIME_TARGET_PERCENT
+					? 'healthy'
+					: 'degraded',
 			needsEscalation: needsEscalation
 		}
 	} catch (error) {

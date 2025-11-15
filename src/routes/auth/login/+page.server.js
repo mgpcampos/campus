@@ -28,7 +28,9 @@ export const actions = {
 
 		try {
 			// Authenticate with PocketBase
-			await locals.pb.collection('users').authWithPassword(form.data.email, form.data.password)
+			await locals.pb
+				.collection('users')
+				.authWithPassword(form.data.email, form.data.password)
 
 			// Check if there's a return URL
 			const returnUrl = url.searchParams.get('returnUrl')

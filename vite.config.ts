@@ -34,9 +34,11 @@ export default defineConfig(({ mode }) => {
 						if (!id.includes('node_modules')) return
 						if (id.includes('lucide-svelte')) return 'icons'
 						if (id.includes('date-fns')) return 'date-fns'
-						if (id.includes('sveltekit-superforms') || id.includes('zod')) return 'forms'
+						if (id.includes('sveltekit-superforms') || id.includes('zod'))
+							return 'forms'
 						if (id.includes('pocketbase')) return 'pocketbase-client'
-						if (id.includes('bits-ui') || id.includes('@melt-ui')) return 'ui-primitives'
+						if (id.includes('bits-ui') || id.includes('@melt-ui'))
+							return 'ui-primitives'
 						return 'vendor'
 					}
 				}

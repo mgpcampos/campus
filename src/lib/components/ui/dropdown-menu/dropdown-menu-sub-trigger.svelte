@@ -1,18 +1,18 @@
 <script lang="ts">
-import ChevronRightIcon from '@lucide/svelte/icons/chevron-right'
-import type { DropdownMenu as DropdownMenuPrimitiveType } from 'bits-ui'
-import { DropdownMenu as DropdownMenuPrimitive } from 'bits-ui'
-import { cn } from '$lib/utils.js'
+	import ChevronRightIcon from '@lucide/svelte/icons/chevron-right'
+	import type { DropdownMenu as DropdownMenuPrimitiveType } from 'bits-ui'
+	import { DropdownMenu as DropdownMenuPrimitive } from 'bits-ui'
+	import { cn } from '$lib/utils.js'
 
-let {
-	ref = $bindable(null),
-	class: className,
-	inset,
-	children,
-	...restProps
-}: DropdownMenuPrimitiveType.SubTriggerProps & {
-	inset?: boolean
-} = $props()
+	let {
+		ref = $bindable(null),
+		class: className,
+		inset,
+		children,
+		...restProps
+	}: DropdownMenuPrimitiveType.SubTriggerProps & {
+		inset?: boolean
+	} = $props()
 </script>
 
 <DropdownMenuPrimitive.SubTrigger

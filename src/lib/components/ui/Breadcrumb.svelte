@@ -1,34 +1,34 @@
 <script lang="ts">
-import { ChevronRight, Home } from '@lucide/svelte'
-import type { ComponentType } from 'svelte'
+	import { ChevronRight, Home } from '@lucide/svelte'
+	import type { ComponentType } from 'svelte'
 
-interface BreadcrumbItem {
-	label: string
-	href?: string
-	icon?: ComponentType
-	current?: boolean
-}
+	interface BreadcrumbItem {
+		label: string
+		href?: string
+		icon?: ComponentType
+		current?: boolean
+	}
 
-let {
-	items = [],
-	separator = ChevronRight as unknown as ComponentType,
-	showHome = true,
-	homeHref = '/',
-	class: className = ''
-}: {
-	items: BreadcrumbItem[]
-	separator?: ComponentType
-	showHome?: boolean
-	homeHref?: string
-	class?: string
-} = $props()
+	let {
+		items = [],
+		separator = ChevronRight as unknown as ComponentType,
+		showHome = true,
+		homeHref = '/',
+		class: className = ''
+	}: {
+		items: BreadcrumbItem[]
+		separator?: ComponentType
+		showHome?: boolean
+		homeHref?: string
+		class?: string
+	} = $props()
 
-const homeItem: BreadcrumbItem = {
-	label: 'Home',
-	href: homeHref,
-	icon: Home as unknown as ComponentType
-}
-const allItems: BreadcrumbItem[] = showHome ? [homeItem, ...items] : items
+	const homeItem: BreadcrumbItem = {
+		label: 'Home',
+		href: homeHref,
+		icon: Home as unknown as ComponentType
+	}
+	const allItems: BreadcrumbItem[] = showHome ? [homeItem, ...items] : items
 </script>
 
 <nav aria-label="Breadcrumb" class="flex {className}">

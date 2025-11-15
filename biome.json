@@ -34,7 +34,7 @@
 		"enabled": true,
 		"formatWithErrors": false,
 		"indentStyle": "tab",
-		"indentWidth": 2,
+		"indentWidth": 4,
 		"lineEnding": "lf",
 		"lineWidth": 100,
 		"attributePosition": "auto",
@@ -210,7 +210,7 @@
 	},
 	"html": {
 		"formatter": {
-			"indentScriptAndStyle": false,
+			"indentScriptAndStyle": true,
 			"selfCloseVoidElements": "always"
 		},
 		"parser": { "interpolation": true }

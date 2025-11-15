@@ -31,7 +31,9 @@ export function pbFileUrl(collection, recordId, filename, opts = {}) {
  */
 export function pbSrcSet(collection, recordId, filename, widths = [64, 128, 256, 512], height = 0) {
 	return widths
-		.map((w) => `${pbFileUrl(collection, recordId, filename, { thumb: `${w}x${height}` })} ${w}w`)
+		.map(
+			(w) => `${pbFileUrl(collection, recordId, filename, { thumb: `${w}x${height}` })} ${w}w`
+		)
 		.join(', ')
 }
 

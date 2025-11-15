@@ -165,13 +165,15 @@ async function handleConfigure(message: TranscodeConfigureMessage) {
 		audioEncoder = new AudioEncoderCtor({
 			output(chunk: EncodedAudioChunk, metadata?: EncodedAudioChunkMetadata) {
 				if (audioSource) {
-					audioSource.add(EncodedPacket.fromEncodedChunk(chunk), metadata).catch((error) => {
-						post({
-							type: 'error',
-							jobId: message.jobId,
-							error: error instanceof Error ? error.message : String(error)
+					audioSource
+						.add(EncodedPacket.fromEncodedChunk(chunk), metadata)
+						.catch((error) => {
+							post({
+								type: 'error',
+								jobId: message.jobId,
+								error: error instanceof Error ? error.message : String(error)
+							})
 						})
-					})
 				}
 			},
 			error(error: unknown) {

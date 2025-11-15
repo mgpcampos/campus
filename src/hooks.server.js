@@ -47,7 +47,10 @@ export async function handle({ event, resolve }) {
 		const ip =
 			event.getClientAddress?.() || event.request.headers.get('x-forwarded-for') || 'unknown'
 		if (!rateLimit(ip)) {
-			return new Response('Too Many Requests', { status: 429, headers: { 'Retry-After': '60' } })
+			return new Response('Too Many Requests', {
+				status: 429,
+				headers: { 'Retry-After': '60' }
+			})
 		}
 	}
 

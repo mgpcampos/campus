@@ -1,7 +1,7 @@
 <script>
-import { t } from '$lib/i18n'
-export let data
-const { profile, posts, memberships } = data
+	import { t } from '$lib/i18n'
+	export let data
+	const { profile, posts, memberships } = data
 </script>
 
 <svelte:head>

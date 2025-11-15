@@ -34,7 +34,11 @@ export async function broadcastEventCreation(
 			author: creatorId,
 			content: postContent,
 			scope:
-				event.scopeType === 'space' ? 'space' : event.scopeType === 'group' ? 'group' : 'public',
+				event.scopeType === 'space'
+					? 'space'
+					: event.scopeType === 'group'
+						? 'group'
+						: 'public',
 			scopeId: event.scopeId || undefined,
 			mediaType: 'text',
 			metadata: JSON.stringify({
@@ -76,7 +80,11 @@ export async function broadcastEventUpdate(
 			author: updaterId,
 			content: postContent,
 			scope:
-				event.scopeType === 'space' ? 'space' : event.scopeType === 'group' ? 'group' : 'public',
+				event.scopeType === 'space'
+					? 'space'
+					: event.scopeType === 'group'
+						? 'group'
+						: 'public',
 			scopeId: event.scopeId || undefined,
 			mediaType: 'text',
 			metadata: JSON.stringify({
@@ -108,7 +116,11 @@ export async function broadcastEventCancellation(
 			author: cancellerId,
 			content: postContent,
 			scope:
-				event.scopeType === 'space' ? 'space' : event.scopeType === 'group' ? 'group' : 'public',
+				event.scopeType === 'space'
+					? 'space'
+					: event.scopeType === 'group'
+						? 'group'
+						: 'public',
 			scopeId: event.scopeId || undefined,
 			mediaType: 'text',
 			metadata: JSON.stringify({
@@ -137,7 +149,11 @@ export async function broadcastEventReminder(pb: PocketBase, event: EventRecord)
 			author: event.createdBy,
 			content: postContent,
 			scope:
-				event.scopeType === 'space' ? 'space' : event.scopeType === 'group' ? 'group' : 'public',
+				event.scopeType === 'space'
+					? 'space'
+					: event.scopeType === 'group'
+						? 'group'
+						: 'public',
 			scopeId: event.scopeId || undefined,
 			mediaType: 'text',
 			metadata: JSON.stringify({

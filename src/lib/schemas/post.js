@@ -246,7 +246,10 @@ export const createPostSchema = z
 		space: z.string().trim().min(1).optional(),
 		group: z.string().trim().min(1).optional(),
 		mediaType: z.enum(['text', 'images', 'video']).default('text'),
-		attachments: fileArraySchema(MAX_ATTACHMENTS, `Maximum ${MAX_ATTACHMENTS} attachments allowed`),
+		attachments: fileArraySchema(
+			MAX_ATTACHMENTS,
+			`Maximum ${MAX_ATTACHMENTS} attachments allowed`
+		),
 		mediaAltText: z
 			.string()
 			.trim()

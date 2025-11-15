@@ -11,8 +11,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		const profiles = await locals.pb.collection('profiles').getFullList({
 			sort: '-created',
 			expand: 'user',
-			fields:
-				'id,user,displayName,role,department,biography,pronouns,links,created,expand.user.email'
+			fields: 'id,user,displayName,role,department,biography,pronouns,links,created,expand.user.email'
 		})
 
 		// Fetch publication counts for each profile

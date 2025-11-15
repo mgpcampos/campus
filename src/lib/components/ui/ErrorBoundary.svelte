@@ -1,46 +1,46 @@
 <script lang="ts">
-import { AlertTriangle, RefreshCw } from '@lucide/svelte'
-import { Button } from '$lib/components/ui/button/index.js'
-import * as Card from '$lib/components/ui/card/index.js'
-import { normalizeError } from '$lib/utils/errors.ts'
-import LiveRegion from './LiveRegion.svelte'
+	import { AlertTriangle, RefreshCw } from '@lucide/svelte'
+	import { Button } from '$lib/components/ui/button/index.js'
+	import * as Card from '$lib/components/ui/card/index.js'
+	import { normalizeError } from '$lib/utils/errors.ts'
+	import LiveRegion from './LiveRegion.svelte'
 
-const props = $props<{
-	error?: unknown | null
-	retry?: () => void
-	class?: string
-	showDetails?: boolean
-}>()
+	const props = $props<{
+		error?: unknown | null
+		retry?: () => void
+		class?: string
+		showDetails?: boolean
+	}>()
 
-const defaultRetry = () => window.location.reload()
+	const defaultRetry = () => window.location.reload()
 
-const normalized = $derived.by(() => {
-	const value = props.error
-	if (!value) return null
-	return value?.__normalized ? value : normalizeError(value)
-})
+	const normalized = $derived.by(() => {
+		const value = props.error
+		if (!value) return null
+		return value?.__normalized ? value : normalizeError(value)
+	})
 
-const announcedMessage = $derived.by(() => {
-	if (!props.error) return ''
-	return normalized?.userMessage || 'Something went wrong.'
-})
+	const announcedMessage = $derived.by(() => {
+		if (!props.error) return ''
+		return normalized?.userMessage || 'Something went wrong.'
+	})
 
-let detailsVisible = $state(props.showDetails ?? false)
+	let detailsVisible = $state(props.showDetails ?? false)
 
-$effect(() => {
-	if (props.showDetails !== undefined) {
-		detailsVisible = props.showDetails
+	$effect(() => {
+		if (props.showDetails !== undefined) {
+			detailsVisible = props.showDetails
+		}
+	})
+
+	function revealDetails() {
+		detailsVisible = true
 	}
-})
 
-function revealDetails() {
-	detailsVisible = true
-}
-
-function handleRetry() {
-	const retry = props.retry ?? defaultRetry
-	retry()
-}
+	function handleRetry() {
+		const retry = props.retry ?? defaultRetry
+		retry()
+	}
 </script>
 
 {#if props.error}

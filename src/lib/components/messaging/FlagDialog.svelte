@@ -1,81 +1,81 @@
 <script lang="ts">
-import { AlertTriangle, Loader2 } from '@lucide/svelte'
-import { toast } from 'svelte-sonner'
-import { Button } from '$lib/components/ui/button/index.js'
-import * as Dialog from '$lib/components/ui/dialog/index.js'
-import { Label } from '$lib/components/ui/label/index.js'
-import { Textarea } from '$lib/components/ui/textarea/index.js'
+	import { AlertTriangle, Loader2 } from '@lucide/svelte'
+	import { toast } from 'svelte-sonner'
+	import { Button } from '$lib/components/ui/button/index.js'
+	import * as Dialog from '$lib/components/ui/dialog/index.js'
+	import { Label } from '$lib/components/ui/label/index.js'
+	import { Textarea } from '$lib/components/ui/textarea/index.js'
 
-interface Props {
-	messageId: string
-	open: boolean
-	onOpenChange: (open: boolean) => void
-	onFlagSubmitted?: () => void
-}
-
-let { messageId, open, onOpenChange, onFlagSubmitted }: Props = $props()
-
-let reason = $state('')
-let isSubmitting = $state(false)
-
-const MIN_REASON_LENGTH = 10
-const MAX_REASON_LENGTH = 500
-
-function handleOpenChange(newOpen: boolean) {
-	if (!newOpen) {
-		// Reset form when closing
-		reason = ''
-	}
-	onOpenChange(newOpen)
-}
-
-async function handleSubmit(event: Event) {
-	event.preventDefault()
-
-	const trimmedReason = reason.trim()
-
-	// Validation
-	if (trimmedReason.length < MIN_REASON_LENGTH) {
-		toast.error(`Reason must be at least ${MIN_REASON_LENGTH} characters`)
-		return
+	interface Props {
+		messageId: string
+		open: boolean
+		onOpenChange: (open: boolean) => void
+		onFlagSubmitted?: () => void
 	}
 
-	if (trimmedReason.length > MAX_REASON_LENGTH) {
-		toast.error(`Reason must be less than ${MAX_REASON_LENGTH} characters`)
-		return
+	let { messageId, open, onOpenChange, onFlagSubmitted }: Props = $props()
+
+	let reason = $state('')
+	let isSubmitting = $state(false)
+
+	const MIN_REASON_LENGTH = 10
+	const MAX_REASON_LENGTH = 500
+
+	function handleOpenChange(newOpen: boolean) {
+		if (!newOpen) {
+			// Reset form when closing
+			reason = ''
+		}
+		onOpenChange(newOpen)
 	}
 
-	isSubmitting = true
+	async function handleSubmit(event: Event) {
+		event.preventDefault()
 
-	try {
-		const response = await fetch(`/api/messages/${messageId}/flag`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				reason: trimmedReason
-			})
-		})
+		const trimmedReason = reason.trim()
 
-		if (!response.ok) {
-			const errorData = await response.json()
-			throw new Error(errorData.message || 'Failed to report message')
+		// Validation
+		if (trimmedReason.length < MIN_REASON_LENGTH) {
+			toast.error(`Reason must be at least ${MIN_REASON_LENGTH} characters`)
+			return
 		}
 
-		toast.success('Message reported successfully. Moderators will review it shortly.')
+		if (trimmedReason.length > MAX_REASON_LENGTH) {
+			toast.error(`Reason must be less than ${MAX_REASON_LENGTH} characters`)
+			return
+		}
 
-		// Close dialog and reset
-		handleOpenChange(false)
+		isSubmitting = true
 
-		onFlagSubmitted?.()
-	} catch (error) {
-		console.error('Failed to report message:', error)
-		toast.error(error instanceof Error ? error.message : 'Failed to report message')
-	} finally {
-		isSubmitting = false
+		try {
+			const response = await fetch(`/api/messages/${messageId}/flag`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					reason: trimmedReason
+				})
+			})
+
+			if (!response.ok) {
+				const errorData = await response.json()
+				throw new Error(errorData.message || 'Failed to report message')
+			}
+
+			toast.success('Message reported successfully. Moderators will review it shortly.')
+
+			// Close dialog and reset
+			handleOpenChange(false)
+
+			onFlagSubmitted?.()
+		} catch (error) {
+			console.error('Failed to report message:', error)
+			toast.error(error instanceof Error ? error.message : 'Failed to report message')
+		} finally {
+			isSubmitting = false
+		}
 	}
-}
 </script>
 
 <Dialog.Root {open} onOpenChange={handleOpenChange}>

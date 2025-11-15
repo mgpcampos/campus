@@ -287,7 +287,8 @@ export async function notifyError(
 		const toastFn = mod.toast
 		const normalized = normalizeError(error, { context: options.context })
 		logError(normalized)
-		const description = options.description ?? (options.showDev ? normalized.devMessage : undefined)
+		const description =
+			options.description ?? (options.showDev ? normalized.devMessage : undefined)
 		toastFn.error(normalized.userMessage, { description })
 		return normalized
 	} catch {

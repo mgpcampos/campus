@@ -1,60 +1,60 @@
 <script lang="ts">
-import { FileText, Filter, Link as LinkIcon, Search } from '@lucide/svelte'
-import { superForm } from 'sveltekit-superforms'
-import { goto } from '$app/navigation'
-import { Button } from '$lib/components/ui/button/index.js'
-import * as Card from '$lib/components/ui/card/index.js'
-import * as Dialog from '$lib/components/ui/dialog/index.js'
-import { Input } from '$lib/components/ui/input/index.js'
-import { Label } from '$lib/components/ui/label/index.js'
-import { t } from '$lib/i18n'
-import { materialCreateSchema, materialSearchSchema } from '$lib/schemas/material.js'
-import type { MaterialWithUploader } from '$lib/types/materials'
-import { withZodClient } from '$lib/validation/index.js'
-import type { PageData } from './$types'
+	import { FileText, Filter, Link as LinkIcon, Search } from '@lucide/svelte'
+	import { superForm } from 'sveltekit-superforms'
+	import { goto } from '$app/navigation'
+	import { Button } from '$lib/components/ui/button/index.js'
+	import * as Card from '$lib/components/ui/card/index.js'
+	import * as Dialog from '$lib/components/ui/dialog/index.js'
+	import { Input } from '$lib/components/ui/input/index.js'
+	import { Label } from '$lib/components/ui/label/index.js'
+	import { t } from '$lib/i18n'
+	import { materialCreateSchema, materialSearchSchema } from '$lib/schemas/material.js'
+	import type { MaterialWithUploader } from '$lib/types/materials'
+	import { withZodClient } from '$lib/validation/index.js'
+	import type { PageData } from './$types'
 
-let { data }: { data: PageData } = $props()
+	let { data }: { data: PageData } = $props()
 
-// Search form
-const searchFormObj = superForm(data.searchForm, {
-	validators: withZodClient(materialSearchSchema),
-	dataType: 'json',
-	resetForm: false
-})
-const { form: searchForm, enhance: searchEnhance } = searchFormObj
-
-// Upload form
-const uploadFormObj = superForm(data.uploadForm, {
-	validators: false,
-	dataType: 'form',
-	resetForm: true,
-	onUpdated({ form }) {
-		if (form.valid) {
-			uploadOpen = false
-			window.location.reload()
-		}
-	}
-})
-const { form: uploadForm, enhance: uploadEnhance, errors, delayed } = uploadFormObj
-
-let uploadOpen = $state(false)
-
-function formatDate(dateString: string) {
-	return new Date(dateString).toLocaleDateString('en-US', {
-		year: 'numeric',
-		month: 'short',
-		day: 'numeric'
+	// Search form
+	const searchFormObj = superForm(data.searchForm, {
+		validators: withZodClient(materialSearchSchema),
+		dataType: 'json',
+		resetForm: false
 	})
-}
+	const { form: searchForm, enhance: searchEnhance } = searchFormObj
 
-function getFormatIcon(format: string) {
-	return format === 'link' ? LinkIcon : FileText
-}
+	// Upload form
+	const uploadFormObj = superForm(data.uploadForm, {
+		validators: false,
+		dataType: 'form',
+		resetForm: true,
+		onUpdated({ form }) {
+			if (form.valid) {
+				uploadOpen = false
+				window.location.reload()
+			}
+		}
+	})
+	const { form: uploadForm, enhance: uploadEnhance, errors, delayed } = uploadFormObj
 
-function buildPageUrl(page: number): string {
-	const query = $searchForm.q ? `&q=${encodeURIComponent($searchForm.q as string)}` : ''
-	return `?page=${page}${query}`
-}
+	let uploadOpen = $state(false)
+
+	function formatDate(dateString: string) {
+		return new Date(dateString).toLocaleDateString('en-US', {
+			year: 'numeric',
+			month: 'short',
+			day: 'numeric'
+		})
+	}
+
+	function getFormatIcon(format: string) {
+		return format === 'link' ? LinkIcon : FileText
+	}
+
+	function buildPageUrl(page: number): string {
+		const query = $searchForm.q ? `&q=${encodeURIComponent($searchForm.q as string)}` : ''
+		return `?page=${page}${query}`
+	}
 </script>
 
 <div class="container mx-auto px-4 py-8">

@@ -14,7 +14,11 @@ export const materialCreateSchema = z.object({
 		.trim()
 		.min(1, 'Title cannot be empty')
 		.max(500, 'Title cannot exceed 500 characters'),
-	description: z.string().trim().max(5000, 'Description cannot exceed 5000 characters').optional(),
+	description: z
+		.string()
+		.trim()
+		.max(5000, 'Description cannot exceed 5000 characters')
+		.optional(),
 	file: fileLikeSchema
 })
 
