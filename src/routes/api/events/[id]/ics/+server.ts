@@ -64,7 +64,7 @@ function generateICS(event: EventRecord): string {
 	]
 
 	// Filter out empty lines
-	return `${lines.filter((line) => line).join('\r\n')}\r\n`
+	return `${lines.filter(Boolean).join('\r\n')}\r\n`
 }
 
 /**

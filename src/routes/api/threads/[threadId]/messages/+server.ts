@@ -131,9 +131,9 @@ export async function POST({ params, request, locals }) {
 		}
 
 		if (validatedData.attachments) {
-			validatedData.attachments.forEach((file) => {
+			for (const file of validatedData.attachments) {
 				messageFormData.append(`attachments`, file)
-			})
+			}
 		}
 
 		// Create message
