@@ -1,24 +1,24 @@
 <script lang="ts">
-	import { MessageCircle, Plus } from '@lucide/svelte'
-	import { toast } from 'svelte-sonner'
-	import { goto } from '$app/navigation'
-	import ThreadList from '$lib/components/messaging/ThreadList.svelte'
-	import { Button } from '$lib/components/ui/button/index.js'
-	import * as Card from '$lib/components/ui/card/index.js'
-	import { t } from '$lib/i18n'
-	import { currentUser } from '$lib/pocketbase'
-	import type { PageData } from './$types'
+	import { MessageCircle, Plus } from '@lucide/svelte';
+	import { toast } from 'svelte-sonner';
+	import { goto } from '$app/navigation';
+	import ThreadList from '$lib/components/messaging/ThreadList.svelte';
+	import NewMessageModal from '$lib/components/messaging/NewMessageModal.svelte';
+	import { Button } from '$lib/components/ui/button/index.js';
+	import * as Card from '$lib/components/ui/card/index.js';
+	import { t } from '$lib/i18n';
+	import { currentUser } from '$lib/pocketbase';
+	import type { PageData } from './$types';
 
-	let { data }: { data: PageData } = $props()
+	let { data }: { data: PageData } = $props();
+	let showNewMessageModal = false;
 
 	function handleThreadSelect(threadId: string) {
-		goto(`/messages/${threadId}`)
+		goto(`/messages/${threadId}`);
 	}
 
-	function handleNewThread() {
-		// For now, direct to a hypothetical thread creation page
-		// Could be implemented as a modal or separate route
-		toast.info(t('messages.threadCreationComingSoon'))
+	function handleThreadCreated(event: CustomEvent<{ threadId: string }>) {
+		goto(`/messages/${event.detail.threadId}`);
 	}
 </script>
 
@@ -35,11 +35,13 @@
 			</p>
 		</div>
 
-		<Button onclick={handleNewThread} size="sm">
+		<Button onclick={() => showNewMessageModal = true} size="sm">
 			<Plus class="mr-2 h-4 w-4" aria-hidden="true" />
 			{t('messages.newConversation')}
 		</Button>
 	</header>
+
+	<NewMessageModal bind:open={showNewMessageModal} on:threadCreated={handleThreadCreated} />
 
 	{#if data.error}
 		<Card.Root class="border-destructive">
