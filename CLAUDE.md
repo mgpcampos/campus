@@ -1,6 +1,6 @@
 # Guidance for Code and Documentation Reference
 
-You are encouraged to make use of Context7, exa-code, and Ref. If you encounter a code-related issue or are about to begin coding, check the MCP servers for the most recent documentation.
+Always use Context7, exa-code, and Ref when I need code generation, setup or configuration steps, or library/API documentation. This means you should automatically use the Context7, exa-code, and Ref MCP tools to resolve library id and get library docs without me having to explicitly ask.
 
 # Svelte MCP Server Usage Guide
 

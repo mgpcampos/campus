@@ -18,38 +18,38 @@
 
 	let feedComponent: FeedComponentInstance | null = null
 
-	let refreshTrigger = $state(0)
-
-	type SortOption = 'new' | 'top' | 'trending'
+	type SortOption = 'new' | 'top'
 	let feedSearch = $state('')
 	let feedSort = $state<SortOption>('new')
-	let timeframeHours = $state(48)
-
-	const trendingOptions = [6, 12, 24, 48, 72] as const
 
 	let searchDebounce: ReturnType<typeof setTimeout> | null = null
 	function handleSearchInput(event: Event) {
 		const value = (event.target as HTMLInputElement).value
 		if (searchDebounce) clearTimeout(searchDebounce)
-		searchDebounce = setTimeout(() => {
+		searchDebounce = setTimeout(async () => {
 			feedSearch = value.trim()
+			if (feedComponent && typeof feedComponent.refresh === 'function') {
+				await feedComponent.refresh()
+			}
 		}, 250)
 	}
 
-	function changeSort(next: SortOption) {
+	async function changeSort(next: SortOption) {
+		if (feedSort === next) return
 		feedSort = next
+		if (feedComponent && typeof feedComponent.refresh === 'function') {
+			await feedComponent.refresh()
+		}
 	}
 
-	function changeTimeframe(event: Event) {
-		timeframeHours = Number.parseInt((event.target as HTMLSelectElement).value, 10)
-	}
-
-	function handlePostCreated(event: CustomEvent<FeedPost>) {
+	async function handlePostCreated(event: CustomEvent<FeedPost>) {
 		const newPost = event.detail
 		if (feedComponent && typeof feedComponent.addPost === 'function') {
 			feedComponent.addPost(newPost)
 		}
-		refreshTrigger += 1
+		if (feedComponent && typeof feedComponent.refresh === 'function') {
+			await feedComponent.refresh()
+		}
 	}
 </script>
 
@@ -141,34 +141,10 @@
 					>
 						{t('feed.top')}
 					</Button>
-					<Button
-						variant={feedSort === 'trending' ? 'default' : 'ghost'}
-						size="sm"
-						onclick={() => changeSort('trending')}
-						role="tab"
-						aria-selected={feedSort === 'trending'}
-						tabindex={feedSort === 'trending' ? 0 : -1}
-						class="px-3"
-					>
-						{t('feed.trending')}
-					</Button>
 				</div>
 
-				<!-- Search and Timeframe -->
+				<!-- Search -->
 				<div class="flex items-center space-x-3">
-					{#if feedSort === 'trending'}
-						<select
-							class="h-8 rounded-md border border-input bg-background px-2 text-sm focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
-							onchange={changeTimeframe}
-							aria-label="Trending timeframe"
-							value={timeframeHours}
-						>
-							{#each trendingOptions as option (option)}
-								<option value={option}>{option}h</option>
-							{/each}
-						</select>
-					{/if}
-
 					<div class="relative">
 						<input
 							type="search"
@@ -203,10 +179,8 @@
 		<Feed
 			bind:this={feedComponent}
 			scope="global"
-			{refreshTrigger}
 			q={feedSearch}
 			sort={feedSort}
-			{timeframeHours}
 			on:like={(event) => console.log('Like:', event.detail)}
 			on:comment={(event) => console.log('Comment:', event.detail)}
 			on:edit={(event) => console.log('Edit:', event.detail)}

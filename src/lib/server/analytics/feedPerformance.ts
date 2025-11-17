@@ -9,8 +9,7 @@ export type FeedQueryParams = {
 	group?: string
 	page?: number
 	perPage?: number
-	sort?: 'new' | 'top' | 'trending'
-	timeframeHours?: number
+	sort?: 'new' | 'top'
 	q?: string
 }
 
@@ -37,7 +36,6 @@ async function emitEvent(pb: PocketBase, options: EmitOptions) {
 					sort: options.params.sort ?? 'new',
 					page: options.params.page ?? 1,
 					perPage: options.params.perPage ?? 20,
-					timeframeHours: options.params.timeframeHours,
 					hasQuery: Boolean(options.params.q && options.params.q.length > 0),
 					items: options.items,
 					totalPages: options.totalPages

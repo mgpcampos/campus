@@ -16,23 +16,28 @@
 	import PostCard from './PostCard.svelte'
 	import type { FeedPost, FeedPostList, FeedScope } from './types.js'
 
-	export let scope: FeedScope = 'global'
-	export let space: string | null = null
-	export let group: string | null = null
-	export let refreshTrigger = 0 // External trigger for refresh
-	export let q: string = ''
-	export let sort: 'new' | 'top' | 'trending' = 'new'
-	export let timeframeHours: number = 48
+	const {
+		scope = 'global' as FeedScope,
+		space = null as string | null,
+		group = null as string | null,
+		q = '',
+		sort = 'new' as 'new' | 'top'
+	} = $props<{
+		scope?: FeedScope
+		space?: string | null
+		group?: string | null
+		q?: string
+		sort?: 'new' | 'top'
+	}>()
 
 	const dispatch = createEventDispatcher()
 
-	let posts: FeedPost[] = []
-	let loading = false
-	let loadingMore = false
-	let hasMore = true
-	let currentPage = 1
-	let error: string | undefined
-	let lastQueryKey = ''
+	let posts = $state<FeedPost[]>([])
+	let loading = $state(false)
+	let loadingMore = $state(false)
+	let hasMore = $state(true)
+	let currentPage = $state(1)
+	let error = $state<string | undefined>(undefined)
 
 	const perPage = 20
 
@@ -69,23 +74,6 @@
 		}
 	})
 
-	// Watch for refresh trigger changes
-	$: if (refreshTrigger > 0) {
-		refreshFeed()
-	}
-
-	// Reactive refresh when query parameters change
-	$: {
-		const key = `${scope}|${space}|${group}|${q}|${sort}|${timeframeHours}`
-		if (key !== lastQueryKey && !loading && !loadingMore) {
-			lastQueryKey = key
-			// Avoid double initial load (onMount already loads)
-			if (posts.length > 0) {
-				refreshFeed()
-			}
-		}
-	}
-
 	async function loadPosts(page = 1, append = false) {
 		if (loading || loadingMore) return
 
@@ -104,8 +92,7 @@
 				space: space ?? undefined,
 				group: group ?? undefined,
 				q: q || undefined,
-				sort,
-				timeframeHours
+				sort
 			})) as FeedPostList
 
 			if (append) {
@@ -136,6 +123,10 @@
 		currentPage = 1
 		hasMore = true
 		await loadPosts(1, false)
+	}
+
+	export async function refresh() {
+		await refreshFeed()
 	}
 
 	function handlePostAction(event: CustomEvent) {

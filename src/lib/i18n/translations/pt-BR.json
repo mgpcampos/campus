@@ -123,7 +123,6 @@
 		"exploreSpaces": "Explorar Espaços",
 		"browseMaterials": "Navegar Materiais",
 		"feedSortOptions": "Opções de ordenação do feed",
-		"trendingTimeframe": "Período de tendências",
 		"searchPosts": "Buscar publicações...",
 		"searchPostsLabel": "Buscar publicações",
 		"feedTimeline": "Linha do tempo do feed",
@@ -133,7 +132,6 @@
 		"whatsOnYourMind": "O que você está pensando?",
 		"new": "Mais recentes",
 		"top": "Mais populares",
-		"trending": "Em alta",
 		"searchPlaceholder": "Buscar"
 	},
 	"messaging": {

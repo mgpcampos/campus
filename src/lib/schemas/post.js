@@ -350,11 +350,7 @@ export const postQuerySchema = z.object({
 	 */
 	q: z.string().min(1).max(100).optional(),
 	/**
-	 * Sort mode: new (default chronological), top (likeCount), trending (engagement + recency window)
+	 * Sort mode: new (default chronological) or top (most liked)
 	 */
-	sort: z.enum(['new', 'top', 'trending']).default('new').optional(),
-	/**
-	 * Timeframe (in hours) for trending calculation (default 48h)
-	 */
-	timeframeHours: z.coerce.number().min(1).max(168).default(48).optional()
+	sort: z.enum(['new', 'top']).default('new').optional()
 })
