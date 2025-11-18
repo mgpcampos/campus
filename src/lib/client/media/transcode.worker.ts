@@ -83,8 +83,15 @@ async function handleConfigure(message: TranscodeConfigureMessage) {
 			post({ type: 'unsupported', jobId: message.jobId, reason: 'codec' })
 			return
 		}
-	} catch (_error) {
-		post({ type: 'unsupported', jobId: message.jobId, reason: 'codec' })
+	} catch (error) {
+		const detail = error instanceof Error ? error.message : 'Unknown error'
+		console.error('Codec support check failed:', error)
+		post({
+			type: 'unsupported',
+			jobId: message.jobId,
+			reason: 'codec'
+		})
+		post({ type: 'error', jobId: message.jobId, error: detail })
 		return
 	}
 

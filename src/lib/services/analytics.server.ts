@@ -117,13 +117,94 @@ export interface AnalyticsSummary {
 	timeSeries: Array<{ date: string; pageViews: number; events: number }>
 }
 
-export async function getAnalyticsSummary(
-	pb: PocketBase,
-	options: { rangeDays?: number } = {}
-): Promise<AnalyticsSummary> {
-	const rangeDays = Math.max(1, Math.min(options.rangeDays ?? 7, 30))
-	const since = new Date(Date.now() - rangeDays * 86_400_000).toISOString()
+interface EventAccumulator {
+	pageViews: number
+	sessions: Set<string>
+	users: Set<string>
+	pageCounts: Map<string, number>
+	vitalsAccumulator: { lcp: number[]; cls: number[]; fid: number[] }
+	seriesMap: Map<string, { pageViews: number; events: number }>
+}
 
+function createEventAccumulator(): EventAccumulator {
+	return {
+		pageViews: 0,
+		sessions: new Set<string>(),
+		users: new Set<string>(),
+		pageCounts: new Map<string, number>(),
+		vitalsAccumulator: {
+			lcp: [],
+			cls: [],
+			fid: []
+		},
+		seriesMap: new Map<string, { pageViews: number; events: number }>()
+	}
+}
+
+function processEvent(event: AnalyticsRecord, accumulator: EventAccumulator): void {
+	const type = event.type as AnalyticsEventInput['type']
+
+	// Track page views
+	if (type === 'page') accumulator.pageViews += 1
+
+	// Track sessions and users
+	if (event.sessionId) accumulator.sessions.add(event.sessionId)
+	if (event.user) accumulator.users.add(event.user as string)
+
+	// Track page counts
+	if (event.page) {
+		accumulator.pageCounts.set(event.page, (accumulator.pageCounts.get(event.page) ?? 0) + 1)
+	}
+
+	// Track time series
+	updateTimeSeries(event, type, accumulator)
+
+	// Track vitals
+	if (type === 'vital' && typeof event.value === 'number') {
+		accumulateVital(event.name, event.value, accumulator)
+	}
+}
+
+function updateTimeSeries(
+	event: AnalyticsRecord,
+	type: AnalyticsEventInput['type'],
+	accumulator: EventAccumulator
+): void {
+	const day = (event.created as string).slice(0, 10)
+	const bucket = accumulator.seriesMap.get(day) ?? { pageViews: 0, events: 0 }
+	bucket.events += 1
+	if (type === 'page') bucket.pageViews += 1
+	accumulator.seriesMap.set(day, bucket)
+}
+
+function accumulateVital(name: string, value: number, accumulator: EventAccumulator): void {
+	if (name === 'lcp') accumulator.vitalsAccumulator.lcp.push(value)
+	else if (name === 'cls') accumulator.vitalsAccumulator.cls.push(value)
+	else if (name === 'fid') accumulator.vitalsAccumulator.fid.push(value)
+}
+
+function calculateAverage(values: number[]): number | null {
+	return values.length
+		? Number((values.reduce((sum, v) => sum + v, 0) / values.length).toFixed(3))
+		: null
+}
+
+function buildTopPages(pageCounts: Map<string, number>): Array<{ page: string; count: number }> {
+	return Array.from(pageCounts.entries())
+		.sort((a, b) => b[1] - a[1])
+		.slice(0, 5)
+		.map(([page, count]) => ({ page, count }))
+}
+
+function buildTimeSeries(
+	seriesMap: Map<string, { pageViews: number; events: number }>
+): Array<{ date: string; pageViews: number; events: number }> {
+	return Array.from(seriesMap.entries())
+		.sort(([a], [b]) => (a < b ? -1 : 1))
+		.map(([date, value]) => ({ date, ...value }))
+}
+
+async function fetchAnalyticsEvents(pb: PocketBase, since: string): Promise<AnalyticsRecord[]> {
 	const perPage = 200
 	let page = 1
 	const events: AnalyticsRecord[] = []
@@ -138,69 +219,36 @@ export async function getAnalyticsSummary(
 		page += 1
 	}
 
-	const totalEvents = events.length
-	let pageViews = 0
-	const sessions = new Set<string>()
-	const users = new Set<string>()
-	const pageCounts = new Map<string, number>()
+	return events
+}
 
-	const vitalsAccumulator = {
-		lcp: [] as number[],
-		cls: [] as number[],
-		fid: [] as number[]
-	}
+export async function getAnalyticsSummary(
+	pb: PocketBase,
+	options: { rangeDays?: number } = {}
+): Promise<AnalyticsSummary> {
+	const rangeDays = Math.max(1, Math.min(options.rangeDays ?? 7, 30))
+	const since = new Date(Date.now() - rangeDays * 86_400_000).toISOString()
 
-	const seriesMap = new Map<string, { pageViews: number; events: number }>()
+	const events = await fetchAnalyticsEvents(pb, since)
+	const accumulator = createEventAccumulator()
 
 	for (const event of events) {
-		const type = event.type as AnalyticsEventInput['type']
-		if (type === 'page') pageViews += 1
-		if (event.sessionId) sessions.add(event.sessionId)
-		if (event.user) users.add(event.user as string)
-		if (event.page) {
-			pageCounts.set(event.page, (pageCounts.get(event.page) ?? 0) + 1)
-		}
-
-		const day = (event.created as string).slice(0, 10)
-		const bucket = seriesMap.get(day) ?? { pageViews: 0, events: 0 }
-		bucket.events += 1
-		if (type === 'page') bucket.pageViews += 1
-		seriesMap.set(day, bucket)
-
-		if (type === 'vital' && typeof event.value === 'number') {
-			if (event.name === 'lcp') vitalsAccumulator.lcp.push(event.value)
-			if (event.name === 'cls') vitalsAccumulator.cls.push(event.value)
-			if (event.name === 'fid') vitalsAccumulator.fid.push(event.value)
-		}
+		processEvent(event, accumulator)
 	}
-
-	const average = (values: number[]) =>
-		values.length
-			? Number((values.reduce((sum, v) => sum + v, 0) / values.length).toFixed(3))
-			: null
-
-	const topPages = Array.from(pageCounts.entries())
-		.sort((a, b) => b[1] - a[1])
-		.slice(0, 5)
-		.map(([page, count]) => ({ page, count }))
-
-	const timeSeries = Array.from(seriesMap.entries())
-		.sort(([a], [b]) => (a < b ? -1 : 1))
-		.map(([date, value]) => ({ date, ...value }))
 
 	return {
 		rangeDays,
-		totalEvents,
-		pageViews,
-		uniqueSessions: sessions.size,
-		uniqueUsers: users.size,
+		totalEvents: events.length,
+		pageViews: accumulator.pageViews,
+		uniqueSessions: accumulator.sessions.size,
+		uniqueUsers: accumulator.users.size,
 		vitals: {
-			lcp: average(vitalsAccumulator.lcp),
-			cls: average(vitalsAccumulator.cls),
-			fid: average(vitalsAccumulator.fid)
+			lcp: calculateAverage(accumulator.vitalsAccumulator.lcp),
+			cls: calculateAverage(accumulator.vitalsAccumulator.cls),
+			fid: calculateAverage(accumulator.vitalsAccumulator.fid)
 		},
-		topPages,
-		timeSeries
+		topPages: buildTopPages(accumulator.pageCounts),
+		timeSeries: buildTimeSeries(accumulator.seriesMap)
 	}
 }
 

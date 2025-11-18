@@ -8,6 +8,15 @@ import type PocketBase from 'pocketbase'
 import type { EventRecord } from '../../../types/events'
 
 /**
+ * Determines the post scope based on event scope type
+ */
+function getScopeFromEventType(scopeType: string): 'space' | 'group' | 'public' {
+	if (scopeType === 'space') return 'space'
+	if (scopeType === 'group') return 'group'
+	return 'public'
+}
+
+/**
  * Creates a feed post announcing an event creation
  * @param pb - PocketBase client instance
  * @param event - The event that was created
@@ -26,19 +35,14 @@ export async function broadcastEventCreation(
 		const postContent = `📅 **New Event Created**\n\n**${event.title}**\n\n${
 			event.description || ''
 		}\n\n🕒 ${startDate} - ${endDate}\n\n${
-			event.scopeType !== 'global' ? `Scope: ${event.scopeType}` : 'Global Event'
+			event.scopeType === 'global' ? 'Global Event' : `Scope: ${event.scopeType}`
 		}`
 
 		// Create feed post
 		await pb.collection('posts').create({
 			author: creatorId,
 			content: postContent,
-			scope:
-				event.scopeType === 'space'
-					? 'space'
-					: event.scopeType === 'group'
-						? 'group'
-						: 'public',
+			scope: getScopeFromEventType(event.scopeType),
 			scopeId: event.scopeId || undefined,
 			mediaType: 'text',
 			metadata: JSON.stringify({
@@ -79,12 +83,7 @@ export async function broadcastEventUpdate(
 		await pb.collection('posts').create({
 			author: updaterId,
 			content: postContent,
-			scope:
-				event.scopeType === 'space'
-					? 'space'
-					: event.scopeType === 'group'
-						? 'group'
-						: 'public',
+			scope: getScopeFromEventType(event.scopeType),
 			scopeId: event.scopeId || undefined,
 			mediaType: 'text',
 			metadata: JSON.stringify({
@@ -115,12 +114,7 @@ export async function broadcastEventCancellation(
 		await pb.collection('posts').create({
 			author: cancellerId,
 			content: postContent,
-			scope:
-				event.scopeType === 'space'
-					? 'space'
-					: event.scopeType === 'group'
-						? 'group'
-						: 'public',
+			scope: getScopeFromEventType(event.scopeType),
 			scopeId: event.scopeId || undefined,
 			mediaType: 'text',
 			metadata: JSON.stringify({
@@ -148,12 +142,7 @@ export async function broadcastEventReminder(pb: PocketBase, event: EventRecord)
 		await pb.collection('posts').create({
 			author: event.createdBy,
 			content: postContent,
-			scope:
-				event.scopeType === 'space'
-					? 'space'
-					: event.scopeType === 'group'
-						? 'group'
-						: 'public',
+			scope: getScopeFromEventType(event.scopeType),
 			scopeId: event.scopeId || undefined,
 			mediaType: 'text',
 			metadata: JSON.stringify({

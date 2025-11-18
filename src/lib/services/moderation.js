@@ -60,6 +60,88 @@ function evidenceSignature(entry) {
 }
 
 /**
+ * Find existing active moderation case
+ * @param {any} collection - PocketBase RecordService for moderation_cases
+ * @param {string} sourceType
+ * @param {string} sourceId
+ */
+async function findExistingCase(collection, sourceType, sourceId) {
+	try {
+		return await collection.getFirstListItem(
+			`sourceType = "${sourceType}" && sourceId = "${sourceId}" && ${ACTIVE_CASE_FILTER}`,
+			{ requestKey: `moderation-case-${sourceType}-${sourceId}` }
+		)
+	} catch (error) {
+		if (!isNotFoundError(error)) {
+			console.warn('[moderation] failed to lookup moderation case', normalizeError(error))
+		}
+		return null
+	}
+}
+
+/**
+ * Append new evidence to existing case
+ * @param {any} collection - PocketBase RecordService for moderation_cases
+ * @param {any} existingCase
+ * @param {Array<Record<string, unknown>>} evidenceEntries
+ */
+async function appendEvidence(collection, existingCase, evidenceEntries) {
+	const currentEvidence = Array.isArray(existingCase.evidence)
+		? existingCase.evidence.slice()
+		: []
+	const seen = new Set(currentEvidence.map(evidenceSignature))
+	let appended = false
+
+	for (const entry of evidenceEntries) {
+		const sig = evidenceSignature(entry)
+		if (!seen.has(sig)) {
+			currentEvidence.push(entry)
+			seen.add(sig)
+			appended = true
+		}
+	}
+
+	if (!appended) {
+		return existingCase
+	}
+
+	try {
+		await collection.update(existingCase.id, { evidence: currentEvidence })
+		return { ...existingCase, evidence: currentEvidence }
+	} catch (error) {
+		console.warn(
+			'[moderation] failed to append evidence to moderation case',
+			normalizeError(error)
+		)
+		return existingCase
+	}
+}
+
+/**
+ * Create new moderation case
+ * @param {any} collection - PocketBase RecordService for moderation_cases
+ * @param {string} sourceType
+ * @param {string} sourceId
+ * @param {string} state
+ * @param {string | null} assignedTo
+ * @param {Array<Record<string, unknown>>} evidenceEntries
+ */
+async function createNewCase(collection, sourceType, sourceId, state, assignedTo, evidenceEntries) {
+	try {
+		return await collection.create({
+			sourceType,
+			sourceId,
+			state,
+			assignedTo,
+			evidence: evidenceEntries
+		})
+	} catch (error) {
+		console.warn('[moderation] failed to create moderation case', normalizeError(error))
+		return null
+	}
+}
+
+/**
  * Ensure a moderation case exists for the provided source entity, appending evidence if necessary.
  * @param {{
  *  sourceType: 'post'|'comment'|'message';
@@ -79,61 +161,19 @@ export async function ensureModerationCase({
 	pbClient
 }) {
 	if (!sourceId) return null
+
 	const client = pbClient ?? pb
 	const collection = client.collection('moderation_cases')
 	const evidenceEntries = normalizeEvidence(evidence)
-	let existing = null
-	try {
-		existing = await collection.getFirstListItem(
-			`sourceType = "${sourceType}" && sourceId = "${sourceId}" && ${ACTIVE_CASE_FILTER}`,
-			{ requestKey: `moderation-case-${sourceType}-${sourceId}` }
-		)
-	} catch (error) {
-		if (!isNotFoundError(error)) {
-			console.warn('[moderation] failed to lookup moderation case', normalizeError(error))
-		}
-	}
+
+	const existing = await findExistingCase(collection, sourceType, sourceId)
 
 	if (existing) {
 		if (evidenceEntries.length === 0) return existing
-		const currentEvidence = Array.isArray(existing.evidence) ? existing.evidence.slice() : []
-		const seen = new Set(currentEvidence.map(evidenceSignature))
-		let appended = false
-		for (const entry of evidenceEntries) {
-			const sig = evidenceSignature(entry)
-			if (!seen.has(sig)) {
-				currentEvidence.push(entry)
-				seen.add(sig)
-				appended = true
-			}
-		}
-		if (!appended) {
-			return existing
-		}
-		try {
-			await collection.update(existing.id, { evidence: currentEvidence })
-			return { ...existing, evidence: currentEvidence }
-		} catch (error) {
-			console.warn(
-				'[moderation] failed to append evidence to moderation case',
-				normalizeError(error)
-			)
-			return existing
-		}
+		return await appendEvidence(collection, existing, evidenceEntries)
 	}
 
-	try {
-		return await collection.create({
-			sourceType,
-			sourceId,
-			state,
-			assignedTo,
-			evidence: evidenceEntries
-		})
-	} catch (error) {
-		console.warn('[moderation] failed to create moderation case', normalizeError(error))
-		return null
-	}
+	return await createNewCase(collection, sourceType, sourceId, state, assignedTo, evidenceEntries)
 }
 
 /**

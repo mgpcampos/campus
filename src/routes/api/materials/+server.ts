@@ -24,7 +24,7 @@ export async function GET({ url, locals }) {
 		// Filter by tags
 		if (validatedQuery.tags && validatedQuery.tags.length > 0) {
 			const tagFilters = validatedQuery.tags.map(
-				(tag) => `tags ~ "${tag.toLowerCase().replace(/"/g, '\\"')}"`
+				(tag) => `tags ~ "${tag.toLowerCase().replaceAll('"', '\\"')}"`
 			)
 			filters.push(`(${tagFilters.join(' || ')})`)
 		}
@@ -51,8 +51,8 @@ export async function GET({ url, locals }) {
 
 		const filterString = filters.length > 0 ? filters.join(' && ') : ''
 
-		// Determine sort order
-		const sortField = validatedQuery.sort === 'recent' ? '-created' : '-created'
+		// Sort by creation date (descending - most recent first)
+		const sortField = '-created'
 
 		// Fetch materials from PocketBase
 		const result = await locals.pb

@@ -7,7 +7,7 @@ import type { EventLocation, EventRecord } from '../../../../../types/events'
  * RFC 5545 compliant format
  */
 function formatDate(value: string | Date): string {
-	return `${new Date(value).toISOString().replace(/[-:]/g, '').split('.')[0]}Z`
+	return `${new Date(value).toISOString().replaceAll(/[-:]/g, '').split('.')[0]}Z`
 }
 
 function generateICS(event: EventRecord): string {
@@ -37,10 +37,10 @@ function generateICS(event: EventRecord): string {
 	// Escape special characters for ICS format
 	const escapeICS = (str: string) => {
 		return str
-			.replace(/\\/g, '\\\\')
-			.replace(/;/g, '\\;')
-			.replace(/,/g, '\\,')
-			.replace(/\n/g, '\\n')
+			.replaceAll('\\', '\\\\')
+			.replaceAll(';', '\\;')
+			.replaceAll(',', '\\,')
+			.replaceAll('\n', '\\n')
 	}
 
 	const lines = [
@@ -73,8 +73,8 @@ function generateICS(event: EventRecord): string {
 function sanitizeFilename(title: string): string {
 	return title
 		.toLowerCase()
-		.replace(/[^a-z0-9]+/g, '-')
-		.replace(/^-+|-+$/g, '')
+		.replaceAll(/[^a-z0-9]+/g, '-')
+		.replaceAll(/^(-+)|(-+)$/g, '')
 		.substring(0, 50)
 }
 

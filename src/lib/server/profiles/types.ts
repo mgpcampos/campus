@@ -25,7 +25,7 @@ export function generatePublicationSlugHash(title: string, year?: number): strin
 	const normalized = title
 		.toLowerCase()
 		.replace(/[^\w\s]/g, '')
-		.replace(/\s+/g, ' ')
+		.replaceAll(/\s+/g, ' ')
 		.trim()
 
 	// Include year if provided for additional uniqueness

@@ -3,6 +3,35 @@ import { online } from '../stores/connection.js'
 import { normalizeError, withRetry } from './errors.ts'
 
 /**
+ * Execute fallback function if provided
+ * @template T
+ * @param {(() => Promise<T> | T) | undefined} fallback
+ * @param {string} offlineMessage
+ * @param {string} context
+ */
+async function executeFallback(fallback, offlineMessage, context) {
+	if (!fallback) {
+		throw normalizeError(new Error(offlineMessage), { context })
+	}
+	try {
+		return await fallback()
+	} catch {
+		throw normalizeError(new Error(offlineMessage), { context })
+	}
+}
+
+/**
+ * Handle offline scenario
+ * @template T
+ * @param {(() => Promise<T> | T) | undefined} fallback
+ * @param {string} offlineMessage
+ * @param {string} context
+ */
+async function handleOffline(fallback, offlineMessage, context) {
+	return await executeFallback(fallback, offlineMessage, context)
+}
+
+/**
  * Wrapper for API calls that handles offline scenarios gracefully
  * @template T
  * @param {() => Promise<T>} apiCall
@@ -22,18 +51,8 @@ export async function withOfflineSupport(apiCall, options = {}) {
 		context = 'api'
 	} = options
 
-	const isOnline = get(online)
-
-	if (!isOnline) {
-		if (fallback) {
-			try {
-				return await fallback()
-			} catch {
-				throw normalizeError(new Error(offlineMessage), { context })
-			}
-		} else {
-			throw normalizeError(new Error(offlineMessage), { context })
-		}
+	if (!get(online)) {
+		return await handleOffline(fallback, offlineMessage, context)
 	}
 
 	const wrappedCall = enableRetry ? () => withRetry(apiCall, { context }) : apiCall
@@ -43,12 +62,9 @@ export async function withOfflineSupport(apiCall, options = {}) {
 	} catch (error) {
 		// If we detect we went offline during the call, try fallback
 		if (!get(online) && fallback) {
-			try {
-				return await fallback()
-			} catch {
-				// Return the original error if fallback also fails
+			return await executeFallback(fallback, offlineMessage, context).catch(() => {
 				throw error
-			}
+			})
 		}
 		throw error
 	}

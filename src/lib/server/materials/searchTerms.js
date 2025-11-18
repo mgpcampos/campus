@@ -12,8 +12,8 @@ function normalizeText(text) {
 	return text
 		.toLowerCase()
 		.trim()
-		.replace(/[^\w\s-]/g, ' ') // Replace punctuation with spaces
-		.replace(/\s+/g, ' ') // Collapse multiple spaces
+		.replaceAll(/[^\w\s-]/g, ' ') // Replace punctuation with spaces
+		.replaceAll(/\s+/g, ' ') // Collapse multiple spaces
 }
 
 /**

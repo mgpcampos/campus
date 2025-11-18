@@ -89,7 +89,7 @@ export function formatDateRange(start: Date | string, end: Date | string): strin
  * @returns New date with minutes added
  */
 export function addMinutes(date: Date | string, minutes: number): Date {
-	const d = typeof date === 'string' ? new Date(date) : new Date(date)
+	const d = new Date(date)
 	d.setMinutes(d.getMinutes() + minutes)
 	return d
 }
@@ -122,7 +122,7 @@ export function getDurationMinutes(start: Date | string, end: Date | string): nu
  * @returns Date with milliseconds set to 0
  */
 export function roundToSeconds(date: Date | string): Date {
-	const d = typeof date === 'string' ? new Date(date) : new Date(date)
+	const d = new Date(date)
 	d.setMilliseconds(0)
 	return d
 }

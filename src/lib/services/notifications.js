@@ -1,6 +1,6 @@
 import { pb } from '../pocketbase.js'
 
-const mentionRegex = /@([a-zA-Z0-9_]{3,30})/g
+const mentionRegex = /@(\w{3,30})/g
 
 /**
  * Extract unique mentioned usernames from content

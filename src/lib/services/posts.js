@@ -168,7 +168,7 @@ export async function getPosts(
 		if (space) filterParts.push(`space = "${space}"`)
 		if (group) filterParts.push(`group = "${group}"`)
 		if (q) {
-			const safe = q.replace(/"/g, '\\"')
+			const safe = q.replaceAll('"', '\\"')
 			filterParts.push(`(content ~ "%${safe}%" )`)
 		}
 		const filter = filterParts.join(' && ')
@@ -473,49 +473,111 @@ function toVideoDuration(value) {
 }
 
 /**
+ * Process content field for update payload
+ * @param {Record<string, any>} updateData
+ * @param {Record<string, any>} payload
+ */
+function processContentField(updateData, payload) {
+	if (typeof updateData?.content === 'string') {
+		payload.content = sanitizeContent(updateData.content)
+	}
+}
+
+/**
+ * Process media alt text field for update payload
+ * @param {Record<string, any>} updateData
+ * @param {Record<string, any>} payload
+ */
+function processMediaAltTextField(updateData, payload) {
+	if (typeof updateData?.mediaAltText === 'string') {
+		payload.mediaAltText = sanitizePlainText(updateData.mediaAltText).trim()
+	}
+}
+
+/**
+ * Process media type field for update payload
+ * @param {Record<string, any>} updateData
+ * @param {Record<string, any>} payload
+ */
+function processMediaTypeField(updateData, payload) {
+	if (typeof updateData?.mediaType === 'string') {
+		payload.mediaType = normalizeMediaType(updateData.mediaType)
+	}
+}
+
+/**
+ * Process video duration field for update payload
+ * @param {Record<string, any>} updateData
+ * @param {Record<string, any>} payload
+ */
+function processVideoDurationField(updateData, payload) {
+	if ('videoDuration' in updateData) {
+		payload.videoDuration = toVideoDuration(updateData.videoDuration)
+	}
+}
+
+/**
+ * Process scope field for update payload
+ * @param {Record<string, any>} updateData
+ * @param {Record<string, any>} payload
+ */
+function processScopeField(updateData, payload) {
+	if (typeof updateData?.scope === 'string') {
+		payload.scope = normalizeScope(updateData.scope)
+	}
+}
+
+/**
+ * Process space field for update payload
+ * @param {Record<string, any>} updateData
+ * @param {Record<string, any>} payload
+ */
+function processSpaceField(updateData, payload) {
+	if ('space' in updateData) {
+		payload.space =
+			typeof updateData.space === 'string' && updateData.space ? updateData.space : null
+	}
+}
+
+/**
+ * Process group field for update payload
+ * @param {Record<string, any>} updateData
+ * @param {Record<string, any>} payload
+ */
+function processGroupField(updateData, payload) {
+	if ('group' in updateData) {
+		payload.group =
+			typeof updateData.group === 'string' && updateData.group ? updateData.group : null
+	}
+}
+
+/**
+ * Process published at field for update payload
+ * @param {Record<string, any>} updateData
+ * @param {Record<string, any>} payload
+ */
+function processPublishedAtField(updateData, payload) {
+	if ('publishedAt' in updateData) {
+		payload.publishedAt =
+			updateData.publishedAt === null
+				? null
+				: (normalizePublishedAt(updateData.publishedAt) ?? null)
+	}
+}
+
+/**
  * @param {Record<string, any>} updateData
  */
 function prepareUpdatePayload(updateData) {
 	const payload = {}
-	if (typeof updateData?.content === 'string') {
-		payload.content = sanitizeContent(updateData.content)
-	}
-	if (typeof updateData?.mediaAltText === 'string') {
-		const trimmedAlt = sanitizePlainText(updateData.mediaAltText).trim()
-		payload.mediaAltText = trimmedAlt
-	}
-	if (typeof updateData?.mediaType === 'string') {
-		payload.mediaType = normalizeMediaType(updateData.mediaType)
-	}
-	if ('videoDuration' in updateData) {
-		const normalizedDuration = toVideoDuration(updateData.videoDuration)
-		payload.videoDuration = normalizedDuration
-	}
-	if (typeof updateData?.scope === 'string') {
-		payload.scope = normalizeScope(updateData.scope)
-	}
-	if ('space' in updateData) {
-		const value =
-			typeof updateData.space === 'string' && updateData.space ? updateData.space : null
-		payload.space = value
-	}
-	if ('group' in updateData) {
-		const value =
-			typeof updateData.group === 'string' && updateData.group ? updateData.group : null
-		payload.group = value
-	}
-	if ('publishedAt' in updateData) {
-		if (updateData.publishedAt === null) {
-			payload.publishedAt = null
-		} else {
-			const normalized = normalizePublishedAt(updateData.publishedAt)
-			if (normalized) {
-				payload.publishedAt = normalized
-			} else {
-				payload.publishedAt = null
-			}
-		}
-	}
+	processContentField(updateData, payload)
+	processMediaAltTextField(updateData, payload)
+	processMediaTypeField(updateData, payload)
+	processVideoDurationField(updateData, payload)
+	processScopeField(updateData, payload)
+	processSpaceField(updateData, payload)
+	processGroupField(updateData, payload)
+	processPublishedAtField(updateData, payload)
 	return payload
 }
 
@@ -556,8 +618,8 @@ function createModerationMetadata({
 	publishedAt
 }) {
 	const plain = content
-		.replace(/<[^>]+>/g, ' ')
-		.replace(/\s+/g, ' ')
+		.replaceAll(/<[^>]+>/g, ' ')
+		.replaceAll(/\s+/g, ' ')
 		.trim()
 	const wordCount = plain ? plain.split(/\s+/).filter(Boolean).length : 0
 	const containsLinks = /https?:\/\//i.test(plain)

@@ -66,7 +66,7 @@ export function sanitizeContent(input = '') {
 		if (preserveWhitespaceDepth > 0 || (tagName && whitespaceSensitiveTags.has(tagName))) {
 			return text
 		}
-		return text.replace(/\s+/g, ' ')
+		return text.replaceAll(/\s+/g, ' ')
 	}
 
 	/** @type {SanitizeOptions} */

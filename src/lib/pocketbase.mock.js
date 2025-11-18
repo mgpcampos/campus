@@ -13,16 +13,14 @@ const authStore = {
 	/** @type {((token: string | null, model: import('pocketbase').RecordModel | null) => void) | null} */
 	listener: null,
 	/**
-	 * @param {string | null | undefined} token
-	 * @param {import('pocketbase').RecordModel | null | undefined} model
+	 * @param {string | null} token
+	 * @param {import('pocketbase').RecordModel | null} model
 	 */
-	save(token, model) {
-		const nextToken = token ?? null
-		const nextModel = model ?? null
-		this.token = nextToken
-		this.model = nextModel
-		currentUser.set(nextModel)
-		this.listener?.(nextToken, nextModel)
+	save(token = null, model = null) {
+		this.token = token
+		this.model = model
+		currentUser.set(model)
+		this.listener?.(token, model)
 	},
 	clear() {
 		this.token = null
@@ -56,10 +54,10 @@ export const pb = {
 }
 
 /**
- * @param {string | null | undefined} token
- * @param {import('pocketbase').RecordModel | null | undefined} model
+ * @param {string | null} token
+ * @param {import('pocketbase').RecordModel | null} model
  */
-export function hydrateClientAuth(token, model) {
+export function hydrateClientAuth(token = null, model = null) {
 	if (token && model) {
 		authStore.save(token, model)
 	} else {

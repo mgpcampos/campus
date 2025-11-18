@@ -122,7 +122,7 @@ export async function listUserMemberships(
 	}
 	const spaces = (spaceMemberships as MembershipRecord<SpaceRecord>[])
 		.map((m) => m.expand?.space)
-		.filter((s): s is SpaceRecord => Boolean(s))
+		.filter((s): s is SpaceRecord => s !== undefined)
 		.map((s) => ({ id: s.id, name: s.name, slug: s.slug }))
 
 	// Groups
@@ -137,7 +137,7 @@ export async function listUserMemberships(
 	}
 	const groups = (groupMemberships as MembershipRecord<GroupRecord>[])
 		.map((m) => m.expand?.group)
-		.filter((g): g is GroupRecord => Boolean(g))
+		.filter((g): g is GroupRecord => g !== undefined)
 		.map((g) => ({ id: g.id, name: g.name, space: g.space }))
 
 	return { spaces, groups }

@@ -43,7 +43,7 @@ export async function getGroups(
 		const client = resolveClient(serviceOptions.pb)
 		let filter = `space = "${spaceId}"`
 		if (search) {
-			const safe = search.replace(/"/g, '\\"')
+			const safe = search.replaceAll('"', '\\"')
 			filter += ` && (name ~ "%${safe}%" || description ~ "%${safe}%")`
 		}
 		return await client.collection('groups').getList(page, perPage, {

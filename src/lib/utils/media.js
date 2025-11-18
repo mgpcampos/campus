@@ -16,8 +16,8 @@ export const MAX_ATTACHMENTS = 10
 let sharpModule = null
 
 async function loadSharp() {
-	if (typeof window !== 'undefined') {
-		throw new Error('optimizeImage is only available server-side')
+	if (typeof globalThis.window !== 'undefined') {
+		throw new TypeError('optimizeImage is only available server-side')
 	}
 	if (!sharpModule) {
 		const mod = await import('sharp')
@@ -139,5 +139,5 @@ export async function optimizeImage(buffer, { widths = [320, 640, 960], quality 
  * @param {string} name
  */
 export function sanitizeFilename(name = '') {
-	return name.replace(/[^a-zA-Z0-9._-]/g, '_')
+	return name.replaceAll(/[^a-zA-Z0-9._-]/g, '_')
 }

@@ -63,5 +63,3 @@
  * @property {string} created
  * @property {string} updated
  */
-
-export {}

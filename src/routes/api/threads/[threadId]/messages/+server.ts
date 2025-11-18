@@ -61,6 +61,70 @@ export async function GET({ params, url, locals }) {
 }
 
 /**
+ * Parse request data based on content type
+ * @param {Request} request
+ */
+async function parseRequestData(request: Request) {
+	const contentType = request.headers.get('content-type') || ''
+
+	if (contentType.includes('multipart/form-data')) {
+		return parseFormData(await request.formData())
+	}
+
+	const jsonData = await request.json()
+	return { body: jsonData.body, attachments: undefined }
+}
+
+/**
+ * Parse form data for message creation
+ * @param {FormData} formData
+ */
+function parseFormData(formData: FormData) {
+	const body = formData.get('body')?.toString()
+	const attachments: File[] = []
+
+	for (let i = 0; i < 5; i++) {
+		const file = formData.get(`attachment_${i}`)
+		if (file instanceof File) {
+			attachments.push(file)
+		}
+	}
+
+	return { body, attachments }
+}
+
+/**
+ * Build FormData for PocketBase message creation
+ * @param {string} threadId
+ * @param {string} userId
+ * @param {{ body?: string; attachments?: File[] }} validatedData
+ */
+function buildMessageFormData(
+	threadId: string,
+	userId: string,
+	validatedData: { body?: string; attachments?: File[] }
+) {
+	const messageFormData = new FormData()
+	messageFormData.append('thread', threadId)
+	messageFormData.append('author', userId)
+	messageFormData.append('status', 'visible')
+	messageFormData.append('flagCount', '0')
+	messageFormData.append('metadata', JSON.stringify({ readReceipts: [] }))
+
+	if (validatedData.body) {
+		messageFormData.append('body', validatedData.body)
+	}
+
+	if (validatedData.attachments) {
+		for (const file of validatedData.attachments) {
+			messageFormData.append('attachments', file)
+		}
+	}
+
+	return messageFormData
+}
+
+/**
  * POST /api/threads/[threadId]/messages
  * Send a new message in a thread
  */
@@ -85,27 +149,8 @@ export async function POST({ params, request, locals }) {
 			return error(403, 'This thread is locked by moderators')
 		}
 
-		// Parse multipart/form-data or JSON
-		const contentType = request.headers.get('content-type') || ''
-		let body: string | undefined
-		let attachments: File[] | undefined
-
-		if (contentType.includes('multipart/form-data')) {
-			const formData = await request.formData()
-			body = formData.get('body')?.toString()
-
-			// Collect file attachments
-			attachments = []
-			for (let i = 0; i < 5; i++) {
-				const file = formData.get(`attachment_${i}`)
-				if (file instanceof File) {
-					attachments.push(file)
-				}
-			}
-		} else {
-			const jsonData = await request.json()
-			body = jsonData.body
-		}
+		// Parse request data
+		const { body, attachments } = await parseRequestData(request)
 
 		// Validate data
 		const validatedData = messageCreateSchema.parse({ body, attachments })
@@ -118,25 +163,8 @@ export async function POST({ params, request, locals }) {
 			return error(400, 'Message must have either body text or attachments')
 		}
 
-		// Create FormData for PocketBase
-		const messageFormData = new FormData()
-		messageFormData.append('thread', threadId)
-		messageFormData.append('author', locals.user.id)
-		messageFormData.append('status', 'visible')
-		messageFormData.append('flagCount', '0')
-		messageFormData.append('metadata', JSON.stringify({ readReceipts: [] }))
-
-		if (validatedData.body) {
-			messageFormData.append('body', validatedData.body)
-		}
-
-		if (validatedData.attachments) {
-			for (const file of validatedData.attachments) {
-				messageFormData.append(`attachments`, file)
-			}
-		}
-
 		// Create message
+		const messageFormData = buildMessageFormData(threadId, locals.user.id, validatedData)
 		const message = await locals.pb.collection('messages').create(messageFormData, {
 			expand: 'author'
 		})

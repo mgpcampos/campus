@@ -129,12 +129,17 @@ async function persistBuffer(
 ): Promise<string> {
 	const filename = `${randomUUID()}-source`
 	const targetPath = path.join(dir, filename)
-	const buffer =
-		data instanceof Buffer
-			? data
-			: data instanceof ArrayBuffer
-				? Buffer.from(data)
-				: Buffer.from(data.buffer, data.byteOffset, data.byteLength)
+
+	// Convert data to Buffer based on its type
+	let buffer: Buffer
+	if (data instanceof Buffer) {
+		buffer = data
+	} else if (data instanceof ArrayBuffer) {
+		buffer = Buffer.from(data)
+	} else {
+		buffer = Buffer.from(data.buffer, data.byteOffset, data.byteLength)
+	}
+
 	await writeFile(targetPath, buffer)
 	return targetPath
 }

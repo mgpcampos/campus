@@ -85,6 +85,82 @@ export async function createComment(postId, content, parentId) {
  * @returns {Promise<ListResult>}
  */
 /**
+ * Build child filter expression for nested comments
+ * @param {string} postId
+ * @param {string[]} parentIds
+ * @returns {string}
+ */
+function buildChildFilter(postId, parentIds) {
+	const ids = parentIds.map((id) => `"${id}"`).join(',')
+	return `post = "${postId}" && parent != null && parent.id in [${ids}]`
+}
+
+/**
+ * Fetch child comments using getFullList or fallback to pagination
+ * @param {string} filter
+ * @returns {Promise<any[]>}
+ */
+async function fetchChildComments(filter) {
+	const commentsCollection = pb.collection('comments')
+
+	if (typeof commentsCollection.getFullList === 'function') {
+		return await commentsCollection.getFullList({
+			filter,
+			sort: 'created',
+			expand: 'author,parent'
+		})
+	}
+
+	// Fallback: page through using getList
+	const children = []
+	const childPerPage = 50
+	let childPage = 1
+	const MAX_PAGES = 10
+
+	while (childPage <= MAX_PAGES) {
+		const batch = await /** @type {any} */ (commentsCollection).getList(
+			childPage,
+			childPerPage,
+			{ filter, sort: 'created', expand: 'author,parent' }
+		)
+		children.push(...batch.items)
+		if (batch.items.length < childPerPage) break
+		childPage++
+	}
+
+	return children
+}
+
+/**
+ * Build a map of children by parent ID
+ * @param {any[]} children
+ * @returns {Record<string, any[]>}
+ */
+function buildChildrenByParentMap(children) {
+	const childrenByParent = /** @type {Record<string, any[]>} */ ({})
+
+	for (const child of children) {
+		const parentId = child.parent || child.expand?.parent?.id
+		if (!parentId) continue
+		if (!childrenByParent[parentId]) childrenByParent[parentId] = []
+		childrenByParent[parentId].push(child)
+	}
+
+	return childrenByParent
+}
+
+/**
+ * Attach replies to parent comments
+ * @param {any[]} topLevelComments
+ * @param {Record<string, any[]>} childrenByParent
+ */
+function attachRepliesToComments(topLevelComments, childrenByParent) {
+	for (const item of topLevelComments) {
+		item /** @type {any} */.replies = childrenByParent[item.id] || []
+	}
+}
+
+/**
  * @param {string} postId
  * @param {{page?:number, perPage?:number, includeReplies?:boolean}} [options]
  */
@@ -107,50 +183,15 @@ export async function getComments(postId, options = {}) {
 			return topLevel
 		}
 
-		// Collect ids to fetch children for (1 level deep for now)
-		const ids = topLevel.items.map((c) => c.id)
-		if (ids.length === 0) return topLevel
+		// Fetch and attach child comments
+		const parentIds = topLevel.items.map((c) => c.id)
+		if (parentIds.length === 0) return topLevel
 
-		let children = []
-		const filter = `post = "${postId}" && parent != null && parent.id in [${ids
-			.map((id) => `"${id}"`)
-			.join(',')}]`
-		const commentsCollection = pb.collection('comments')
-		if (typeof commentsCollection.getFullList === 'function') {
-			children = await commentsCollection.getFullList({
-				filter,
-				sort: 'created',
-				expand: 'author,parent'
-			})
-		} else {
-			// Fallback: page through using getList until fewer than perPage results
-			let childPage = 1
-			const childPerPage = 50
-			while (true) {
-				const batch = await /** @type {any} */ (commentsCollection).getList(
-					childPage,
-					childPerPage,
-					{ filter, sort: 'created', expand: 'author,parent' }
-				)
-				children.push(...batch.items)
-				if (batch.items.length < childPerPage) break
-				childPage++
-				if (childPage > 10) break // safety cap
-			}
-		}
+		const filter = buildChildFilter(postId, parentIds)
+		const children = await fetchChildComments(filter)
 
-		// Attach children array to each parent
-		/** @type {Record<string, any[]>} */
-		const childrenByParent = {}
-		for (const child of children) {
-			const p = child.parent || child.expand?.parent?.id
-			if (!p) continue
-			if (!childrenByParent[p]) childrenByParent[p] = []
-			childrenByParent[p].push(child)
-		}
-		for (const item of topLevel.items) {
-			item /** @type {any} */.replies = childrenByParent[item.id] || []
-		}
+		const childrenByParent = buildChildrenByParentMap(children)
+		attachRepliesToComments(topLevel.items, childrenByParent)
 
 		return topLevel
 	} catch (error) {

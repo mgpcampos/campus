@@ -32,7 +32,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 
 		const filterString = filters.join(' && ')
 
-		// Fetch materials with expanded uploader info
+		// Fetch materials with expanded uploader info (sorted by creation date descending)
 		const results = await locals.pb
 			.collection('materials')
 			.getList<MaterialWithUploader>(
@@ -40,7 +40,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 				(searchForm.data.perPage as number) || 20,
 				{
 					filter: filterString,
-					sort: searchForm.data.sort === 'relevance' ? '-created' : '-created',
+					sort: '-created',
 					expand: 'uploader'
 				}
 			)

@@ -22,8 +22,8 @@ export async function GET({ params, locals, url }) {
 	}
 
 	const postId = params.id
-	const page = parseInt(url.searchParams.get('page') || '1', 10)
-	const perPage = Math.min(parseInt(url.searchParams.get('perPage') || '50', 10), 100)
+	const page = Number.parseInt(url.searchParams.get('page') || '1', 10)
+	const perPage = Math.min(Number.parseInt(url.searchParams.get('perPage') || '50', 10), 100)
 
 	try {
 		const comments = await locals.pb.collection('comments').getList(page, perPage, {
@@ -36,6 +36,82 @@ export async function GET({ params, locals, url }) {
 	} catch (err) {
 		console.error('Error getting comments:', err instanceof Error ? err.message : err)
 		throw error(500, 'Failed to get comments')
+	}
+}
+
+/**
+ * Notify post author about new comment
+ * @param {string} postAuthorId
+ * @param {string} commentAuthorId
+ * @param {string} postId
+ * @param {string} commentId
+ */
+async function notifyPostAuthor(postAuthorId, commentAuthorId, postId, commentId) {
+	if (!postAuthorId || postAuthorId === commentAuthorId) {
+		return
+	}
+	try {
+		await createNotification({
+			user: postAuthorId,
+			actor: commentAuthorId,
+			type: 'comment',
+			post: postId,
+			comment: commentId
+		})
+	} catch (e) {
+		console.warn('comment notification failed', e)
+	}
+}
+
+/**
+ * Check if should skip mention notification
+ * @param {string} mentionedId
+ * @param {string} authorId
+ * @param {string} postAuthorId
+ */
+function shouldSkipMentionNotification(mentionedId, authorId, postAuthorId) {
+	if (!mentionedId || mentionedId === authorId) {
+		return true
+	}
+	// Avoid duplicate with comment notification to post author
+	if (mentionedId === postAuthorId && postAuthorId !== authorId) {
+		return true
+	}
+	return false
+}
+
+/**
+ * Send mention notifications
+ * @param {string} content
+ * @param {string} userId
+ * @param {string} postAuthorId
+ * @param {string} postId
+ * @param {string} commentId
+ */
+async function notifyMentionedUsers(content, userId, postAuthorId, postId, commentId) {
+	try {
+		const mentions = extractMentions(content)
+		if (mentions.length === 0) {
+			return
+		}
+
+		const resolved = await resolveUsernames(mentions)
+		const uniqueUserIds = new Set(Object.values(resolved))
+
+		for (const mentionedId of uniqueUserIds) {
+			if (shouldSkipMentionNotification(mentionedId, userId, postAuthorId)) {
+				continue
+			}
+			await createNotification({
+				user: mentionedId,
+				actor: userId,
+				type: 'mention',
+				post: postId,
+				comment: commentId
+			})
+		}
+	} catch (e) {
+		console.warn('mention notifications failed', e)
 	}
 }
 
@@ -67,43 +143,9 @@ export async function POST({ params, locals, request }) {
 		const newCommentCount = (post.commentCount || 0) + 1
 		await locals.pb.collection('posts').update(postId, { commentCount: newCommentCount })
 
-		// Comment notification (avoid self notify)
-		try {
-			if (post.author && post.author !== userId) {
-				await createNotification({
-					user: post.author,
-					actor: userId,
-					type: 'comment',
-					post: postId,
-					comment: comment.id
-				})
-			}
-		} catch (e) {
-			console.warn('comment notification failed', e)
-		}
-
-		// Mention notifications
-		try {
-			const mentions = extractMentions(safeContent)
-			if (mentions.length) {
-				const resolved = await resolveUsernames(mentions)
-				const uniqueUserIds = new Set(Object.values(resolved))
-				for (const mentionedId of uniqueUserIds) {
-					if (!mentionedId || mentionedId === userId) continue
-					// Avoid duplicate with comment notification to post author; still allow if someone else
-					if (mentionedId === post.author && post.author !== userId) continue
-					await createNotification({
-						user: mentionedId,
-						actor: userId,
-						type: 'mention',
-						post: postId,
-						comment: comment.id
-					})
-				}
-			}
-		} catch (e) {
-			console.warn('mention notifications failed', e)
-		}
+		// Send notifications
+		await notifyPostAuthor(post.author, userId, postId, comment.id)
+		await notifyMentionedUsers(safeContent, userId, post.author, postId, comment.id)
 
 		// Return comment with expanded author
 		const expandedComment = await locals.pb.collection('comments').getOne(comment.id, {

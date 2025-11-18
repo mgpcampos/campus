@@ -41,7 +41,11 @@ export const materialSearchSchema = z
 		q: z.string().trim().optional(),
 		tags: z
 			.union([z.string(), z.array(z.string())])
-			.transform((val) => (Array.isArray(val) ? val : val ? [val] : []))
+			.transform((val) => {
+				if (Array.isArray(val)) return val
+				if (val) return [val]
+				return []
+			})
 			.optional(),
 		format: z.enum(['document', 'slide', 'dataset', 'video', 'link']).optional(),
 		contributorId: z.string().optional(),

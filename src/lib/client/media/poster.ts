@@ -21,6 +21,16 @@ export type PosterCaptureResult = {
 	duration: number
 }
 
+function isDrawableContext(
+	context:
+		| CanvasRenderingContext2D
+		| OffscreenCanvasRenderingContext2D
+		| RenderingContext
+		| null
+): context is CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D {
+	return Boolean(context && 'drawImage' in context)
+}
+
 function throwIfAborted(signal: AbortSignal | undefined) {
 	if (signal?.aborted) {
 		throw new DOMException('Poster capture aborted', 'AbortError')
@@ -78,7 +88,7 @@ export async function capturePosterFromFile(
 	options: PosterCaptureOptions = {}
 ): Promise<PosterCaptureResult> {
 	if (typeof document === 'undefined') {
-		throw new Error('Poster capture requires a browser environment')
+		throw new TypeError('Poster capture requires a browser environment')
 	}
 
 	const { signal } = options
@@ -138,12 +148,12 @@ export async function capturePosterFromFile(
 		)
 
 		const canvas =
-			typeof OffscreenCanvas !== 'undefined'
-				? new OffscreenCanvas(width, height)
-				: Object.assign(document.createElement('canvas'), { width, height })
+			typeof OffscreenCanvas === 'undefined'
+				? Object.assign(document.createElement('canvas'), { width, height })
+				: new OffscreenCanvas(width, height)
 
 		const context = canvas.getContext('2d')
-		if (!context) {
+		if (!isDrawableContext(context)) {
 			throw new Error('Unable to create 2D context for poster rendering')
 		}
 

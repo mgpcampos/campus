@@ -24,6 +24,16 @@ const swallow = <T>(promise: Promise<T>): void => {
 	promise.catch(() => undefined)
 }
 
+const runtime = globalThis as typeof globalThis & {
+	window?: Window & typeof globalThis
+	document?: Document
+	navigator?: Navigator
+}
+
+const getWindow = () => runtime.window
+const getDocument = () => runtime.document
+const getNavigator = () => runtime.navigator
+
 export type AnalyticsEventType = 'page' | 'event' | 'vital'
 
 export interface AnalyticsEvent {
@@ -83,13 +93,11 @@ class AnalyticsQueue {
 		const payload = { events: this.queue.splice(0, this.queue.length) }
 
 		try {
-			if (
-				browser &&
-				navigator.sendBeacon &&
-				(immediate || document.visibilityState === 'hidden')
-			) {
+			const nav = getNavigator()
+			const doc = getDocument()
+			if (browser && nav?.sendBeacon && (immediate || doc?.visibilityState === 'hidden')) {
 				const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' })
-				navigator.sendBeacon(analytics.endpoint, blob)
+				nav.sendBeacon(analytics.endpoint, blob)
 				return
 			}
 
@@ -137,13 +145,14 @@ function ensureSessionId() {
 	if (!browser) return 'server'
 	if (sessionId) return sessionId
 	try {
-		const existing = window.sessionStorage.getItem(SESSION_STORAGE_KEY)
+		const storage = getWindow()?.sessionStorage
+		const existing = storage?.getItem(SESSION_STORAGE_KEY)
 		if (existing) {
 			sessionId = existing
 			return sessionId
 		}
 		const generated = crypto.randomUUID()
-		window.sessionStorage.setItem(SESSION_STORAGE_KEY, generated)
+		storage?.setItem(SESSION_STORAGE_KEY, generated)
 		sessionId = generated
 	} catch {
 		// sessionStorage may be unavailable (Safari private mode); fall back to in-memory id
@@ -154,12 +163,14 @@ function ensureSessionId() {
 
 function enrichEvent(event: AnalyticsEvent): EnrichedEvent {
 	const nowIso = new Date().toISOString()
-	const page =
-		event.page ?? (browser ? window.location.pathname + window.location.search : undefined)
-	const viewport = browser
+	const win = getWindow()
+	const nav = getNavigator()
+	const doc = getDocument()
+	const page = event.page ?? (browser && win ? win.location.pathname + win.location.search : undefined)
+	const viewport = browser && win
 		? {
-				width: window.innerWidth,
-				height: window.innerHeight
+				width: win.innerWidth,
+				height: win.innerHeight
 			}
 		: undefined
 
@@ -168,9 +179,9 @@ function enrichEvent(event: AnalyticsEvent): EnrichedEvent {
 		sessionId: ensureSessionId(),
 		timestamp: nowIso,
 		userId,
-		locale: browser ? navigator.language : undefined,
-		referrer: browser ? document.referrer || null : null,
-		userAgent: browser ? navigator.userAgent : undefined,
+		locale: browser ? nav?.language : undefined,
+		referrer: browser ? doc?.referrer || null : null,
+		userAgent: browser ? nav?.userAgent : undefined,
 		page,
 		viewport
 	}
@@ -181,7 +192,8 @@ function enqueue(event: AnalyticsEvent) {
 }
 
 function handleVisibilityChange() {
-	if (document.visibilityState === 'hidden') {
+	const doc = getDocument()
+	if (doc?.visibilityState === 'hidden') {
 		swallow(analyticsQueue.flush(true))
 	}
 }
@@ -264,18 +276,20 @@ function setupWebVitalsObservers() {
 function setupNavigationTracking() {
 	if (!browser || navigationTrackingInitialized) return
 	navigationTrackingInitialized = true
+	const win = getWindow()
+	if (!win) return
 
 	const listener: EventListener = (event) => {
 		const nav = (event as CustomEvent<{ from?: { url?: URL }; to?: { url?: URL } }>).detail
-		const destination = nav?.to?.url ?? window.location
+		const destination = nav?.to?.url ?? win.location
 		trackPageView(destination.pathname + destination.search, {
 			referer: nav?.from?.url?.pathname ?? null
 		})
 	}
 
-	window.addEventListener('sveltekit:navigation-end', listener)
+	win.addEventListener('sveltekit:navigation-end', listener)
 	removeNavigationListener = () => {
-		window.removeEventListener('sveltekit:navigation-end', listener)
+		win.removeEventListener('sveltekit:navigation-end', listener)
 		navigationTrackingInitialized = false
 		removeNavigationListener = null
 	}
@@ -335,8 +349,10 @@ export function initAnalytics() {
 	})
 
 	if (browser) {
-		document.addEventListener('visibilitychange', handleVisibilityChange)
-		window.addEventListener('beforeunload', () => {
+		const doc = getDocument()
+		const win = getWindow()
+		doc?.addEventListener('visibilitychange', handleVisibilityChange)
+		win?.addEventListener('beforeunload', () => {
 			swallow(analyticsQueue.flush(true))
 		})
 	}
@@ -345,7 +361,7 @@ export function initAnalytics() {
 		analyticsQueue.clear()
 		swallow(analyticsQueue.flush(true))
 		if (browser) {
-			document.removeEventListener('visibilitychange', handleVisibilityChange)
+			getDocument()?.removeEventListener('visibilitychange', handleVisibilityChange)
 		}
 		disconnectors.forEach((disconnect) => {
 			disconnect()

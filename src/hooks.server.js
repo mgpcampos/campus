@@ -36,7 +36,9 @@ export async function handle({ event, resolve }) {
 			await event.locals.pb.collection('users').authRefresh()
 		}
 		syncLocalsAuth()
-	} catch (/** @type {any} */ _) {
+	} catch (/** @type {any} */ err) {
+		// Auth refresh failed - clear invalid session
+		console.warn('Auth refresh failed, clearing session:', err?.message || err)
 		event.locals.pb.authStore.clear()
 		syncLocalsAuth()
 	}

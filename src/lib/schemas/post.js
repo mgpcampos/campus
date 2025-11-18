@@ -15,16 +15,22 @@ import { fileArraySchema, fileLikeSchema } from './helpers.js'
  */
 
 const MAX_ATTACHMENTS = 10
-const IMAGE_MIME_TYPES = [
+const IMAGE_MIME_TYPES = new Set([
 	'image/jpeg',
 	'image/png',
 	'image/webp',
 	'image/gif',
 	'image/heic',
 	'image/heif'
-]
-const VIDEO_MIME_TYPES = ['video/mp4']
-const POSTER_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']
+])
+const VIDEO_MIME_TYPES = new Set(['video/mp4'])
+const POSTER_MIME_TYPES = new Set([
+	'image/jpeg',
+	'image/png',
+	'image/webp',
+	'image/heic',
+	'image/heif'
+])
 
 /**
  * @param {RefinementCtx} ctx
@@ -59,7 +65,7 @@ const ensureVideoFieldsOmitted = (data, ctx) => {
 const validatePoster = (poster, ctx) => {
 	if (!poster) return
 	const mime = getMimeType(poster)
-	if (!POSTER_MIME_TYPES.includes(mime)) {
+	if (!POSTER_MIME_TYPES.has(mime)) {
 		addIssue(ctx, ['videoPoster'], `${mime || 'unknown'} is not supported for video posters`)
 	}
 }
@@ -79,14 +85,14 @@ const getMimeType = (file) => {
 
 /**
  * @param {MimeLike[]} files
- * @param {string[]} allowed
+ * @param {Set<string>} allowed
  * @param {RefinementCtx} ctx
  * @param {Array<string | number>} path
  */
 const validateAttachmentsMime = (files, allowed, ctx, path) => {
 	files.forEach((file, index) => {
 		const mime = getMimeType(file)
-		if (!allowed.includes(mime)) {
+		if (!allowed.has(mime)) {
 			ctx.addIssue({
 				code: z.ZodIssueCode.custom,
 				message: `${mime || 'unknown'} is not supported for this media type`,
@@ -97,60 +103,66 @@ const validateAttachmentsMime = (files, allowed, ctx, path) => {
 }
 
 /**
+ * Validate space scope requirements
+ * @param {{ space?: string | undefined; group?: string | undefined }} data
+ * @param {RefinementCtx} ctx
+ */
+const validateSpaceScope = (data, ctx) => {
+	if (!data.space) {
+		addIssue(ctx, ['space'], 'space is required when scope is set to space')
+	}
+	if (data.group) {
+		addIssue(ctx, ['group'], 'group cannot be provided when scope is space')
+	}
+}
+
+/**
+ * Validate group scope requirements
+ * @param {{ space?: string | undefined; group?: string | undefined }} data
+ * @param {RefinementCtx} ctx
+ */
+const validateGroupScope = (data, ctx) => {
+	if (!data.group) {
+		addIssue(ctx, ['group'], 'group is required when scope is set to group')
+	}
+	if (data.space) {
+		addIssue(ctx, ['space'], 'space cannot be provided when scope is group')
+	}
+}
+
+/**
+ * Validate global scope requirements
+ * @param {{ space?: string | undefined; group?: string | undefined }} data
+ * @param {RefinementCtx} ctx
+ */
+const validateGlobalScope = (data, ctx) => {
+	if (data.space) {
+		addIssue(ctx, ['space'], 'space is not allowed when scope is global')
+	}
+	if (data.group) {
+		addIssue(ctx, ['group'], 'group is not allowed when scope is global')
+	}
+}
+
+/**
  * @param {{ scope?: 'global' | 'space' | 'group'; space?: string | undefined; group?: string | undefined }} data
  * @param {RefinementCtx} ctx
  */
 const validateScope = (data, ctx) => {
 	if (!data.scope) return
+
 	if (data.scope === 'space') {
-		if (!data.space) {
-			ctx.addIssue({
-				code: z.ZodIssueCode.custom,
-				message: 'space is required when scope is set to space',
-				path: ['space']
-			})
-		}
-		if (data.group) {
-			ctx.addIssue({
-				code: z.ZodIssueCode.custom,
-				message: 'group cannot be provided when scope is space',
-				path: ['group']
-			})
-		}
+		validateSpaceScope(data, ctx)
+		return
 	}
 
 	if (data.scope === 'group') {
-		if (!data.group) {
-			ctx.addIssue({
-				code: z.ZodIssueCode.custom,
-				message: 'group is required when scope is set to group',
-				path: ['group']
-			})
-		}
-		if (data.space) {
-			ctx.addIssue({
-				code: z.ZodIssueCode.custom,
-				message: 'space cannot be provided when scope is group',
-				path: ['space']
-			})
-		}
+		validateGroupScope(data, ctx)
+		return
 	}
 
 	if (data.scope === 'global') {
-		if (data.space) {
-			ctx.addIssue({
-				code: z.ZodIssueCode.custom,
-				message: 'space is not allowed when scope is global',
-				path: ['space']
-			})
-		}
-		if (data.group) {
-			ctx.addIssue({
-				code: z.ZodIssueCode.custom,
-				message: 'group is not allowed when scope is global',
-				path: ['group']
-			})
-		}
+		validateGlobalScope(data, ctx)
 	}
 }
 

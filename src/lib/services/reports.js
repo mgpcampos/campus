@@ -94,15 +94,18 @@ export async function updateReportStatus(reportId, newStatus) {
 		if (!allowed) throw new Error('Not authorized to modify report')
 
 		const updated = await pb.collection('reports').update(reportId, { status: newStatus })
+		// Determine moderation action based on status
+		let moderationAction = 'resolve_report'
+		if (newStatus === 'dismissed') {
+			moderationAction = 'dismiss_report'
+		} else if (newStatus === 'resolved') {
+			moderationAction = 'resolve_report'
+		}
+
 		// Log
 		await pb.collection('moderation_logs').create({
 			actor: pb.authStore.model.id,
-			action:
-				newStatus === 'resolved'
-					? 'resolve_report'
-					: newStatus === 'dismissed'
-						? 'dismiss_report'
-						: 'resolve_report',
+			action: moderationAction,
 			meta: { reportId, newStatus }
 		})
 		return updated

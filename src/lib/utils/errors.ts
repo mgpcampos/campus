@@ -90,35 +90,59 @@ function asErrorLike(value: unknown): ErrorLike | undefined {
 	return isRecord(value) ? (value as ErrorLike) : undefined
 }
 
+/**
+ * Extract message from field error entry
+ */
+function extractFieldErrorMessage(entry: PocketBaseFieldError): string | null {
+	if (typeof entry === 'string' && entry.length > 0) {
+		return entry
+	}
+	if (isRecord(entry) && typeof entry.message === 'string' && entry.message.length > 0) {
+		return entry.message
+	}
+	return null
+}
+
+/**
+ * Extract message from field errors in data
+ */
+function getFieldErrorsMessage(data: PocketBaseErrorData | undefined): string | null {
+	const fieldGroups = data?.data ? Object.values(data.data) : undefined
+	if (!fieldGroups || fieldGroups.length === 0) {
+		return null
+	}
+
+	const fieldErrors = fieldGroups.flat() as PocketBaseFieldError[]
+	for (const entry of fieldErrors) {
+		const msg = extractFieldErrorMessage(entry)
+		if (msg) {
+			return msg
+		}
+	}
+	return null
+}
+
 export function getErrorMessage(error: unknown): string {
-	let message = DEFAULT_ERROR_MESSAGE
 	const err = asErrorLike(error)
 	const data = err?.response?.data
 
-	const fieldGroups = data?.data ? Object.values(data.data) : undefined
-	if (fieldGroups && fieldGroups.length > 0) {
-		const fieldErrors = fieldGroups.flat() as PocketBaseFieldError[]
-		for (const entry of fieldErrors) {
-			if (typeof entry === 'string' && entry.length > 0) {
-				message = entry
-				break
-			}
-			if (isRecord(entry) && typeof entry.message === 'string' && entry.message.length > 0) {
-				message = entry.message
-				break
-			}
-		}
+	// Try field errors first
+	const fieldMessage = getFieldErrorsMessage(data)
+	if (fieldMessage) {
+		return fieldMessage
 	}
 
+	// Try data message
 	if (typeof data?.message === 'string' && data.message.length > 0) {
-		message = data.message
+		return data.message
 	}
 
+	// Try error message
 	if (typeof err?.message === 'string' && err.message.length > 0) {
-		message = err.message
+		return err.message
 	}
 
-	return message
+	return DEFAULT_ERROR_MESSAGE
 }
 
 export function isAuthError(error: unknown): boolean {

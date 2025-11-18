@@ -7,7 +7,7 @@ export const usernameSchema = z
 	.string()
 	.min(3, 'Username must be at least 3 characters long')
 	.max(30, 'Username must be no more than 30 characters long')
-	.regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores')
+	.regex(/^\w+$/, 'Username can only contain letters, numbers, and underscores')
 
 // User registration schema
 export const registerSchema = z

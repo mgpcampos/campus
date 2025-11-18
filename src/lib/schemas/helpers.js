@@ -5,9 +5,7 @@ import { z } from 'zod'
  */
 
 const FileCtor =
-	typeof globalThis !== 'undefined' && typeof globalThis.File !== 'undefined'
-		? globalThis.File
-		: undefined
+	globalThis !== undefined && globalThis.File !== undefined ? globalThis.File : undefined
 
 /**
  * @param {unknown} value

@@ -24,16 +24,12 @@ export function trapFocus(container: HTMLElement): () => void {
 		if (event.key !== 'Tab') return
 		if (!firstElement || !lastElement) return
 
-		if (event.shiftKey) {
-			if (document.activeElement === firstElement) {
-				event.preventDefault()
-				lastElement.focus()
-			}
-		} else {
-			if (document.activeElement === lastElement) {
-				event.preventDefault()
-				firstElement.focus()
-			}
+		if (event.shiftKey && document.activeElement === firstElement) {
+			event.preventDefault()
+			lastElement.focus()
+		} else if (!event.shiftKey && document.activeElement === lastElement) {
+			event.preventDefault()
+			firstElement.focus()
 		}
 	}
 
@@ -95,7 +91,7 @@ export function createRovingTabindex(
 	}
 
 	function handleKeydown(event: KeyboardEvent) {
-		let newIndex = currentIndex
+		let newIndex: number
 
 		switch (event.key) {
 			case 'ArrowDown':
@@ -148,7 +144,7 @@ export function announce(message: string, priority: 'polite' | 'assertive' = 'po
 
 		// Remove after announcement
 		setTimeout(() => {
-			document.body.removeChild(announcer)
+			announcer.remove()
 		}, 1000)
 	}, 100)
 }

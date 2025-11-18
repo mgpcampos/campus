@@ -39,6 +39,51 @@ export async function GET({ url, locals }) {
 	}
 }
 
+/**
+ * Parse media type from form data
+ * @param {string} mediaTypeValue
+ */
+function parseMediaType(mediaTypeValue) {
+	return mediaTypeValue === 'images' || mediaTypeValue === 'video' ? mediaTypeValue : 'text'
+}
+
+/**
+ * Parse video duration from form data
+ * @param {FormDataEntryValue | null} videoDurationRaw
+ */
+function parseVideoDuration(videoDurationRaw) {
+	if (typeof videoDurationRaw === 'string' && videoDurationRaw.trim().length > 0) {
+		return Number.parseFloat(videoDurationRaw)
+	}
+	return undefined
+}
+
+/**
+ * Parse video poster from form data
+ * @param {FormDataEntryValue | null} posterEntry
+ */
+function parseVideoPoster(posterEntry) {
+	return posterEntry instanceof File && posterEntry.size > 0 ? posterEntry : undefined
+}
+
+/**
+ * Parse published at timestamp from form data
+ * @param {FormDataEntryValue | null} publishedAtRaw
+ */
+function parsePublishedAt(publishedAtRaw) {
+	return typeof publishedAtRaw === 'string' && publishedAtRaw.trim().length > 0
+		? publishedAtRaw
+		: undefined
+}
+
+/**
+ * Parse media alt text from form data
+ * @param {FormDataEntryValue | null} mediaAltTextValue
+ */
+function parseMediaAltText(mediaAltTextValue) {
+	return typeof mediaAltTextValue === 'string' ? mediaAltTextValue : undefined
+}
+
 /** @type {import('./$types').RequestHandler} */
 export async function POST({ request, locals }) {
 	// Check authentication
@@ -52,24 +97,11 @@ export async function POST({ request, locals }) {
 		const rawFiles = /** @type {File[]} */ (
 			formData.getAll('attachments').filter((f) => f instanceof File && f.size > 0)
 		)
-		const mediaTypeValue = (formData.get('mediaType') || 'text').toString()
-		const mediaType =
-			mediaTypeValue === 'images' || mediaTypeValue === 'video' ? mediaTypeValue : 'text'
-		const posterEntry = formData.get('videoPoster')
-		const videoPoster =
-			posterEntry instanceof File && posterEntry.size > 0 ? posterEntry : undefined
-		const videoDurationRaw = formData.get('videoDuration')
-		const videoDuration =
-			typeof videoDurationRaw === 'string' && videoDurationRaw.trim().length > 0
-				? Number.parseFloat(videoDurationRaw)
-				: undefined
-		const publishedAtRaw = formData.get('publishedAt')
-		const publishedAt =
-			typeof publishedAtRaw === 'string' && publishedAtRaw.trim().length > 0
-				? publishedAtRaw
-				: undefined
-		const mediaAltTextValue = formData.get('mediaAltText')
-		const mediaAltText = typeof mediaAltTextValue === 'string' ? mediaAltTextValue : undefined
+		const mediaType = parseMediaType((formData.get('mediaType') || 'text').toString())
+		const videoPoster = parseVideoPoster(formData.get('videoPoster'))
+		const videoDuration = parseVideoDuration(formData.get('videoDuration'))
+		const publishedAt = parsePublishedAt(formData.get('publishedAt'))
+		const mediaAltText = parseMediaAltText(formData.get('mediaAltText'))
 
 		const mediaValidation = validatePostMedia({
 			mediaType,
@@ -104,9 +136,7 @@ export async function POST({ request, locals }) {
 		return json(newPost, { status: 201 })
 	} catch (err) {
 		const isZod = err instanceof Error && err.name === 'ZodError'
-		const n = isZod
-			? normalizeError(err, { context: 'api:createPost' })
-			: normalizeError(err, { context: 'api:createPost' })
+		const n = normalizeError(err, { context: 'api:createPost' })
 		console.error('Error creating post:', n.toString())
 		const status = isZod ? 400 : n.status || 500
 		return json({ error: toErrorPayload({ ...n, status }) }, { status })

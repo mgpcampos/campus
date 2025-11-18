@@ -39,7 +39,7 @@ export function useQuery<T>(
 				.catch((e) => {
 					if (rec) state.set({ data: rec.data, loading: false, error: e })
 					else state.set({ data: null, loading: false, error: e })
-					return Promise.reject(e)
+					throw e
 				})
 			cache.set(key, { data: rec?.data ?? null, updated: rec?.updated ?? 0, ttlMs, promise })
 			state.set({ data: rec?.data ?? null, loading: true, error: null })
