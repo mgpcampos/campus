@@ -1,9 +1,7 @@
-import { materialCreateSchema, materialSearchSchema } from '$lib/schemas/material.js'
-
 /**
  * Re-export schemas for use with sveltekit-superforms
  */
-export { materialCreateSchema, materialSearchSchema }
+export { materialCreateSchema, materialSearchSchema } from '$lib/schemas/material.js'
 
 /**
  * Default values for material creation form

@@ -35,13 +35,12 @@ function generateICS(event: EventRecord): string {
 	const uid = event.icsUid || `${event.id}@campus.example.edu`
 
 	// Escape special characters for ICS format
-	const escapeICS = (str: string) => {
-		return str
-			.replaceAll('\\', '\\\\')
-			.replaceAll(';', '\\;')
-			.replaceAll(',', '\\,')
-			.replaceAll('\n', '\\n')
-	}
+	const escapeICS = (str: string) =>
+		str
+			.replaceAll(/\\/g, String.raw`\\`)
+			.replaceAll(/;/g, String.raw`\;`)
+			.replaceAll(/,/g, String.raw`\,`)
+			.replaceAll(/\n/g, String.raw`\n`)
 
 	const lines = [
 		'BEGIN:VCALENDAR',
@@ -74,7 +73,8 @@ function sanitizeFilename(title: string): string {
 	return title
 		.toLowerCase()
 		.replaceAll(/[^a-z0-9]+/g, '-')
-		.replaceAll(/^(-+)|(-+)$/g, '')
+		.replaceAll(/^-+/, '')
+		.replaceAll(/-+$/, '')
 		.substring(0, 50)
 }
 

@@ -157,7 +157,8 @@ export function isFocusable(element: HTMLElement): boolean {
 	if (isDisableable(element) && element.disabled) return false
 	if (element.hidden) return false
 
-	const style = window.getComputedStyle(element)
+	const style = globalThis.window?.getComputedStyle?.(element)
+	if (!style) return false
 	if (style.display === 'none' || style.visibility === 'hidden') return false
 
 	return true

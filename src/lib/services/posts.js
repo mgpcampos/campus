@@ -168,7 +168,7 @@ export async function getPosts(
 		if (space) filterParts.push(`space = "${space}"`)
 		if (group) filterParts.push(`group = "${group}"`)
 		if (q) {
-			const safe = q.replaceAll('"', '\\"')
+			const safe = JSON.stringify(q).slice(1, -1)
 			filterParts.push(`(content ~ "%${safe}%" )`)
 		}
 		const filter = filterParts.join(' && ')
@@ -322,63 +322,13 @@ function shouldRetryWithApi(error, serviceOptions) {
  */
 function buildPostPayload(postData, options = {}) {
 	const formData = new FormData()
-	const client = options.client
-	const includeAuthor = Boolean(options.includeAuthor)
-	const authorId = client?.authStore.model?.id ?? null
-	if (includeAuthor && authorId) {
-		formData.set('author', authorId)
-	}
-
-	const sanitizedContent = sanitizeContent(
-		typeof postData.content === 'string' ? postData.content : ''
-	)
-	if (!sanitizedContent) {
-		throw new Error('Post content cannot be empty after sanitization')
-	}
-	formData.set('content', sanitizedContent)
-
-	const scope = normalizeScope(postData.scope)
-	formData.set('scope', scope)
-	if (scope === 'space' && typeof postData.space === 'string' && postData.space) {
-		formData.set('space', postData.space)
-	}
-	if (scope === 'group' && typeof postData.group === 'string' && postData.group) {
-		formData.set('group', postData.group)
-	}
-
-	const mediaType = normalizeMediaType(postData.mediaType)
-	formData.set('mediaType', mediaType)
-
-	const attachmentsInput = Array.isArray(postData.attachments) ? postData.attachments : []
-	/** @type {File[]} */
-	const normalizedAttachments = []
-	for (let i = 0; i < attachmentsInput.length; i += 1) {
-		const candidate = normalizeToFile(attachmentsInput[i], `attachment-${i + 1}`)
-		if (candidate) {
-			normalizedAttachments.push(candidate)
-			formData.append('attachments', candidate)
-		}
-	}
-
-	const sanitizedAltText = sanitizePlainText(postData.mediaAltText || '').trim()
-	if (sanitizedAltText) {
-		formData.set('mediaAltText', sanitizedAltText)
-	}
-
-	const posterFile = normalizeToFile(postData.videoPoster, 'video-poster')
-	if (posterFile) {
-		formData.set('videoPoster', posterFile)
-	}
-
-	const coercedDuration = toVideoDuration(postData.videoDuration)
-	if (coercedDuration !== null) {
-		formData.set('videoDuration', String(coercedDuration))
-	}
-
-	const normalizedPublishedAt = normalizePublishedAt(postData.publishedAt)
-	if (normalizedPublishedAt) {
-		formData.set('publishedAt', normalizedPublishedAt)
-	}
+	const authorId = appendAuthorField(formData, options)
+	const sanitizedContent = applyContentField(formData, postData.content)
+	const scope = applyScopeFields(formData, postData)
+	const mediaType = applyMediaTypeField(formData, postData.mediaType)
+	const normalizedAttachments = appendAttachmentFields(formData, postData.attachments)
+	const { sanitizedAltText, posterFile, coercedDuration, normalizedPublishedAt } =
+		applyMediaDetails(formData, postData)
 
 	const metadata = createModerationMetadata({
 		scope,
@@ -401,6 +351,114 @@ function buildPostPayload(postData, options = {}) {
 			...metadata
 		}
 	}
+}
+
+/**
+ * @param {FormData} formData
+ * @param {{ includeAuthor?: boolean; client?: import('pocketbase').default }} [options]
+ * @returns {string|null}
+ */
+function appendAuthorField(
+	formData,
+	options = /** @type {{ includeAuthor?: boolean; client?: import('pocketbase').default }} */ ({})
+) {
+	if (!options.includeAuthor) return null
+	const authorId = options.client?.authStore.model?.id ?? null
+	if (authorId) {
+		formData.set('author', authorId)
+	}
+	return authorId
+}
+
+/**
+ * @param {FormData} formData
+ * @param {unknown} content
+ * @returns {string}
+ */
+function applyContentField(formData, content) {
+	const sanitizedContent = sanitizeContent(typeof content === 'string' ? content : '')
+	if (!sanitizedContent) {
+		throw new Error('Post content cannot be empty after sanitization')
+	}
+	formData.set('content', sanitizedContent)
+	return sanitizedContent
+}
+
+/**
+ * @param {FormData} formData
+ * @param {{ scope?: unknown; space?: unknown; group?: unknown }} postData
+ * @returns {'global'|'space'|'group'}
+ */
+function applyScopeFields(formData, postData) {
+	const scope = normalizeScope(postData.scope)
+	formData.set('scope', scope)
+	if (scope === 'space' && typeof postData.space === 'string' && postData.space) {
+		formData.set('space', postData.space)
+	}
+	if (scope === 'group' && typeof postData.group === 'string' && postData.group) {
+		formData.set('group', postData.group)
+	}
+	return scope
+}
+
+/**
+ * @param {FormData} formData
+ * @param {unknown} mediaTypeInput
+ * @returns {'text'|'images'|'video'}
+ */
+function applyMediaTypeField(formData, mediaTypeInput) {
+	const mediaType = normalizeMediaType(mediaTypeInput)
+	formData.set('mediaType', mediaType)
+	return mediaType
+}
+
+/**
+ * @param {FormData} formData
+ * @param {unknown} attachmentsInput
+ * @returns {File[]}
+ */
+function appendAttachmentFields(formData, attachmentsInput) {
+	const attachments = Array.isArray(attachmentsInput) ? attachmentsInput : []
+	/** @type {File[]} */
+	const normalizedAttachments = []
+	for (let i = 0; i < attachments.length; i += 1) {
+		const candidate = normalizeToFile(attachments[i], `attachment-${i + 1}`)
+		if (candidate) {
+			normalizedAttachments.push(candidate)
+			formData.append('attachments', candidate)
+		}
+	}
+	return normalizedAttachments
+}
+
+/**
+ * @param {FormData} formData
+ * @param {{ mediaAltText?: unknown; videoPoster?: unknown; videoDuration?: unknown; publishedAt?: unknown }} postData
+ * @returns {{ sanitizedAltText: string; posterFile: File | null; coercedDuration: number | null; normalizedPublishedAt: string | null }}
+ */
+function applyMediaDetails(formData, postData) {
+	const mediaAltText = typeof postData.mediaAltText === 'string' ? postData.mediaAltText : ''
+	const sanitizedAltText = sanitizePlainText(mediaAltText).trim()
+	if (sanitizedAltText) {
+		formData.set('mediaAltText', sanitizedAltText)
+	}
+
+	const posterFile = normalizeToFile(postData.videoPoster, 'video-poster')
+	if (posterFile) {
+		formData.set('videoPoster', posterFile)
+	}
+
+	const coercedDuration = toVideoDuration(postData.videoDuration)
+	if (coercedDuration !== null) {
+		formData.set('videoDuration', String(coercedDuration))
+	}
+
+	const normalizedPublishedAt = normalizePublishedAt(postData.publishedAt)
+	if (normalizedPublishedAt) {
+		formData.set('publishedAt', normalizedPublishedAt)
+	}
+
+	return { sanitizedAltText, posterFile, coercedDuration, normalizedPublishedAt }
 }
 
 /**

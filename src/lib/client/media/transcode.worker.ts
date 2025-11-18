@@ -29,7 +29,7 @@ type JobContext = {
 
 const activeJobs = new Map<string, JobContext>()
 
-const workerContext = self as unknown as DedicatedWorkerGlobalScope
+const workerContext = globalThis as unknown as DedicatedWorkerGlobalScope
 const webCodecsScope = globalThis as typeof globalThis & {
 	VideoEncoder?: typeof VideoEncoder
 	AudioEncoder?: typeof AudioEncoder

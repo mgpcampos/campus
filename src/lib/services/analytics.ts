@@ -166,13 +166,15 @@ function enrichEvent(event: AnalyticsEvent): EnrichedEvent {
 	const win = getWindow()
 	const nav = getNavigator()
 	const doc = getDocument()
-	const page = event.page ?? (browser && win ? win.location.pathname + win.location.search : undefined)
-	const viewport = browser && win
-		? {
-				width: win.innerWidth,
-				height: win.innerHeight
-			}
-		: undefined
+	const page =
+		event.page ?? (browser && win ? win.location.pathname + win.location.search : undefined)
+	const viewport =
+		browser && win
+			? {
+					width: win.innerWidth,
+					height: win.innerHeight
+				}
+			: undefined
 
 	return {
 		...event,

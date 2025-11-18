@@ -76,9 +76,10 @@ type AnalyticsRecord = {
 export async function recordAnalyticsEvents(
 	pb: PocketBase,
 	events: AnalyticsEventInput[],
-	options: { ip?: string } = {}
+	options?: { ip?: string }
 ) {
 	let created = 0
+	const requestIp = options?.ip ?? null
 	for (const event of events) {
 		try {
 			await pb.collection('analytics_events').create({
@@ -91,7 +92,7 @@ export async function recordAnalyticsEvents(
 				locale: event.locale ?? null,
 				referrer: event.referrer ?? null,
 				userAgent: event.userAgent ?? null,
-				ip: options.ip ?? null,
+				ip: requestIp,
 				user: event.userId ?? null
 			})
 			created += 1

@@ -4,21 +4,15 @@
  */
 
 import type PocketBase from 'pocketbase'
-import {
+import { createPublicationRecord, linkPublicationToProfile } from './types.js'
+
+export {
 	checkPublicationExists,
 	createPublicationRecord,
 	generatePublicationSlugHash,
 	getProfilePublications,
 	linkPublicationToProfile
 } from './types.js'
-
-export {
-	generatePublicationSlugHash,
-	checkPublicationExists,
-	createPublicationRecord,
-	linkPublicationToProfile,
-	getProfilePublications
-}
 
 /**
  * Add a publication to a profile with full deduplication logic

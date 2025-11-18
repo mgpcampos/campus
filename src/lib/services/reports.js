@@ -95,12 +95,7 @@ export async function updateReportStatus(reportId, newStatus) {
 
 		const updated = await pb.collection('reports').update(reportId, { status: newStatus })
 		// Determine moderation action based on status
-		let moderationAction = 'resolve_report'
-		if (newStatus === 'dismissed') {
-			moderationAction = 'dismiss_report'
-		} else if (newStatus === 'resolved') {
-			moderationAction = 'resolve_report'
-		}
+		const moderationAction = newStatus === 'dismissed' ? 'dismiss_report' : 'resolve_report'
 
 		// Log
 		await pb.collection('moderation_logs').create({

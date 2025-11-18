@@ -23,9 +23,10 @@ export async function GET({ url, locals }) {
 
 		// Filter by tags
 		if (validatedQuery.tags && validatedQuery.tags.length > 0) {
-			const tagFilters = validatedQuery.tags.map(
-				(tag) => `tags ~ "${tag.toLowerCase().replaceAll('"', '\\"')}"`
-			)
+			const tagFilters = validatedQuery.tags.map((tag) => {
+				const safeTag = JSON.stringify(tag.toLowerCase()).slice(1, -1)
+				return `tags ~ "${safeTag}"`
+			})
 			filters.push(`(${tagFilters.join(' || ')})`)
 		}
 

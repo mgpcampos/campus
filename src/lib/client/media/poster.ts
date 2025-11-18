@@ -22,11 +22,7 @@ export type PosterCaptureResult = {
 }
 
 function isDrawableContext(
-	context:
-		| CanvasRenderingContext2D
-		| OffscreenCanvasRenderingContext2D
-		| RenderingContext
-		| null
+	context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | RenderingContext | null
 ): context is CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D {
 	return Boolean(context && 'drawImage' in context)
 }

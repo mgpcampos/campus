@@ -6,13 +6,16 @@ import type PocketBase from 'pocketbase'
 import type {
 	ContributionRole,
 	ProfilePublicationRecord,
-	ProfileRecord,
 	PublicationCreateInput,
 	PublicationDedupeResult,
 	PublicationRecord
 } from '../../../types/profiles.js'
 
-export type { ProfileRecord, PublicationRecord, PublicationCreateInput }
+export type {
+	ProfileRecord,
+	PublicationCreateInput,
+	PublicationRecord
+} from '../../../types/profiles.js'
 
 /**
  * Generate a slug hash for a publication to enable deduplication
@@ -33,9 +36,9 @@ export function generatePublicationSlugHash(title: string, year?: number): strin
 
 	// Generate a simple hash (for production, use a proper hash function like crypto.subtle.digest)
 	let hash = 0
-	for (let i = 0; i < slug.length; i++) {
-		const char = slug.charCodeAt(i)
-		hash = (hash << 5) - hash + char
+	for (const char of slug) {
+		const codePoint = char.codePointAt(0) ?? 0
+		hash = (hash << 5) - hash + codePoint
 		hash = hash & hash // Convert to 32-bit integer
 	}
 

@@ -16,7 +16,7 @@ export const MAX_ATTACHMENTS = 10
 let sharpModule = null
 
 async function loadSharp() {
-	if (typeof globalThis.window !== 'undefined') {
+	if (globalThis.window !== undefined) {
 		throw new TypeError('optimizeImage is only available server-side')
 	}
 	if (!sharpModule) {

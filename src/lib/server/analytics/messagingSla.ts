@@ -242,7 +242,9 @@ function calculateDeliveryMetrics(deliveryEvents: AnalyticsEvent[]): DeliveryMet
 			const meta = JSON.parse(event.metadata)
 			return typeof meta.latencyMs === 'number' ? meta.latencyMs : null
 		})
-		.filter((latency): latency is number => typeof latency === 'number' && Number.isFinite(latency))
+		.filter(
+			(latency): latency is number => typeof latency === 'number' && Number.isFinite(latency)
+		)
 
 	const messagesWithinSLA = deliveryEvents.filter((e) => {
 		const meta = JSON.parse(e.metadata)
@@ -463,7 +465,9 @@ function resolveAlertSeverity(type: string): AlertSeverity {
 
 function formatDetails(details: Record<string, unknown>) {
 	return Object.entries(details)
-		.map(([key, value]) => `${key}: ${typeof value === 'object' ? JSON.stringify(value) : value}`)
+		.map(
+			([key, value]) => `${key}: ${typeof value === 'object' ? JSON.stringify(value) : value}`
+		)
 		.join(', ')
 }
 
