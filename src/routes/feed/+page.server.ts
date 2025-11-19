@@ -23,7 +23,7 @@ const createDefaultFormState = () =>
 		scope: 'global' as const,
 		space: undefined,
 		group: undefined,
-		mediaType: 'text' as const,
+		mediaType: undefined,
 		attachments: [] as File[],
 		mediaAltText: '',
 		videoPoster: undefined as File | undefined,

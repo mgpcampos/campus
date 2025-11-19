@@ -257,7 +257,7 @@ export const createPostSchema = z
 		scope: z.enum(['global', 'space', 'group']).default('global'),
 		space: z.string().trim().min(1).optional(),
 		group: z.string().trim().min(1).optional(),
-		mediaType: z.enum(['text', 'images', 'video']).default('text'),
+		mediaType: z.enum(['text', 'images', 'video']).optional(),
 		attachments: fileArraySchema(
 			MAX_ATTACHMENTS,
 			`Maximum ${MAX_ATTACHMENTS} attachments allowed`
@@ -274,6 +274,26 @@ export const createPostSchema = z
 			.max(300, 'Video duration cannot exceed 300 seconds')
 			.optional(),
 		publishedAt: publishedAtSchema
+	})
+	.transform((data) => {
+		// Auto-infer mediaType from attachments if not explicitly provided
+		if (!data.mediaType) {
+			if (!data.attachments || data.attachments.length === 0) {
+				data.mediaType = 'text'
+			} else {
+				const firstFile = data.attachments[0]
+				const mimeType = getMimeType(firstFile)
+				if (IMAGE_MIME_TYPES.has(mimeType)) {
+					data.mediaType = 'images'
+				} else if (VIDEO_MIME_TYPES.has(mimeType)) {
+					data.mediaType = 'video'
+				} else {
+					// Fallback to text if MIME type is unknown
+					data.mediaType = 'text'
+				}
+			}
+		}
+		return data
 	})
 	.superRefine((data, ctx) => {
 		validateScope(data, ctx)
