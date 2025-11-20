@@ -25,29 +25,24 @@
 	}
 	type PostFormData = SuperValidated<z.infer<typeof createPostSchema>, PostFormMessage>
 	type AttachmentPreview = { file: File; url: string }
+	type UserSpace = { id: string; name: string; avatar?: string }
 
-	const MEDIA_OPTIONS = [
-		{
-			value: /** @type {'text'} */ ('text'),
-			label: t('postForm.text'),
-			helper: t('postForm.textHelper'),
-			icon: MessageSquare
-		},
-		{
-			value: /** @type {'images'} */ ('images'),
-			label: t('postForm.images'),
-			helper: t('postForm.imagesHelper', { count: MAX_ATTACHMENTS }),
-			icon: ImagePlus
-		},
-		{
-			value: /** @type {'video'} */ ('video'),
-			label: t('postForm.video'),
-			helper: t('postForm.videoHelper'),
-			icon: Video
-		}
-	] as const
+	let {
+		formData,
+		disabled = false,
+		userSpaces = []
+	} = $props<{ formData: PostFormData; disabled?: boolean; userSpaces?: UserSpace[] }>()
 
-	let { formData, disabled = false } = $props<{ formData: PostFormData; disabled?: boolean }>()
+	// Media type constants for auto-detection
+	const ALLOWED_IMAGE_MIME = [
+		'image/jpeg',
+		'image/png',
+		'image/webp',
+		'image/gif',
+		'image/heic',
+		'image/heif'
+	]
+	const ALLOWED_VIDEO_MIME = ['video/mp4']
 
 	const dispatch = createEventDispatcher<{ postCreated: FeedPost }>()
 
@@ -55,6 +50,15 @@
 	const uploadError = writable<string | null>(null)
 	const generalError = writable<string | null>(null)
 	const videoDurationDisplay = writable<number | null>(null)
+
+	// Derived states for media type detection
+	const hasImageAttachments = $derived.by(() => {
+		return $attachments.some((preview) => ALLOWED_IMAGE_MIME.includes(preview.file.type))
+	})
+
+	const hasVideoAttachment = $derived.by(() => {
+		return $attachments.some((preview) => ALLOWED_VIDEO_MIME.includes(preview.file.type))
+	})
 
 	const { form, errors, enhance, submitting, message } = superForm(formData, {
 		...createClientFormOptions(createPostSchema),
@@ -107,6 +111,7 @@
 	)
 
 	let contentField = $state<HTMLTextAreaElement | null>(null)
+	let selectedDestination = $state<'global' | string>('global')
 
 	$effect(() => {
 		if (!contentField) return
@@ -115,6 +120,16 @@
 			errorId: errorIds.content
 		})
 		return () => action.destroy()
+	})
+
+	$effect(() => {
+		if (selectedDestination === 'global') {
+			$form.scope = 'global'
+			$form.space = undefined
+		} else {
+			$form.scope = 'space'
+			$form.space = selectedDestination
+		}
 	})
 
 	function handleNativeInvalid(field: 'content') {
@@ -176,22 +191,7 @@
 		resetAttachments()
 		resetVideoMetadata()
 		$form.mediaAltText = ''
-		$form.mediaType = 'text'
-		$uploadError = null
-	}
-
-	function selectMediaType(type: 'text' | 'images' | 'video') {
-		if ($form.mediaType === type) return
-		if (type === 'text') {
-			clearMediaState()
-		} else if (type === 'images') {
-			resetVideoMetadata()
-			resetAttachments()
-		} else if (type === 'video') {
-			resetAttachments()
-			resetVideoMetadata()
-		}
-		$form.mediaType = type
+		$form.mediaType = undefined
 		$uploadError = null
 	}
 
@@ -199,6 +199,17 @@
 		const target = event.target as HTMLInputElement
 		const selectedFiles = Array.from(target.files ?? [])
 		if (selectedFiles.length === 0) {
+			target.value = ''
+			return
+		}
+
+		// Block if video already attached
+		if (hasVideoAttachment) {
+			$uploadError =
+				t('postForm.videoBlocksImages') || 'Please remove video before adding images'
+			toast.error(
+				t('postForm.videoBlocksImages') || 'Please remove video before adding images'
+			)
 			target.value = ''
 			return
 		}
@@ -227,6 +238,10 @@
 			.forEach(revokePreview)
 		$attachments = nextPreviews
 		$form.attachments = nextPreviews.map((preview: AttachmentPreview) => preview.file)
+
+		// Auto-set mediaType to 'images'
+		$form.mediaType = 'images'
+
 		target.value = ''
 		syncFileInput(imageInput, $form.attachments as File[])
 		$uploadError = null
@@ -257,6 +272,17 @@
 			return
 		}
 
+		// Block if images already attached
+		if (hasImageAttachments) {
+			$uploadError =
+				t('postForm.imagesBlockVideo') || 'Please remove images before adding video'
+			toast.error(
+				t('postForm.imagesBlockVideo') || 'Please remove images before adding video'
+			)
+			target.value = ''
+			return
+		}
+
 		const duration = await extractVideoDuration(file)
 		const { valid, errors: validationErrors } = validateVideo(file, duration ?? undefined)
 		if (!valid) {
@@ -274,7 +300,10 @@
 		$form.attachments = [file]
 		target.value = ''
 		syncFileInput(videoInput, [file])
+
+		// Auto-set mediaType to 'video'
 		$form.mediaType = 'video'
+
 		$form.videoDuration = duration ?? undefined
 		$videoDurationDisplay = duration ?? null
 		$uploadError = null
@@ -288,17 +317,29 @@
 		$attachments = current
 		const currentFiles = current.map((preview: AttachmentPreview) => preview.file)
 		$form.attachments = currentFiles
-		const targetInput = $form.mediaType === 'video' ? videoInput : imageInput
-		syncFileInput(targetInput, currentFiles)
-		if ($form.mediaType === 'video') {
-			resetVideoMetadata()
-			$form.mediaType = 'text'
-		}
-	}
 
-	function currentMediaHelper() {
-		const current = MEDIA_OPTIONS.find((option) => option.value === $form.mediaType)
-		return current?.helper ?? ''
+		// Auto-detect mediaType based on remaining files
+		if (currentFiles.length === 0) {
+			// No attachments left → revert to undefined (will be inferred as 'text')
+			$form.mediaType = undefined
+			resetVideoMetadata()
+		} else {
+			// Infer from first remaining file
+			const firstFile = currentFiles[0]
+			if (!firstFile) {
+				$form.mediaType = undefined
+				resetVideoMetadata()
+				return
+			}
+			if (ALLOWED_IMAGE_MIME.includes(firstFile.type)) {
+				$form.mediaType = 'images'
+			} else if (ALLOWED_VIDEO_MIME.includes(firstFile.type)) {
+				$form.mediaType = 'video'
+			}
+		}
+
+		const targetInput = hasVideoAttachment ? videoInput : imageInput
+		syncFileInput(targetInput, currentFiles)
 	}
 
 	const canSubmit = $derived.by(
@@ -310,7 +351,12 @@
 
 <form method="POST" use:enhance class="space-y-6" enctype="multipart/form-data">
 	<input type="hidden" name="scope" value={$form.scope} />
-	<input type="hidden" name="mediaType" value={$form.mediaType} />
+	{#if $form.space}
+		<input type="hidden" name="space" value={$form.space} />
+	{/if}
+	{#if $form.mediaType}
+		<input type="hidden" name="mediaType" value={$form.mediaType} />
+	{/if}
 	<input type="hidden" name="videoDuration" value={$form.videoDuration ?? ''} />
 
 	{#if $generalError}
@@ -358,130 +404,179 @@
 		</div>
 	</div>
 
+	<!-- Destination Selector -->
 	<div class="space-y-2">
-		<Label class="text-sm font-medium text-muted-foreground">{t('postForm.mediaTypeLabel')}</Label>
-		<div class="inline-flex flex-wrap gap-2">
-			{#each MEDIA_OPTIONS as option (option.value)}
-				{@const Icon = option.icon}
-				<Button
-					type="button"
-					variant={$form.mediaType === option.value ? 'default' : 'outline'}
-					size="sm"
-					aria-pressed={$form.mediaType === option.value}
-					onclick={() => selectMediaType(option.value)}
-					disabled={disabled || $submitting}
+		<Label for="post-destination" class="text-sm font-medium">
+			{t('postForm.postTo')}
+		</Label>
+
+		<div class="relative">
+			<select
+				id="post-destination"
+				bind:value={selectedDestination}
+				disabled={disabled || $submitting}
+				class="w-full appearance-none rounded-lg border border-input bg-background px-4 py-2.5 pr-10 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+				aria-describedby="destination-help"
+			>
+				<!-- Global Network (Default) -->
+				<option value="global">
+					🌍 {t('postForm.globalNetwork')}
+				</option>
+
+				<!-- User's Joined Spaces -->
+				{#if userSpaces.length > 0}
+					<optgroup label={t('postForm.yourSpaces')}>
+						{#each userSpaces as space (space.id)}
+							<option value={space.id}>
+								📚 {space.name}
+							</option>
+						{/each}
+					</optgroup>
+				{:else}
+					<optgroup label={t('postForm.yourSpaces')}>
+						<option disabled value="">
+							{t('postForm.noSpacesJoined')}
+						</option>
+					</optgroup>
+				{/if}
+			</select>
+
+			<!-- Dropdown Arrow Icon -->
+			<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+				<svg
+					class="h-4 w-4 text-muted-foreground"
+					fill="none"
+					stroke="currentColor"
+					viewBox="0 0 24 24"
 				>
-					<Icon class="mr-2 h-4 w-4" aria-hidden="true" />
-					{option.label}
-				</Button>
-			{/each}
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M19 9l-7 7-7-7"
+					/>
+				</svg>
+			</div>
 		</div>
-		<p class="text-xs text-muted-foreground">{currentMediaHelper()}</p>
+
+		<!-- Helper Text (Dynamic) -->
+		<p id="destination-help" class="text-xs text-muted-foreground">
+			{#if selectedDestination === 'global'}
+				{t('postForm.globalHelp')}
+			{:else}
+				{@const selectedSpace = userSpaces.find(
+					(space: (typeof userSpaces)[number]) => space.id === selectedDestination
+				)}
+				{#if selectedSpace}
+					{t('postForm.spaceHelp', { name: selectedSpace.name })}
+				{/if}
+			{/if}
+		</p>
 	</div>
 
-	{#if $form.mediaType === 'images'}
+	<!-- Hidden file inputs -->
+	<input
+		type="file"
+		name="attachments"
+		accept={ACCEPT_IMAGES}
+		multiple
+		class="hidden"
+		bind:this={imageInput}
+		onchange={handleImageSelect}
+		disabled={disabled || $submitting || hasVideoAttachment}
+	/>
+	<input
+		type="file"
+		name="attachments"
+		accept="video/mp4"
+		class="hidden"
+		bind:this={videoInput}
+		onchange={handleVideoSelect}
+		disabled={disabled || $submitting || hasImageAttachments}
+	/>
+
+	<!-- Image Previews -->
+	{#if hasImageAttachments && $attachments.length > 0}
 		<div class="space-y-3">
-			<input
-				type="file"
-				name="attachments"
-				accept={ACCEPT_IMAGES}
-				multiple
-				class="hidden"
-				bind:this={imageInput}
-				onchange={handleImageSelect}
-				disabled={disabled || $submitting}
-			/>
-			<Button
-				type="button"
-				variant="outline"
-				size="sm"
-				onclick={() => imageInput?.click()}
-				disabled={disabled || $submitting}
-			>
-				<ImagePlus class="mr-2 h-4 w-4" aria-hidden="true" />
-				{t('postForm.addImages')}
-			</Button>
-			<p class="text-xs text-muted-foreground">
-				{t('postForm.imageFormats', { count: MAX_ATTACHMENTS })}
-			</p>
-			{#if $attachments.length > 0}
-				<div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
-					{#each $attachments as preview, index (preview.url)}
-						<div class="group relative overflow-hidden rounded-md border border-border/60">
-							<img
-								src={preview.url}
-								alt={`Selected image ${index + 1}`}
-								class="h-28 w-full object-cover"
-							/>
-							<button
-								type="button"
-								onclick={() => removeAttachment(index)}
-								class="absolute top-2 right-2 rounded-full bg-background/80 p-1 text-foreground opacity-0 shadow transition-opacity group-hover:opacity-100"
-								disabled={disabled || $submitting}
-							>
-								<X class="h-4 w-4" aria-hidden="true" />
-								<span class="sr-only">Remove image {index + 1}</span>
-							</button>
-						</div>
-					{/each}
-				</div>
-			{/if}
+			<div class="flex items-center justify-between">
+				<p class="text-sm font-medium text-muted-foreground">
+					{t('postForm.attachedImages') || 'Attached images'} ({$attachments.length})
+				</p>
+				<Button
+					type="button"
+					variant="ghost"
+					size="sm"
+					onclick={() => {
+						resetAttachments()
+						$form.mediaType = undefined
+					}}
+				>
+					<X class="mr-2 h-4 w-4" />
+					{t('postForm.removeAll') || 'Remove all'}
+				</Button>
+			</div>
+			<div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+				{#each $attachments as preview, index (preview.url)}
+					<div class="group relative overflow-hidden rounded-md border border-border/60">
+						<img
+							src={preview.url}
+							alt={`Selected image ${index + 1}`}
+							class="h-28 w-full object-cover"
+						/>
+						<button
+							type="button"
+							onclick={() => removeAttachment(index)}
+							class="absolute top-2 right-2 rounded-full bg-background/80 p-1 text-foreground opacity-0 shadow transition-opacity group-hover:opacity-100"
+							disabled={disabled || $submitting}
+						>
+							<X class="h-4 w-4" aria-hidden="true" />
+							<span class="sr-only">Remove image {index + 1}</span>
+						</button>
+					</div>
+				{/each}
+			</div>
 		</div>
 	{/if}
 
-	{#if $form.mediaType === 'video'}
-		<div class="space-y-4">
-			<input
-				type="file"
-				name="attachments"
-				accept="video/mp4"
-				class="hidden"
-				bind:this={videoInput}
-				onchange={handleVideoSelect}
-				disabled={disabled || $submitting}
-			/>
-			<Button
-				type="button"
-				variant="outline"
-				size="sm"
-				onclick={() => videoInput?.click()}
-				disabled={disabled || $submitting}
-			>
-				<FileVideo class="mr-2 h-4 w-4" aria-hidden="true" />
-				{t('postForm.selectVideo')}
-			</Button>
-			{#if $attachments.length === 1}
-				{@const firstAttachment = $attachments[0]}
-				{#if firstAttachment}
-					<div
-						class="flex items-start justify-between gap-4 rounded-md border border-border/60 bg-card/60 px-4 py-3"
-					>
-						<div class="space-y-1">
-							<p class="text-sm font-medium text-foreground">{firstAttachment.file.name}</p>
-							<p class="text-xs text-muted-foreground">
-								{(firstAttachment.file.size / (1024 * 1024)).toFixed(1)} MB
-								{#if $videoDurationDisplay}
-									· {$videoDurationDisplay}s
-								{/if}
-							</p>
-						</div>
-						<Button
-							type="button"
-							variant="ghost"
-							size="sm"
-							onclick={() => removeAttachment(0)}
-							disabled={disabled || $submitting}
-						>
-							<X class="mr-1 h-4 w-4" aria-hidden="true" />
-							Remove
-						</Button>
+	<!-- Video Preview -->
+	{#if hasVideoAttachment && $attachments.length === 1}
+		{@const firstAttachment = $attachments[0]}
+		{#if firstAttachment}
+			<div class="space-y-3">
+				<div class="flex items-center justify-between">
+					<p class="text-sm font-medium text-muted-foreground">
+						{t('postForm.attachedVideo') || 'Attached video'}
+					</p>
+				</div>
+				<div
+					class="flex items-start justify-between gap-4 rounded-md border border-border/60 bg-card/60 px-4 py-3"
+				>
+					<div class="space-y-1">
+						<p class="text-sm font-medium text-foreground">{firstAttachment.file.name}</p>
+						<p class="text-xs text-muted-foreground">
+							{(firstAttachment.file.size / (1024 * 1024)).toFixed(1)} MB
+							{#if $videoDurationDisplay}
+								· {$videoDurationDisplay}s
+							{/if}
+						</p>
 					</div>
-				{/if}
-			{/if}
-			{#if $errors.videoDuration}
-				<p class="text-sm text-red-600">{$errors.videoDuration[0]}</p>
-			{/if}
-		</div>
+					<Button
+						type="button"
+						variant="ghost"
+						size="sm"
+						onclick={() => removeAttachment(0)}
+						disabled={disabled || $submitting}
+					>
+						<X class="mr-1 h-4 w-4" aria-hidden="true" />
+						Remove
+					</Button>
+				</div>
+			</div>
+		{/if}
+	{/if}
+
+	{#if $errors.videoDuration}
+		<p class="text-sm text-red-600">{$errors.videoDuration[0]}</p>
 	{/if}
 
 	{#if $uploadError}
@@ -491,7 +586,40 @@
 		<p class="text-sm text-red-600">{$errors.attachments[0]}</p>
 	{/if}
 
-	<div class="flex items-center justify-end gap-3">
+	<!-- Always-visible Attachment Controls Toolbar -->
+	<div class="flex items-center justify-between border-t border-border/40 pt-4">
+		<div class="flex items-center gap-2">
+			<!-- Image Upload Button -->
+			<Button
+				type="button"
+				variant="ghost"
+				size="sm"
+				onclick={() => imageInput?.click()}
+				disabled={disabled || $submitting || hasVideoAttachment}
+				title={hasVideoAttachment
+					? t('postForm.videoBlocksImages') || 'Remove video to add images'
+					: `Add images (up to ${MAX_ATTACHMENTS})`}
+			>
+				<ImagePlus class="mr-2 h-4 w-4" aria-hidden="true" />
+				{t('postForm.addImages') || 'Images'}
+			</Button>
+
+			<!-- Video Upload Button -->
+			<Button
+				type="button"
+				variant="ghost"
+				size="sm"
+				onclick={() => videoInput?.click()}
+				disabled={disabled || $submitting || hasImageAttachments}
+				title={hasImageAttachments
+					? t('postForm.imagesBlockVideo') || 'Remove images to add video'
+					: 'Add video (up to 5 minutes)'}
+			>
+				<FileVideo class="mr-2 h-4 w-4" aria-hidden="true" />
+				{t('postForm.addVideo') || 'Video'}
+			</Button>
+		</div>
+
 		<Button type="submit" disabled={!canSubmit}>
 			{#if $submitting}
 				<Loader2 class="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />

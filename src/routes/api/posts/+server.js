@@ -40,11 +40,44 @@ export async function GET({ url, locals }) {
 }
 
 /**
- * Parse media type from form data
- * @param {string} mediaTypeValue
+ * Parse media type from form data or auto-infer from attachments
+ * @param {string | undefined} mediaTypeValue
+ * @param {File[]} attachments
  */
-function parseMediaType(mediaTypeValue) {
-	return mediaTypeValue === 'images' || mediaTypeValue === 'video' ? mediaTypeValue : 'text'
+function parseMediaType(mediaTypeValue, attachments) {
+	// If mediaType explicitly provided, use it
+	if (mediaTypeValue === 'images' || mediaTypeValue === 'video' || mediaTypeValue === 'text') {
+		return mediaTypeValue
+	}
+
+	// Auto-infer from attachments if not provided
+	if (attachments.length === 0) {
+		return 'text'
+	}
+
+	const ALLOWED_IMAGE_MIME = [
+		'image/jpeg',
+		'image/png',
+		'image/webp',
+		'image/gif',
+		'image/heic',
+		'image/heif'
+	]
+	const ALLOWED_VIDEO_MIME = ['video/mp4']
+
+	const firstFile = attachments[0]
+	if (!firstFile) {
+		return 'text'
+	}
+	if (ALLOWED_IMAGE_MIME.includes(firstFile.type)) {
+		return 'images'
+	}
+	if (ALLOWED_VIDEO_MIME.includes(firstFile.type)) {
+		return 'video'
+	}
+
+	// Fallback to text if MIME type is unknown
+	return 'text'
 }
 
 /**
@@ -97,7 +130,11 @@ export async function POST({ request, locals }) {
 		const rawFiles = /** @type {File[]} */ (
 			formData.getAll('attachments').filter((f) => f instanceof File && f.size > 0)
 		)
-		const mediaType = parseMediaType((formData.get('mediaType') || 'text').toString())
+		const mediaTypeRaw = formData.get('mediaType')
+		const mediaType = parseMediaType(
+			mediaTypeRaw ? mediaTypeRaw.toString() : undefined,
+			rawFiles
+		)
 		const videoPoster = parseVideoPoster(formData.get('videoPoster'))
 		const videoDuration = parseVideoDuration(formData.get('videoDuration'))
 		const publishedAt = parsePublishedAt(formData.get('publishedAt'))

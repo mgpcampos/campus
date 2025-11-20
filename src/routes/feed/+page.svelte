@@ -78,7 +78,11 @@
 
 					<!-- Compose Form -->
 					<div class="flex-1">
-						<PostForm formData={data.form} on:postCreated={handlePostCreated} />
+						<PostForm
+						formData={data.form}
+						userSpaces={data.userSpaces || []}
+						on:postCreated={handlePostCreated}
+					/>
 					</div>
 				</div>
 			</div>

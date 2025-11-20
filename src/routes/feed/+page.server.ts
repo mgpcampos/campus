@@ -10,6 +10,7 @@ import { withZod } from '$lib/validation'
 import type { Actions, PageServerLoad } from './$types'
 
 type CreatePostInput = z.infer<typeof createPostSchema>
+type UserSpace = { id: string; name: string; avatar?: string }
 
 type MessageOptions = NonNullable<Parameters<typeof message>[2]>
 type MessageStatus = NonNullable<MessageOptions['status']>
@@ -23,7 +24,7 @@ const createDefaultFormState = () =>
 		scope: 'global' as const,
 		space: undefined,
 		group: undefined,
-		mediaType: 'text' as const,
+		mediaType: undefined,
 		attachments: [] as File[],
 		mediaAltText: '',
 		videoPoster: undefined as File | undefined,
@@ -31,7 +32,17 @@ const createDefaultFormState = () =>
 		publishedAt: null as CreatePostInput['publishedAt']
 	})
 
-export const load: PageServerLoad = async ({ parent }) => {
+const isValidSpace = (space: unknown): space is UserSpace =>
+	Boolean(
+		space &&
+			typeof space === 'object' &&
+			'id' in space &&
+			typeof (space as { id?: unknown }).id === 'string' &&
+			'name' in space &&
+			typeof (space as { name?: unknown }).name === 'string'
+	)
+
+export const load: PageServerLoad = async ({ parent, locals }) => {
 	const parentData = await parent()
 
 	const form = await superValidate(withZod(createPostSchema), {
@@ -40,9 +51,36 @@ export const load: PageServerLoad = async ({ parent }) => {
 		defaults: createDefaultFormState()
 	})
 
+	// Fetch user's joined spaces (for destination selector)
+	let userSpaces: UserSpace[] = []
+	if (locals.pb?.authStore?.isValid && locals.pb.authStore.model?.id) {
+		try {
+			// Fetch memberships with expanded space data
+			const memberships = await locals.pb.collection('space_members').getList(1, 100, {
+				filter: `user = "${locals.pb.authStore.model.id}"`,
+				expand: 'space',
+				sort: '-created'
+			})
+
+			// Map to simple objects with space details
+			userSpaces = memberships.items
+				.map((membership) => membership.expand?.space)
+				.filter(isValidSpace)
+				.map((space) => ({
+					id: space.id,
+					name: space.name,
+					avatar: typeof space.avatar === 'string' ? space.avatar : undefined
+				}))
+		} catch (error) {
+			console.error('Failed to load user spaces:', error)
+			// Continue without spaces (user can still post globally)
+		}
+	}
+
 	return {
 		...parentData,
 		form,
+		userSpaces,
 		meta: {
 			title: 'Campus | Feed',
 			description:
