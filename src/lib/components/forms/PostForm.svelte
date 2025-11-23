@@ -27,11 +27,7 @@
 	type AttachmentPreview = { file: File; url: string }
 	type UserSpace = { id: string; name: string; avatar?: string }
 
-	let {
-		formData,
-		disabled = false,
-		userSpaces = []
-	} = $props<{ formData: PostFormData; disabled?: boolean; userSpaces?: UserSpace[] }>()
+	let { formData, disabled = false } = $props<{ formData: PostFormData; disabled?: boolean }>()
 
 	// Media type constants for auto-detection
 	const ALLOWED_IMAGE_MIME = [
@@ -326,11 +322,6 @@
 		} else {
 			// Infer from first remaining file
 			const firstFile = currentFiles[0]
-			if (!firstFile) {
-				$form.mediaType = undefined
-				resetVideoMetadata()
-				return
-			}
 			if (ALLOWED_IMAGE_MIME.includes(firstFile.type)) {
 				$form.mediaType = 'images'
 			} else if (ALLOWED_VIDEO_MIME.includes(firstFile.type)) {
@@ -351,9 +342,6 @@
 
 <form method="POST" use:enhance class="space-y-6" enctype="multipart/form-data">
 	<input type="hidden" name="scope" value={$form.scope} />
-	{#if $form.space}
-		<input type="hidden" name="space" value={$form.space} />
-	{/if}
 	{#if $form.mediaType}
 		<input type="hidden" name="mediaType" value={$form.mediaType} />
 	{/if}
@@ -402,76 +390,6 @@
 		<div class="text-right text-xs text-muted-foreground">
 			{$form.content.length}/2000
 		</div>
-	</div>
-
-	<!-- Destination Selector -->
-	<div class="space-y-2">
-		<Label for="post-destination" class="text-sm font-medium">
-			{t('postForm.postTo')}
-		</Label>
-
-		<div class="relative">
-			<select
-				id="post-destination"
-				bind:value={selectedDestination}
-				disabled={disabled || $submitting}
-				class="w-full appearance-none rounded-lg border border-input bg-background px-4 py-2.5 pr-10 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-				aria-describedby="destination-help"
-			>
-				<!-- Global Network (Default) -->
-				<option value="global">
-					🌍 {t('postForm.globalNetwork')}
-				</option>
-
-				<!-- User's Joined Spaces -->
-				{#if userSpaces.length > 0}
-					<optgroup label={t('postForm.yourSpaces')}>
-						{#each userSpaces as space (space.id)}
-							<option value={space.id}>
-								📚 {space.name}
-							</option>
-						{/each}
-					</optgroup>
-				{:else}
-					<optgroup label={t('postForm.yourSpaces')}>
-						<option disabled value="">
-							{t('postForm.noSpacesJoined')}
-						</option>
-					</optgroup>
-				{/if}
-			</select>
-
-			<!-- Dropdown Arrow Icon -->
-			<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-				<svg
-					class="h-4 w-4 text-muted-foreground"
-					fill="none"
-					stroke="currentColor"
-					viewBox="0 0 24 24"
-				>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M19 9l-7 7-7-7"
-					/>
-				</svg>
-			</div>
-		</div>
-
-		<!-- Helper Text (Dynamic) -->
-		<p id="destination-help" class="text-xs text-muted-foreground">
-			{#if selectedDestination === 'global'}
-				{t('postForm.globalHelp')}
-			{:else}
-				{@const selectedSpace = userSpaces.find(
-					(space: (typeof userSpaces)[number]) => space.id === selectedDestination
-				)}
-				{#if selectedSpace}
-					{t('postForm.spaceHelp', { name: selectedSpace.name })}
-				{/if}
-			{/if}
-		</p>
 	</div>
 
 	<!-- Hidden file inputs -->

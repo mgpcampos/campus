@@ -66,9 +66,6 @@ function parseMediaType(mediaTypeValue, attachments) {
 	const ALLOWED_VIDEO_MIME = ['video/mp4']
 
 	const firstFile = attachments[0]
-	if (!firstFile) {
-		return 'text'
-	}
 	if (ALLOWED_IMAGE_MIME.includes(firstFile.type)) {
 		return 'images'
 	}
