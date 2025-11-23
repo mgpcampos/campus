@@ -5,8 +5,7 @@
 			"name": "campus",
 			"build": {
 				"builder": "RAILPACK",
-				"buildCommand": "bun install && bun run build",
-				"startCommand": "bun build/index.js"
+				"buildCommand": "bun install && bun run build"
 			},
 			"variables": {
 				"PUBLIC_POCKETBASE_URL": {
