@@ -1,8 +1,8 @@
-import PocketBase from 'pocketbase';
+import PocketBase from 'pocketbase'
 
-const PB_URL = process.env.PB_BASE_URL ?? 'http://127.0.0.1:8090';
-const ADMIN_EMAIL = process.env.PB_ADMIN_EMAIL ?? 'admin@campus.local';
-const ADMIN_PASSWORD = process.env.PB_ADMIN_PASSWORD ?? 'admin12345';
+const PB_URL = process.env.PB_BASE_URL ?? 'http://127.0.0.1:8090'
+const ADMIN_EMAIL = process.env.PB_ADMIN_EMAIL ?? 'admin@campus.local'
+const ADMIN_PASSWORD = process.env.PB_ADMIN_PASSWORD ?? 'admin12345'
 
 const definitions = [
 	{
@@ -240,7 +240,9 @@ const definitions = [
 				max: 1000
 			}
 		],
-		indexes: ['CREATE INDEX IF NOT EXISTS idx_comments_post_created ON comments(post, created)'],
+		indexes: [
+			'CREATE INDEX IF NOT EXISTS idx_comments_post_created ON comments(post, created)'
+		],
 		listRule: '@request.auth.id != ""',
 		viewRule: '@request.auth.id != ""',
 		createRule: '@request.auth.id != "" && @request.auth.id = author',
@@ -314,12 +316,19 @@ const definitions = [
 				}
 			}
 		],
-		indexes: ['CREATE UNIQUE INDEX IF NOT EXISTS idx_space_members_unique ON space_members(space, user)'],
-		listRule: "@request.auth.id != '' && (user = @request.auth.id || space.isPublic = true || space.owners.id ?= @request.auth.id)",
-		viewRule: "@request.auth.id != '' && (user = @request.auth.id || space.isPublic = true || space.owners.id ?= @request.auth.id)",
-		createRule: "@request.auth.id != '' && @request.body.user = @request.auth.id && (space.isPublic = true || space.owners.id ?= @request.auth.id)",
-		updateRule: "@request.auth.id != '' && (space.owners.id ?= @request.auth.id || space.moderators.id ?= @request.auth.id)",
-		deleteRule: "@request.auth.id != '' && (user = @request.auth.id || space.owners.id ?= @request.auth.id || space.moderators.id ?= @request.auth.id)"
+		indexes: [
+			'CREATE UNIQUE INDEX IF NOT EXISTS idx_space_members_unique ON space_members(space, user)'
+		],
+		listRule:
+			"@request.auth.id != '' && (user = @request.auth.id || space.isPublic = true || space.owners.id ?= @request.auth.id)",
+		viewRule:
+			"@request.auth.id != '' && (user = @request.auth.id || space.isPublic = true || space.owners.id ?= @request.auth.id)",
+		createRule:
+			"@request.auth.id != '' && @request.body.user = @request.auth.id && (space.isPublic = true || space.owners.id ?= @request.auth.id)",
+		updateRule:
+			"@request.auth.id != '' && (space.owners.id ?= @request.auth.id || space.moderators.id ?= @request.auth.id)",
+		deleteRule:
+			"@request.auth.id != '' && (user = @request.auth.id || space.owners.id ?= @request.auth.id || space.moderators.id ?= @request.auth.id)"
 	},
 	{
 		name: 'group_members',
@@ -355,7 +364,9 @@ const definitions = [
 				}
 			}
 		],
-		indexes: ['CREATE UNIQUE INDEX IF NOT EXISTS idx_group_members_unique ON group_members(group, user)'],
+		indexes: [
+			'CREATE UNIQUE INDEX IF NOT EXISTS idx_group_members_unique ON group_members(group, user)'
+		],
 		listRule:
 			"@request.auth.id != '' && (user = @request.auth.id || group.isPublic = true || group.moderators.id ?= @request.auth.id || group.space.owners.id ?= @request.auth.id || group.space.moderators.id ?= @request.auth.id)",
 		viewRule:
@@ -636,28 +647,28 @@ const definitions = [
 		updateRule: null,
 		deleteRule: null
 	}
-];
+]
 
 function cleanPayload(payload) {
-	const result = { ...payload };
+	const result = { ...payload }
 	for (const key of Object.keys(result)) {
 		if (result[key] === undefined) {
-			delete result[key];
+			delete result[key]
 		}
 		if (result[key] === null && key === 'schema') {
-			delete result[key];
+			delete result[key]
 		}
 	}
-	return result;
+	return result
 }
 
 function normalizeIndexes(indexes) {
-	if (!indexes || indexes.length === 0) return '';
-	return indexes.join('\n');
+	if (!indexes || indexes.length === 0) return ''
+	return indexes.join('\n')
 }
 
 function cloneSchema(schema) {
-	return JSON.parse(JSON.stringify(schema));
+	return JSON.parse(JSON.stringify(schema))
 }
 
 async function ensureCollection(pb, def) {
@@ -672,92 +683,95 @@ async function ensureCollection(pb, def) {
 		updateRule: def.updateRule ?? null,
 		deleteRule: def.deleteRule ?? null,
 		options: def.options ?? {}
-	});
+	})
 
 	try {
-		const existing = await pb.collections.getOne(def.name);
-		await pb.collections.update(existing.id, payload);
-		console.log(`Updated collection ${def.name}`);
+		const existing = await pb.collections.getOne(def.name)
+		await pb.collections.update(existing.id, payload)
+		console.log(`Updated collection ${def.name}`)
 	} catch (error) {
 		if (error?.status === 404) {
 			try {
-				await pb.collections.create(payload);
-				console.log(`Created collection ${def.name}`);
+				await pb.collections.create(payload)
+				console.log(`Created collection ${def.name}`)
 			} catch (createError) {
-				console.error(`Failed creating collection ${def.name} with payload:`, JSON.stringify(payload, null, 2));
-				throw createError;
+				console.error(
+					`Failed creating collection ${def.name} with payload:`,
+					JSON.stringify(payload, null, 2)
+				)
+				throw createError
 			}
 		} else {
-			console.error(`Failed updating collection ${def.name} with payload:`, JSON.stringify(payload, null, 2));
-			throw error;
+			console.error(
+				`Failed updating collection ${def.name} with payload:`,
+				JSON.stringify(payload, null, 2)
+			)
+			throw error
 		}
 	}
 }
 
 async function ensureUsersCollection(pb) {
-	const users = await pb.collections.getOne('_pb_users_auth_');
-	const existingSchema = cloneSchema(users.schema ?? []);
-	const hasIsAdmin = existingSchema.some((field) => field.name === 'isAdmin');
+	const users = await pb.collections.getOne('_pb_users_auth_')
+	const existingSchema = cloneSchema(users.schema ?? [])
+	const hasIsAdmin = existingSchema.some((field) => field.name === 'isAdmin')
 	if (!hasIsAdmin) {
 		existingSchema.push({
 			name: 'isAdmin',
 			type: 'bool',
 			required: false
-		});
+		})
 	}
 	await pb.collections.update(users.id, {
 		fields: existingSchema,
-		listRule: '@request.auth.id != "" && (@request.auth.id = id || @request.auth.isAdmin = true)',
-		viewRule: '@request.auth.id != "" && (@request.auth.id = id || @request.auth.isAdmin = true)',
+		listRule:
+			'@request.auth.id != "" && (@request.auth.id = id || @request.auth.isAdmin = true)',
+		viewRule:
+			'@request.auth.id != "" && (@request.auth.id = id || @request.auth.isAdmin = true)',
 		updateRule: '@request.auth.id = id || @request.auth.isAdmin = true',
 		deleteRule: '@request.auth.id = id || @request.auth.isAdmin = true'
-	});
-	console.log('Ensured users collection rules and isAdmin field');
+	})
+	console.log('Ensured users collection rules and isAdmin field')
 }
 
 async function collectionExists(pb, name) {
 	try {
-		await pb.collections.getOne(name);
-		return true;
+		await pb.collections.getOne(name)
+		return true
 	} catch (error) {
 		if (error?.status === 404) {
-			return false;
+			return false
 		}
-		throw error;
+		throw error
 	}
 }
 
 async function getOrCreateRecord(pb, collection, filter, payload) {
 	try {
-		return await pb.collection(collection).getFirstListItem(filter);
+		return await pb.collection(collection).getFirstListItem(filter)
 	} catch (error) {
 		if (error?.status === 404) {
-			return await pb.collection(collection).create(payload);
+			return await pb.collection(collection).create(payload)
 		}
-		throw error;
+		throw error
 	}
 }
 
 async function ensureUser(pb, { email, password, name, isAdmin = false }) {
-	const user = await getOrCreateRecord(
-		pb,
-		'_pb_users_auth_',
-		`email = "${email}"`,
-		{
-			email,
-			password,
-			passwordConfirm: password,
-			name,
-			emailVisibility: true
-		}
-	);
+	const user = await getOrCreateRecord(pb, '_pb_users_auth_', `email = "${email}"`, {
+		email,
+		password,
+		passwordConfirm: password,
+		name,
+		emailVisibility: true
+	})
 
 	if (isAdmin && !user.isAdmin) {
-		await pb.collection('_pb_users_auth_').update(user.id, { isAdmin: true });
-		user.isAdmin = true;
+		await pb.collection('_pb_users_auth_').update(user.id, { isAdmin: true })
+		user.isAdmin = true
 	}
 
-	return user;
+	return user
 }
 
 async function ensureSpace(pb, { slug, name, description, owners }) {
@@ -768,28 +782,23 @@ async function ensureSpace(pb, { slug, name, description, owners }) {
 		isPublic: true,
 		owners,
 		moderators: owners
-	});
+	})
 }
 
 async function ensureGroup(pb, { name, spaceId, description }) {
-	return await getOrCreateRecord(
-		pb,
-		'groups',
-		`name = "${name}" && space = "${spaceId}"`,
-		{
-			name,
-			description,
-			space: spaceId,
-			isPublic: true
-		}
-	);
+	return await getOrCreateRecord(pb, 'groups', `name = "${name}" && space = "${spaceId}"`, {
+		name,
+		description,
+		space: spaceId,
+		isPublic: true
+	})
 }
 
 async function seedFeed(pb, users, space, group) {
-	const hasPosts = await collectionExists(pb, 'posts');
+	const hasPosts = await collectionExists(pb, 'posts')
 	if (!hasPosts) {
-		console.warn('Skipping feed seed: posts collection not found yet.');
-		return;
+		console.warn('Skipping feed seed: posts collection not found yet.')
+		return
 	}
 
 	const samplePosts = [
@@ -811,17 +820,17 @@ async function seedFeed(pb, users, space, group) {
 				group: group.id
 			}
 		}
-	];
+	]
 
 	for (const { filter, payload } of samplePosts) {
-		await getOrCreateRecord(pb, 'posts', filter, payload);
+		await getOrCreateRecord(pb, 'posts', filter, payload)
 	}
 }
 
 async function seedMaterials(pb, users) {
 	if (!(await collectionExists(pb, 'materials'))) {
-		console.warn('Skipping materials seed: materials collection not found yet.');
-		return;
+		console.warn('Skipping materials seed: materials collection not found yet.')
+		return
 	}
 
 	await getOrCreateRecord(pb, 'materials', 'title = "Quantum Entanglement Primer"', {
@@ -832,13 +841,13 @@ async function seedMaterials(pb, users) {
 		linkUrl: 'https://example.edu/materials/quantum-entanglement-primer',
 		visibility: 'institution',
 		uploader: users['professor@example.edu'].id
-	});
+	})
 }
 
 async function seedEvents(pb, users, space) {
 	if (!(await collectionExists(pb, 'events'))) {
-		console.warn('Skipping events seed: events collection not found yet.');
-		return;
+		console.warn('Skipping events seed: events collection not found yet.')
+		return
 	}
 
 	const event = await getOrCreateRecord(pb, 'events', 'title = "Quantum Lab Planning"', {
@@ -850,150 +859,222 @@ async function seedEvents(pb, users, space) {
 		end: new Date(Date.now() + 50 * 60 * 60 * 1000).toISOString(),
 		location: { type: 'physical', value: 'Physics Building, Room 204' },
 		createdBy: users['lab-lead@example.edu'].id
-	});
+	})
 
 	if (await collectionExists(pb, 'event_participants')) {
 		for (const email of ['grad-student@example.edu', 'professor@example.edu']) {
-			await getOrCreateRecord(pb, 'event_participants', `event = "${event.id}" && user = "${users[email].id}"`, {
-				event: event.id,
-				user: users[email].id,
-				status: 'going'
-			});
+			await getOrCreateRecord(
+				pb,
+				'event_participants',
+				`event = "${event.id}" && user = "${users[email].id}"`,
+				{
+					event: event.id,
+					user: users[email].id,
+					status: 'going'
+				}
+			)
 		}
 	}
 }
 
 async function seedProfiles(pb, users) {
 	if (!(await collectionExists(pb, 'profiles'))) {
-		console.warn('Skipping profiles seed: profiles collection not found yet.');
-		return;
+		console.warn('Skipping profiles seed: profiles collection not found yet.')
+		return
 	}
 
 	// Create profile for Professor
-	const professorProfile = await getOrCreateRecord(pb, 'profiles', `user = "${users['professor@example.edu'].id}"`, {
-		user: users['professor@example.edu'].id,
-		displayName: 'Dr. Ada Carver',
-		department: 'Physics',
-		role: 'professor',
-		biography: 'Quantum computing researcher focusing on entanglement-based networking.',
-		pronouns: 'she/her',
-		links: [
-			{ label: 'Lab Website', url: 'https://example.edu/labs/quantum' },
-			{ label: 'Scholar Profile', url: 'https://scholar.example.edu/ada-carver' }
-		]
-	});
+	const professorProfile = await getOrCreateRecord(
+		pb,
+		'profiles',
+		`user = "${users['professor@example.edu'].id}"`,
+		{
+			user: users['professor@example.edu'].id,
+			displayName: 'Dr. Ada Carver',
+			department: 'Physics',
+			role: 'professor',
+			biography: 'Quantum computing researcher focusing on entanglement-based networking.',
+			pronouns: 'she/her',
+			links: [
+				{ label: 'Lab Website', url: 'https://example.edu/labs/quantum' },
+				{ label: 'Scholar Profile', url: 'https://scholar.example.edu/ada-carver' }
+			]
+		}
+	)
 
 	// Create profile for Graduate Student
-	const gradProfile = await getOrCreateRecord(pb, 'profiles', `user = "${users['grad-student@example.edu'].id}"`, {
-		user: users['grad-student@example.edu'].id,
-		displayName: 'Jordan Chen',
-		department: 'Computer Science',
-		role: 'student',
-		biography: 'PhD candidate researching quantum algorithms and distributed systems.',
-		pronouns: 'they/them',
-		links: []
-	});
+	const gradProfile = await getOrCreateRecord(
+		pb,
+		'profiles',
+		`user = "${users['grad-student@example.edu'].id}"`,
+		{
+			user: users['grad-student@example.edu'].id,
+			displayName: 'Jordan Chen',
+			department: 'Computer Science',
+			role: 'student',
+			biography: 'PhD candidate researching quantum algorithms and distributed systems.',
+			pronouns: 'they/them',
+			links: []
+		}
+	)
 
 	// Create profile for Lab Lead
-	const labLeadProfile = await getOrCreateRecord(pb, 'profiles', `user = "${users['lab-lead@example.edu'].id}"`, {
-		user: users['lab-lead@example.edu'].id,
-		displayName: 'Dr. Marcus Rodriguez',
-		department: 'Physics',
-		role: 'researcher',
-		biography: 'Principal investigator for quantum networking lab, focusing on practical implementations.',
-		pronouns: 'he/him',
-		links: [
-			{ label: 'ORCID', url: 'https://orcid.org/0000-0001-2345-6789' }
-		]
-	});
+	const labLeadProfile = await getOrCreateRecord(
+		pb,
+		'profiles',
+		`user = "${users['lab-lead@example.edu'].id}"`,
+		{
+			user: users['lab-lead@example.edu'].id,
+			displayName: 'Dr. Marcus Rodriguez',
+			department: 'Physics',
+			role: 'researcher',
+			biography:
+				'Principal investigator for quantum networking lab, focusing on practical implementations.',
+			pronouns: 'he/him',
+			links: [{ label: 'ORCID', url: 'https://orcid.org/0000-0001-2345-6789' }]
+		}
+	)
 
 	// Seed publications (if collections exist)
-	if (!(await collectionExists(pb, 'publication_records')) || !(await collectionExists(pb, 'profile_publications'))) {
-		console.warn('Skipping publications seed: publication_records or profile_publications collection not found yet.');
-		return;
+	if (
+		!(await collectionExists(pb, 'publication_records')) ||
+		!(await collectionExists(pb, 'profile_publications'))
+	) {
+		console.warn(
+			'Skipping publications seed: publication_records or profile_publications collection not found yet.'
+		)
+		return
 	}
 
 	// Sample publications
-	const pub1 = await getOrCreateRecord(pb, 'publication_records', 'title = "Quantum Entanglement in Distributed Networks"', {
-		title: 'Quantum Entanglement in Distributed Networks',
-		doi: '10.1038/nature12345',
-		slugHash: 'quantum-entanglement-distributed-networks-2023',
-		abstract: 'We present a novel approach to maintaining quantum entanglement across geographically distributed network nodes, achieving coherence times exceeding 1 second.',
-		year: 2023,
-		venue: 'Nature Physics',
-		authors: [
-			{ name: 'Ada Carver', affiliation: 'Example University' },
-			{ name: 'Marcus Rodriguez', affiliation: 'Example University' }
-		]
-	});
+	const pub1 = await getOrCreateRecord(
+		pb,
+		'publication_records',
+		'title = "Quantum Entanglement in Distributed Networks"',
+		{
+			title: 'Quantum Entanglement in Distributed Networks',
+			doi: '10.1038/nature12345',
+			slugHash: 'quantum-entanglement-distributed-networks-2023',
+			abstract:
+				'We present a novel approach to maintaining quantum entanglement across geographically distributed network nodes, achieving coherence times exceeding 1 second.',
+			year: 2023,
+			venue: 'Nature Physics',
+			authors: [
+				{ name: 'Ada Carver', affiliation: 'Example University' },
+				{ name: 'Marcus Rodriguez', affiliation: 'Example University' }
+			]
+		}
+	)
 
-	const pub2 = await getOrCreateRecord(pb, 'publication_records', 'title = "Scalable Quantum Key Distribution Protocols"', {
-		title: 'Scalable Quantum Key Distribution Protocols',
-		doi: '10.1103/PhysRevX.11.041001',
-		slugHash: 'scalable-quantum-key-distribution-2022',
-		abstract: 'A framework for quantum key distribution that scales to metropolitan-area networks while maintaining security guarantees.',
-		year: 2022,
-		venue: 'Physical Review X',
-		authors: [
-			{ name: 'Ada Carver', affiliation: 'Example University' },
-			{ name: 'Jordan Chen', affiliation: 'Example University' }
-		]
-	});
+	const pub2 = await getOrCreateRecord(
+		pb,
+		'publication_records',
+		'title = "Scalable Quantum Key Distribution Protocols"',
+		{
+			title: 'Scalable Quantum Key Distribution Protocols',
+			doi: '10.1103/PhysRevX.11.041001',
+			slugHash: 'scalable-quantum-key-distribution-2022',
+			abstract:
+				'A framework for quantum key distribution that scales to metropolitan-area networks while maintaining security guarantees.',
+			year: 2022,
+			venue: 'Physical Review X',
+			authors: [
+				{ name: 'Ada Carver', affiliation: 'Example University' },
+				{ name: 'Jordan Chen', affiliation: 'Example University' }
+			]
+		}
+	)
 
-	const pub3 = await getOrCreateRecord(pb, 'publication_records', 'title = "Machine Learning Approaches to Quantum State Tomography"', {
-		title: 'Machine Learning Approaches to Quantum State Tomography',
-		slugHash: 'machine-learning-quantum-state-tomography-2024',
-		abstract: 'We demonstrate how neural networks can significantly improve the efficiency of quantum state tomography in laboratory settings.',
-		year: 2024,
-		venue: 'IEEE Quantum Computing',
-		authors: [
-			{ name: 'Jordan Chen', affiliation: 'Example University' },
-			{ name: 'Marcus Rodriguez', affiliation: 'Example University' }
-		]
-	});
+	const pub3 = await getOrCreateRecord(
+		pb,
+		'publication_records',
+		'title = "Machine Learning Approaches to Quantum State Tomography"',
+		{
+			title: 'Machine Learning Approaches to Quantum State Tomography',
+			slugHash: 'machine-learning-quantum-state-tomography-2024',
+			abstract:
+				'We demonstrate how neural networks can significantly improve the efficiency of quantum state tomography in laboratory settings.',
+			year: 2024,
+			venue: 'IEEE Quantum Computing',
+			authors: [
+				{ name: 'Jordan Chen', affiliation: 'Example University' },
+				{ name: 'Marcus Rodriguez', affiliation: 'Example University' }
+			]
+		}
+	)
 
 	// Link publications to profiles
-	await getOrCreateRecord(pb, 'profile_publications', `profile = "${professorProfile.id}" && publication = "${pub1.id}"`, {
-		profile: professorProfile.id,
-		publication: pub1.id,
-		contributionRole: 'author'
-	});
+	await getOrCreateRecord(
+		pb,
+		'profile_publications',
+		`profile = "${professorProfile.id}" && publication = "${pub1.id}"`,
+		{
+			profile: professorProfile.id,
+			publication: pub1.id,
+			contributionRole: 'author'
+		}
+	)
 
-	await getOrCreateRecord(pb, 'profile_publications', `profile = "${labLeadProfile.id}" && publication = "${pub1.id}"`, {
-		profile: labLeadProfile.id,
-		publication: pub1.id,
-		contributionRole: 'author'
-	});
+	await getOrCreateRecord(
+		pb,
+		'profile_publications',
+		`profile = "${labLeadProfile.id}" && publication = "${pub1.id}"`,
+		{
+			profile: labLeadProfile.id,
+			publication: pub1.id,
+			contributionRole: 'author'
+		}
+	)
 
-	await getOrCreateRecord(pb, 'profile_publications', `profile = "${professorProfile.id}" && publication = "${pub2.id}"`, {
-		profile: professorProfile.id,
-		publication: pub2.id,
-		contributionRole: 'author'
-	});
+	await getOrCreateRecord(
+		pb,
+		'profile_publications',
+		`profile = "${professorProfile.id}" && publication = "${pub2.id}"`,
+		{
+			profile: professorProfile.id,
+			publication: pub2.id,
+			contributionRole: 'author'
+		}
+	)
 
-	await getOrCreateRecord(pb, 'profile_publications', `profile = "${gradProfile.id}" && publication = "${pub2.id}"`, {
-		profile: gradProfile.id,
-		publication: pub2.id,
-		contributionRole: 'author'
-	});
+	await getOrCreateRecord(
+		pb,
+		'profile_publications',
+		`profile = "${gradProfile.id}" && publication = "${pub2.id}"`,
+		{
+			profile: gradProfile.id,
+			publication: pub2.id,
+			contributionRole: 'author'
+		}
+	)
 
-	await getOrCreateRecord(pb, 'profile_publications', `profile = "${gradProfile.id}" && publication = "${pub3.id}"`, {
-		profile: gradProfile.id,
-		publication: pub3.id,
-		contributionRole: 'author'
-	});
+	await getOrCreateRecord(
+		pb,
+		'profile_publications',
+		`profile = "${gradProfile.id}" && publication = "${pub3.id}"`,
+		{
+			profile: gradProfile.id,
+			publication: pub3.id,
+			contributionRole: 'author'
+		}
+	)
 
-	await getOrCreateRecord(pb, 'profile_publications', `profile = "${labLeadProfile.id}" && publication = "${pub3.id}"`, {
-		profile: labLeadProfile.id,
-		publication: pub3.id,
-		contributionRole: 'advisor'
-	});
+	await getOrCreateRecord(
+		pb,
+		'profile_publications',
+		`profile = "${labLeadProfile.id}" && publication = "${pub3.id}"`,
+		{
+			profile: labLeadProfile.id,
+			publication: pub3.id,
+			contributionRole: 'advisor'
+		}
+	)
 }
 
 async function seedMessaging(pb, users) {
 	if (!(await collectionExists(pb, 'conversation_threads'))) {
-		console.warn('Skipping messaging seed: conversation_threads collection not found yet.');
-		return;
+		console.warn('Skipping messaging seed: conversation_threads collection not found yet.')
+		return
 	}
 
 	const thread = await getOrCreateRecord(
@@ -1006,15 +1087,20 @@ async function seedMessaging(pb, users) {
 			createdBy: users['lab-lead@example.edu'].id,
 			members: Object.values(users).map((user) => user.id)
 		}
-	);
+	)
 
 	if (await collectionExists(pb, 'messages')) {
-		await getOrCreateRecord(pb, 'messages', `thread = "${thread.id}" && author = "${users['lab-lead@example.edu'].id}"`, {
-			thread: thread.id,
-			author: users['lab-lead@example.edu'].id,
-			body: 'Welcome to the team thread! Share blockers before Friday.',
-			status: 'visible'
-		});
+		await getOrCreateRecord(
+			pb,
+			'messages',
+			`thread = "${thread.id}" && author = "${users['lab-lead@example.edu'].id}"`,
+			{
+				thread: thread.id,
+				author: users['lab-lead@example.edu'].id,
+				body: 'Welcome to the team thread! Share blockers before Friday.',
+				status: 'visible'
+			}
+		)
 	}
 }
 
@@ -1041,47 +1127,47 @@ async function seedDemoData(pb) {
 			name: 'Campus Moderator',
 			isAdmin: true
 		})
-	};
+	}
 
 	const space = await ensureSpace(pb, {
 		slug: 'quantum-networking-lab',
 		name: 'Quantum Networking Lab',
 		description: 'Research updates and coordination hub for the quantum networking team.',
 		owners: [users['lab-lead@example.edu'].id]
-	});
+	})
 
 	const group = await ensureGroup(pb, {
 		name: 'Qubit Synchronization Squad',
 		description: 'Working group focused on synchronization experiments.',
 		spaceId: space.id
-	});
+	})
 
-	await seedFeed(pb, users, space, group);
-	await seedMaterials(pb, users);
-	await seedEvents(pb, users, space);
-	await seedProfiles(pb, users);
-	await seedMessaging(pb, users);
+	await seedFeed(pb, users, space, group)
+	await seedMaterials(pb, users)
+	await seedEvents(pb, users, space)
+	await seedProfiles(pb, users)
+	await seedMessaging(pb, users)
 
-	console.log('Seeded demo data for quickstart scenarios.');
+	console.log('Seeded demo data for quickstart scenarios.')
 }
 
 async function main() {
-	const pb = new PocketBase(PB_URL);
-	await pb.admins.authWithPassword(ADMIN_EMAIL, ADMIN_PASSWORD);
+	const pb = new PocketBase(PB_URL)
+	await pb.admins.authWithPassword(ADMIN_EMAIL, ADMIN_PASSWORD)
 
 	for (const def of definitions) {
-		await ensureCollection(pb, def);
+		await ensureCollection(pb, def)
 	}
 
-	await ensureUsersCollection(pb);
+	await ensureUsersCollection(pb)
 
-	await seedDemoData(pb);
+	await seedDemoData(pb)
 
-	console.log('PocketBase schema bootstrap completed successfully.');
-	pb.authStore.clear();
+	console.log('PocketBase schema bootstrap completed successfully.')
+	pb.authStore.clear()
 }
 
 main().catch((error) => {
-	console.error('Failed to bootstrap PocketBase schema:', error);
-	process.exit(1);
-});
+	console.error('Failed to bootstrap PocketBase schema:', error)
+	process.exit(1)
+})

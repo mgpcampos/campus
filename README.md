@@ -1,190 +1,102 @@
-# Campus - Academic Social Network
+# Campus
 
-A lightweight, Twitter-like social network designed specifically for the education community, including high-school and university students, teachers, professors, researchers, and alumni.
+Este repositório hospeda o código-fonte da aplicação desenvolvida para a disciplina **Projeto Integrador**.
 
-## Features
+### Integrantes do Grupo
 
-- Global feed with chronological posts
-- Institution-centric "Spaces" (university communities)
-- Study Groups within Spaces
-- Post interactions (likes, comments)
-- User authentication and profiles
-- Real-time updates
-- Responsive design with accessibility support
-- Role-based Space memberships (owner, moderator, member)
-- Image attachments on posts with validation & previews (Task 10)
-- Admin dashboard with analytics overview and moderation queue (Task 18)
+| Nome Completo         | Prontuário |
+| :---                  | :---       |
+| Mateus G. P. Campos   | JC3019705  |
+| Ray G. dos S. Martins | JC3019543  |
+| Kauê M. de Araujo     | JC3019497  |
+| Kevin L. R. de Candia | JC3018784  |
 
-## Tech Stack
+## Descrição do Projeto
 
-- **Frontend**: SvelteKit with TypeScript
-- **Backend**: PocketBase (SQLite, REST API, real-time, file storage)
-- **UI**: Tailwind CSS + shadcn-svelte components
-- **Forms**: Zod schemas + sveltekit-superforms
-- **Icons**: @lucide/svelte
+**Campus** é um protótipo de rede social acadêmica que conecta estudantes, educadores, pesquisadores e gestores — sem a sistematicidade de um ambiente virtual de aprendizagem nem a dispersividade de redes sociais tradicionais. Um espaço curado para grupos de estudo, fóruns de discussão, eventos e recursos educacionais, onde o conhecimento flui com propósito e o encontro humano prevalece.
 
-## Prerequisites
+## Funcionalidades Principais
 
-- Node.js 24.9.0 (npm 11.6.1)
-- PocketBase server running on http://127.0.0.1:8090
+O sistema oferece um conjunto robusto de ferramentas para gerenciamento de comunidades:
 
-## Setup
+*   **Interação Social:**  Feed de postagens, comentários, curtidas e compartilhamento de mídia.
+*   **Espaços e Grupos:**  Organização hierárquica de comunidades em Espaços, subdivididos em Grupos temáticos.
+*   **Calendário:**        Visualização de eventos e prazos importantes.
+*   **Eventos:**           Criação e gerenciamento pessoal de eventos.
+*   **Materiais:**         Repositório para compartilhamento de materiais didáticos ou recursos.
+*   **Perfis Acadêmicos:** Detalhes acerca de formação, pesquisas e interesses acadêmicos.
+*   **Perfis de Usuário:** Personalização de perfil e preferências (incluindo modo escuro).
 
-1. Install dependencies:
+## Conjunto de tecnologias, ferramentas e frameworks
 
-```sh
-npm install
+A aplicação foi construída utilizando a seguinte pilha de tecnologias:
+
+| Categoria                    | Tecnologia           | Descrição                                                                 |
+| :---                         | :---                 | :---                                                                      |
+| **Frontend**                 | Svelte 5 + SvelteKit | Framework reativo de última geração para interfaces web rápidas.          |
+| **Estilização**              | Tailwind CSS v4      | Framework CSS utilitário para design responsivo e customizável.           |
+| **Backend / Banco de Dados** | PocketBase           | Backend-as-a-Service de código aberto, leve e rápido (baseado em SQLite). |
+| **Runtime**                  | Bun                  | Alternativa ao Node.js, utilizado como runtime JavaScript.                |
+| **Componentes**              | Bits UI + Lucide     | Componentes de interface headless e ícones vetoriais.                     |
+| **Validação**                | Zod + Superforms     | Validação de esquemas e gerenciamento robusto de formulários.             |
+
+## Instalação e Execução
+
+Siga os passos abaixo para configurar o ambiente de desenvolvimento.
+
+### Pré-requisitos
+
+*   [Bun](https://bun.com/) (Runtime JavaScript)
+*   [PocketBase](https://pocketbase.io/) (Backend-as-a-Service)
+
+### 1. Clonar o Repositório
+
+```bash
+git clone https://github.com/mgpcampos/campus.git
+cd campus
 ```
 
-2. Copy environment variables:
+### 2. Instalar Dependências
 
-```sh
-cp .env.example .env
+Utilize o Bun para instalar as dependências do projeto:
+
+```bash
+bun install
 ```
 
-3. Start PocketBase server (download from https://pocketbase.io/ or install system-wide):
+### 3. Configurar o Backend (PocketBase)
 
-```sh
-pocketbase serve
+1.  Baixe o executável do PocketBase para o seu sistema operacional (disponível em https://pocketbase.io/docs/) e coloque-o na raiz do projeto.
+2.  Inicie o servidor do PocketBase:
+
+```bash
+./pocketbase migrate
+./pocketbase serve
 ```
 
-4. Start the development server:
+Ao iniciar, o PocketBase aplicará automaticamente as migrações presentes na pasta `pb_migrations`, criando a estrutura do banco de dados necessária.
 
-```sh
-npm run dev
+### 4. Iniciar o Frontend
+
+Em um novo terminal, inicie o servidor de desenvolvimento:
+
+```bash
+bun run dev
 ```
 
-## Project Structure
+A aplicação estará acessível em `http://localhost:5173`. Tanto o frontend quanto o backend devem estar simultaneamente em execução para que a aplicação funcione corretamente.
+
+## Estrutura do Projeto
 
 ```
-src/
-├── lib/
-│   ├── components/
-│   │   ├── ui/          # Reusable UI components
-│   │   ├── layout/      # Layout components (Header, Footer)
-│   │   ├── forms/       # Form components
-│   │   └── feed/        # Feed-related components
-│   ├── utils/           # Utility functions
-│   ├── stores/          # Svelte stores
-│   ├── pocketbase.js    # PocketBase client setup
-│   ├── config.js        # App configuration
-│   └── types.js         # Type definitions
-├── routes/              # SvelteKit routes
-└── hooks.server.js      # Server-side hooks for auth
+.
+├── src/
+│   ├── lib/            # Componentes reutilizáveis, utilitários e stores
+│   ├── routes/         # Rotas da aplicação (SvelteKit File-based routing)
+│   └── app.html        # Template HTML principal
+├── pb_migrations/      # Migrações do banco de dados PocketBase (JS)
+├── pb_hooks/           # Hooks do lado do servidor do PocketBase
+├── static/             # Arquivos estáticos públicos
+├── package.json        # Dependências e scripts do projeto
+└── ...
 ```
-
-## Spaces & Memberships
-
-Spaces allow organizing content around institutions or thematic communities. Each Space has:
-
-- Visibility: public (joinable by any authenticated user) or private (future enhancement)
-- Owners: users with full administrative control
-- Moderators: users who can manage description and moderate content (future moderation tools)
-- Members: regular participants
-
-Memberships are stored in the `space_members` collection with a unique `(space, user)` constraint and a `role` field (`member | moderator | owner`). An owner membership is automatically created when a Space is created.
-
-### Creating a Space
-
-1. Navigate to `/spaces/create`
-2. Provide name, slug, optional description, and public flag
-3. Submit the form – you become the owner
-
-### Browsing Spaces
-
-The `/spaces` page lists spaces with member counts and supports basic search.
-
-### Space Detail & Feed
-
-`/spaces/[id]` displays:
-
-- Space metadata
-- Join/Leave button based on membership state
-- Member count
-- Posts scoped to that space
-
-### Management
-
-Owners and moderators can edit the description at `/spaces/[id]/manage`.
-
-### Posting Into a Space
-
-When on a Space page, new posts created via the post form are automatically scoped to that Space.
-
-## Development
-
-- `npm run dev` - Start development server
-- `npm run build` - Build for production (precompresses assets and generates Node server in `build/`)
-- `npm run preview` - Preview production build
-- `npm run check` - Run type checking
-- `npm run lint` - Run linting
-- `npm run format` - Format code
-
-## Environment Variables
-
-- `PUBLIC_POCKETBASE_URL` - PocketBase server URL (default: http://127.0.0.1:8090)
-- `BUNDLE_SOURCEMAP` - When set to `true`, emits sourcemaps during production build for debugging.
-
-## Deployment
-
-Refer to `docs/deployment.md` for end-to-end deployment steps, including PocketBase hosting guidance, environment hardening, and build verification checklists.
-
-## Security & Validation
-
-The platform implements multiple layers of content safety (Task 11):
-
-- Server-side HTML sanitization via `sanitize-html` (`sanitizeContent`) for posts, comments, and bios
-- Zod schemas for all major entities (`posts`, `comments`, `spaces`, `groups`, `profile`) with length and pattern constraints
-- File upload validation (type, size, count) in `media.js`
-- In-memory rate limiting for write API endpoints (30 write ops/min/IP) in `hooks.server.ts` (replace with Redis for production)
-- Hardened auth cookies: httpOnly, Secure (in production), path-wide, SameSite Lax (Strict on auth routes)
-- Consistent trimming & normalization of whitespace to mitigate hidden payload obfuscation
-
-Planned / recommended production enhancements:
-
-- Redis or Upstash-backed distributed rate limiting
-- CSP headers & security headers (Helmet-equivalent) middleware
-- Structured audit logging for moderation actions
-- Optional virus scanning (e.g., ClamAV) for file uploads
-
-## Performance & Caching (Task 12)
-
-Implemented optimizations:
-
-- Server-side in-memory LRU+TTL cache (`src/lib/utils/cache.js`) for:
-  - First page of global posts feed (10s TTL)
-  - First page of spaces listing (30s TTL)
-  - Space member counts (20s TTL)
-- Client-side stale-while-revalidate query cache store (`src/lib/stores/queryCache.ts`) for lightweight response reuse without bringing a full query lib.
-- PocketBase collection indexes migration (`pb_migrations/1758635000_add_performance_indexes.js`) adding composite indexes for common filters & uniqueness constraints.
-- Lazy loading of comment section in `PostCard.svelte` via dynamic import to reduce initial bundle.
-- Responsive image URL helpers with PocketBase thumbs (`src/lib/utils/images.js`) generating `srcset` for avatars & attachments.
-- Simple perf instrumentation (`src/lib/utils/perf.js`) to warn on slow ops (>200ms) and optional cache miss logging.
-
-Next recommendations for production scale:
-
-- Replace in-process cache with Redis / KV store for horizontal scaling.
-- Add HTTP caching headers (ETag/Last-Modified) and CDN edge caching for public assets and first feed page.
-- Precompute denormalized counters (already partially stored as like/comment counts) via PocketBase before hooks or background jobs.
-- Add bundle analyzer and track JS payload budgets (<150KB gzipped initial route).
-- Implement image format negotiation (WebP/AVIF) and add width-based placeholder (LQIP) pipeline.
-- Add Service Worker for offline caching of shell & last feed snapshot.
-
-## Monitoring & Analytics
-
-- Client-side analytics pipeline batches page views, feature events, and Web Vitals to the `/api/analytics` endpoint. See `docs/analytics.md` for architecture details.
-- PocketBase `analytics_events` collection stores metrics; access is limited to platform admins for privacy.
-- Sampling is controlled by `PUBLIC_ANALYTICS_SAMPLE_RATE`; disable entirely by setting `PUBLIC_ENABLE_ANALYTICS=false`.
-
-## Realtime Feed & Notifications (Task 14)
-
-Implemented a realtime layer for post feed updates and a user notifications system:
-
-- Feed subscription listens to all `posts` events and filters client-side by current context (global / space / group).
-- Heartbeat monitors event freshness; lack of events >30s triggers a 15s polling fallback until realtime resumes.
-- Notifications collection stores like, comment, and mention events with indexes for `(user, read)` and chronological retrieval.
-- Server endpoints emit notifications on like toggle, comment creation, and detected `@mentions` (regex based, duplicate-safe).
-- Client subscription maintains a capped in-memory list (50) and an unread counter with mark single / mark all functionality.
-- Accessible dropdown UI with keyboard support and axe-tested semantics.
-
-Detailed architecture & extension guidance: `docs/realtime-notifications.md`.

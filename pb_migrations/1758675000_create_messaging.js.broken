@@ -1,0 +1,565 @@
+/// <reference path="../pb_data/types.d.ts" />
+migrate((app) => {
+	// Create conversation_threads collection
+	const threadsCollection = new Collection({
+		id: 'conversation_threads',
+		name: 'conversation_threads',
+		type: 'base',
+		createRule:
+			"@request.auth.id != '' && @request.body.createdBy = @request.auth.id && @request.body.members:length >= 2 && @request.body.members ?~ @request.auth.id",
+		deleteRule: "@request.auth.id != '' && createdBy = @request.auth.id",
+		listRule: "@request.auth.id != '' && members ?~ @request.auth.id",
+		updateRule:
+			"@request.auth.id != '' && (createdBy = @request.auth.id || members ?~ @request.auth.id)",
+		viewRule: "@request.auth.id != '' && members ?~ @request.auth.id",
+		fields: [
+			{
+				autogeneratePattern: '[a-z0-9]{15}',
+				hidden: false,
+				id: 'text3208210256',
+				max: 15,
+				min: 15,
+				name: 'id',
+				pattern: '^[a-z0-9]+$',
+				presentable: false,
+				primaryKey: true,
+				required: true,
+				system: true,
+				type: 'text'
+			},
+			{
+				hidden: false,
+				id: 'select1234567890',
+				maxSelect: 1,
+				name: 'type',
+				presentable: false,
+				required: true,
+				system: false,
+				type: 'select',
+				values: ['direct', 'group']
+			},
+			{
+				autogeneratePattern: '',
+				hidden: false,
+				id: 'text2345678901',
+				max: 0,
+				min: 0,
+				name: 'name',
+				pattern: '',
+				presentable: false,
+				primaryKey: false,
+				required: false,
+				system: false,
+				type: 'text'
+			},
+			{
+				cascadeDelete: false,
+				collectionId: '_pb_users_auth_',
+				hidden: false,
+				id: 'relation3456789012',
+				maxSelect: 1,
+				minSelect: 0,
+				name: 'createdBy',
+				presentable: false,
+				required: true,
+				system: false,
+				type: 'relation'
+			},
+			{
+				cascadeDelete: false,
+				collectionId: '_pb_users_auth_',
+				hidden: false,
+				id: 'relation4567890123',
+				maxSelect: 999,
+				minSelect: 2,
+				name: 'members',
+				presentable: false,
+				required: true,
+				system: false,
+				type: 'relation'
+			},
+			{
+				hidden: false,
+				id: 'autodate5678901234',
+				name: 'lastMessageAt',
+				onCreate: true,
+				onUpdate: true,
+				presentable: false,
+				system: false,
+				type: 'autodate'
+			},
+			{
+				hidden: false,
+				id: 'select6789012345',
+				maxSelect: 1,
+				name: 'moderationStatus',
+				presentable: false,
+				required: true,
+				system: false,
+				type: 'select',
+				values: ['active', 'locked']
+			},
+			{
+				hidden: false,
+				id: 'autodate7890123456',
+				name: 'created',
+				onCreate: true,
+				onUpdate: false,
+				presentable: false,
+				system: false,
+				type: 'autodate'
+			},
+			{
+				hidden: false,
+				id: 'autodate8901234567',
+				name: 'updated',
+				onCreate: true,
+				onUpdate: true,
+				presentable: false,
+				system: false,
+				type: 'autodate'
+			}
+		],
+		indexes: ['CREATE INDEX idx_threads_lastMessage ON conversation_threads (lastMessageAt DESC)']
+	});
+
+	app.save(threadsCollection);
+
+	// Create messages collection
+	const messagesCollection = new Collection({
+		id: 'messages',
+		name: 'messages',
+		type: 'base',
+		createRule:
+			"@request.auth.id != '' && @request.body.author = @request.auth.id && thread.members ?~ @request.auth.id && thread.moderationStatus = 'active'",
+		deleteRule: '',
+		listRule: "@request.auth.id != '' && thread.members ?~ @request.auth.id",
+		updateRule: '',
+		viewRule: "@request.auth.id != '' && thread.members ?~ @request.auth.id",
+		fields: [
+			{
+				autogeneratePattern: '[a-z0-9]{15}',
+				hidden: false,
+				id: 'text3208210257',
+				max: 15,
+				min: 15,
+				name: 'id',
+				pattern: '^[a-z0-9]+$',
+				presentable: false,
+				primaryKey: true,
+				required: true,
+				system: true,
+				type: 'text'
+			},
+			{
+				cascadeDelete: true,
+				collectionId: 'conversation_threads',
+				hidden: false,
+				id: 'relation1234567891',
+				maxSelect: 1,
+				minSelect: 0,
+				name: 'thread',
+				presentable: false,
+				required: true,
+				system: false,
+				type: 'relation'
+			},
+			{
+				cascadeDelete: false,
+				collectionId: '_pb_users_auth_',
+				hidden: false,
+				id: 'relation2345678902',
+				maxSelect: 1,
+				minSelect: 0,
+				name: 'author',
+				presentable: false,
+				required: true,
+				system: false,
+				type: 'relation'
+			},
+			{
+				autogeneratePattern: '',
+				hidden: false,
+				id: 'text3456789013',
+				max: 0,
+				min: 0,
+				name: 'body',
+				pattern: '',
+				presentable: false,
+				primaryKey: false,
+				required: false,
+				system: false,
+				type: 'text'
+			},
+			{
+				hidden: false,
+				id: 'file4567890124',
+				maxSelect: 5,
+				maxSize: 52428800,
+				mimeTypes: [
+					'application/pdf',
+					'application/msword',
+					'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+					'application/vnd.ms-excel',
+					'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+					'image/jpeg',
+					'image/png',
+					'image/gif',
+					'image/webp',
+					'video/mp4',
+					'video/webm'
+				],
+				name: 'attachments',
+				presentable: false,
+				protected: false,
+				required: false,
+				system: false,
+				thumbs: ['320x240', '100x75'],
+				type: 'file'
+			},
+			{
+				hidden: false,
+				id: 'select5678901235',
+				maxSelect: 1,
+				name: 'status',
+				presentable: false,
+				required: true,
+				system: false,
+				type: 'select',
+				values: ['visible', 'pending_review', 'removed']
+			},
+			{
+				hidden: false,
+				id: 'number6789012346',
+				max: null,
+				min: 0,
+				name: 'flagCount',
+				onlyInt: true,
+				presentable: false,
+				required: true,
+				system: false,
+				type: 'number'
+			},
+			{
+				hidden: false,
+				id: 'json7890123457',
+				maxSize: 0,
+				name: 'metadata',
+				presentable: false,
+				required: false,
+				system: false,
+				type: 'json'
+			},
+			{
+				hidden: false,
+				id: 'autodate8901234568',
+				name: 'created',
+				onCreate: true,
+				onUpdate: false,
+				presentable: false,
+				system: false,
+				type: 'autodate'
+			},
+			{
+				hidden: false,
+				id: 'autodate9012345679',
+				name: 'updated',
+				onCreate: true,
+				onUpdate: true,
+				presentable: false,
+				system: false,
+				type: 'autodate'
+			}
+		],
+		indexes: [
+			'CREATE INDEX idx_messages_thread_created ON messages (thread, created)',
+			'CREATE INDEX idx_messages_status ON messages (status)'
+		]
+	});
+
+	app.save(messagesCollection);
+
+	// Create message_flags collection
+	const flagsCollection = new Collection({
+		id: 'message_flags',
+		name: 'message_flags',
+		type: 'base',
+		createRule:
+			"@request.auth.id != '' && @request.body.reporter = @request.auth.id && message.thread.members ?~ @request.auth.id",
+		deleteRule: '',
+		listRule: "@request.auth.id != '' && (reporter = @request.auth.id || @request.auth.is_admin = true)",
+		updateRule: '',
+		viewRule: "@request.auth.id != '' && (reporter = @request.auth.id || @request.auth.is_admin = true)",
+		fields: [
+			{
+				autogeneratePattern: '[a-z0-9]{15}',
+				hidden: false,
+				id: 'text3208210258',
+				max: 15,
+				min: 15,
+				name: 'id',
+				pattern: '^[a-z0-9]+$',
+				presentable: false,
+				primaryKey: true,
+				required: true,
+				system: true,
+				type: 'text'
+			},
+			{
+				cascadeDelete: true,
+				collectionId: 'messages',
+				hidden: false,
+				id: 'relation1234567892',
+				maxSelect: 1,
+				minSelect: 0,
+				name: 'message',
+				presentable: false,
+				required: true,
+				system: false,
+				type: 'relation'
+			},
+			{
+				cascadeDelete: false,
+				collectionId: '_pb_users_auth_',
+				hidden: false,
+				id: 'relation2345678903',
+				maxSelect: 1,
+				minSelect: 0,
+				name: 'reporter',
+				presentable: false,
+				required: true,
+				system: false,
+				type: 'relation'
+			},
+			{
+				autogeneratePattern: '',
+				hidden: false,
+				id: 'text3456789014',
+				max: 0,
+				min: 1,
+				name: 'reason',
+				pattern: '',
+				presentable: false,
+				primaryKey: false,
+				required: true,
+				system: false,
+				type: 'text'
+			},
+			{
+				hidden: false,
+				id: 'autodate4567890125',
+				name: 'created',
+				onCreate: true,
+				onUpdate: false,
+				presentable: false,
+				system: false,
+				type: 'autodate'
+			},
+			{
+				hidden: false,
+				id: 'autodate5678901236',
+				name: 'updated',
+				onCreate: true,
+				onUpdate: true,
+				presentable: false,
+				system: false,
+				type: 'autodate'
+			}
+		],
+		indexes: ['CREATE UNIQUE INDEX idx_flags_message_reporter ON message_flags (message, reporter)']
+	});
+
+	app.save(flagsCollection);
+
+	// Create moderation_cases collection
+	const casesCollection = new Collection({
+		id: 'moderation_cases',
+		name: 'moderation_cases',
+		type: 'base',
+		createRule: "@request.auth.id != '' && @request.auth.is_admin = true",
+		deleteRule: '',
+		listRule: "@request.auth.id != '' && @request.auth.is_admin = true",
+		updateRule: "@request.auth.id != '' && @request.auth.is_admin = true",
+		viewRule: "@request.auth.id != '' && @request.auth.is_admin = true",
+		fields: [
+			{
+				autogeneratePattern: '[a-z0-9]{15}',
+				hidden: false,
+				id: 'text3208210259',
+				max: 15,
+				min: 15,
+				name: 'id',
+				pattern: '^[a-z0-9]+$',
+				presentable: false,
+				primaryKey: true,
+				required: true,
+				system: true,
+				type: 'text'
+			},
+			{
+				hidden: false,
+				id: 'select1234567893',
+				maxSelect: 1,
+				name: 'sourceType',
+				presentable: false,
+				required: true,
+				system: false,
+				type: 'select',
+				values: ['post', 'comment', 'message']
+			},
+			{
+				autogeneratePattern: '',
+				hidden: false,
+				id: 'text2345678904',
+				max: 0,
+				min: 1,
+				name: 'sourceId',
+				pattern: '',
+				presentable: false,
+				primaryKey: false,
+				required: true,
+				system: false,
+				type: 'text'
+			},
+			{
+				hidden: false,
+				id: 'select3456789015',
+				maxSelect: 1,
+				name: 'state',
+				presentable: false,
+				required: true,
+				system: false,
+				type: 'select',
+				values: ['open', 'in_review', 'resolved', 'escalated']
+			},
+			{
+				cascadeDelete: false,
+				collectionId: '_pb_users_auth_',
+				hidden: false,
+				id: 'relation4567890126',
+				maxSelect: 1,
+				minSelect: 0,
+				name: 'assignedTo',
+				presentable: false,
+				required: false,
+				system: false,
+				type: 'relation'
+			},
+			{
+				autogeneratePattern: '',
+				hidden: false,
+				id: 'text5678901237',
+				max: 0,
+				min: 0,
+				name: 'resolution',
+				pattern: '',
+				presentable: false,
+				primaryKey: false,
+				required: false,
+				system: false,
+				type: 'text'
+			},
+			{
+				hidden: false,
+				id: 'date6789012348',
+				max: '',
+				min: '',
+				name: 'resolutionAt',
+				presentable: false,
+				required: false,
+				system: false,
+				type: 'date'
+			},
+			{
+				hidden: false,
+				id: 'json7890123458',
+				maxSize: 0,
+				name: 'evidence',
+				presentable: false,
+				required: false,
+				system: false,
+				type: 'json'
+			},
+			{
+				hidden: false,
+				id: 'autodate8901234569',
+				name: 'created',
+				onCreate: true,
+				onUpdate: false,
+				presentable: false,
+				system: false,
+				type: 'autodate'
+			},
+			{
+				hidden: false,
+				id: 'autodate9012345680',
+				name: 'updated',
+				onCreate: true,
+				onUpdate: true,
+				presentable: false,
+				system: false,
+				type: 'autodate'
+			}
+		],
+		indexes: [
+			'CREATE INDEX idx_cases_state ON moderation_cases (state)',
+			'CREATE INDEX idx_cases_source ON moderation_cases (sourceType, sourceId)'
+		]
+	});
+
+	app.save(casesCollection);
+
+	// Update reports collection to add conversationId and messageId fields
+	const reportsCollection = app.findCollectionByNameOrId('reports');
+	if (reportsCollection) {
+		reportsCollection.fields.addAt(
+			-3,
+			{
+				cascadeDelete: false,
+				collectionId: 'conversation_threads',
+				hidden: false,
+				id: 'relation_conversation',
+				maxSelect: 1,
+				minSelect: 0,
+				name: 'conversationId',
+				presentable: false,
+				required: false,
+				system: false,
+				type: 'relation'
+			}
+		);
+		reportsCollection.fields.addAt(
+			-3,
+			{
+				cascadeDelete: false,
+				collectionId: 'messages',
+				hidden: false,
+				id: 'relation_message',
+				maxSelect: 1,
+				minSelect: 0,
+				name: 'messageId',
+				presentable: false,
+				required: false,
+				system: false,
+				type: 'relation'
+			}
+		);
+		app.save(reportsCollection);
+	}
+}, (app) => {
+	// Down migration
+	app.findCollectionByNameOrId('moderation_cases') && app.delete(app.findCollectionByNameOrId('moderation_cases'));
+	app.findCollectionByNameOrId('message_flags') && app.delete(app.findCollectionByNameOrId('message_flags'));
+	app.findCollectionByNameOrId('messages') && app.delete(app.findCollectionByNameOrId('messages'));
+	app.findCollectionByNameOrId('conversation_threads') && app.delete(app.findCollectionByNameOrId('conversation_threads'));
+	
+	// Remove fields from reports collection
+	const reportsCollection = app.findCollectionByNameOrId('reports');
+	if (reportsCollection) {
+		const convField = reportsCollection.fields.getByName('conversationId');
+		const msgField = reportsCollection.fields.getByName('messageId');
+		if (convField) reportsCollection.fields.remove(convField);
+		if (msgField) reportsCollection.fields.remove(msgField);
+		app.save(reportsCollection);
+	}
+});
