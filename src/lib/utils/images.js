@@ -1,10 +1,6 @@
-import { PUBLIC_POCKETBASE_URL } from '$env/static/public'
+import { pocketBaseUrl } from '$lib/utils/pocketbase-url.js'
 
-const browserBase = (() => {
-	if (globalThis.window === undefined) return null
-	return new URL('/pb', globalThis.window.location.origin).toString().replace(/\/$/, '')
-})()
-const BASE_URL = PUBLIC_POCKETBASE_URL || browserBase || 'http://127.0.0.1:8090'
+const BASE_URL = pocketBaseUrl
 
 /**
  * Build a PocketBase file URL with optional thumb (widthxheight or preset) and token options.

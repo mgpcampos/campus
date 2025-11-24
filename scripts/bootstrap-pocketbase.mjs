@@ -1,6 +1,22 @@
 import PocketBase from 'pocketbase'
 
-const PB_URL = process.env.PB_BASE_URL ?? 'http://127.0.0.1:8090'
+const PB_URL = (() => {
+	const rawValue = process.env.PUBLIC_POCKETBASE_URL?.trim()
+	if (!rawValue) {
+		throw new Error(
+			'PUBLIC_POCKETBASE_URL is not defined. Provide it so the bootstrap script can reach PocketBase.'
+		)
+	}
+
+	try {
+		return new URL(rawValue).toString().replace(/\/$/, '')
+	} catch (error) {
+		throw new Error(
+			`PUBLIC_POCKETBASE_URL must be a valid absolute URL (including protocol and optional port). Received: ${rawValue}`,
+			{ cause: error }
+		)
+	}
+})()
 const ADMIN_EMAIL = process.env.PB_ADMIN_EMAIL ?? 'admin@campus.local'
 const ADMIN_PASSWORD = process.env.PB_ADMIN_PASSWORD ?? 'admin12345'
 
