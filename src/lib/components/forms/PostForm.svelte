@@ -322,9 +322,9 @@
 		} else {
 			// Infer from first remaining file
 			const firstFile = currentFiles[0]
-			if (ALLOWED_IMAGE_MIME.includes(firstFile.type)) {
+			if (firstFile && ALLOWED_IMAGE_MIME.includes(firstFile.type)) {
 				$form.mediaType = 'images'
-			} else if (ALLOWED_VIDEO_MIME.includes(firstFile.type)) {
+			} else if (firstFile && ALLOWED_VIDEO_MIME.includes(firstFile.type)) {
 				$form.mediaType = 'video'
 			}
 		}
