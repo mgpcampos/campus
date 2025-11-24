@@ -1,0 +1,22 @@
+# Caddyfile - Reverse proxy for Campus
+# Listens on Railway's PORT and routes to internal services
+
+:{$PORT:8080} {
+    # PocketBase API and Admin UI
+    handle /api/* {
+        reverse_proxy 127.0.0.1:8090
+    }
+    handle /_/* {
+        reverse_proxy 127.0.0.1:8090
+    }
+
+    # SvelteKit handles everything else
+    handle {
+        reverse_proxy 127.0.0.1:3000
+    }
+
+    encode gzip
+    log {
+        output stdout
+    }
+}

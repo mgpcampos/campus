@@ -1,9 +1,5 @@
 node_modules
 
-# Editor-specific
-.idea
-.vscode
-
 # Output
 .output
 .vercel
@@ -31,4 +27,4 @@ pb_data
 
 # Developer-specific
 docs
-# /scripts
+/scripts

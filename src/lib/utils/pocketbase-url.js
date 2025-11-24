@@ -1,8 +1,14 @@
-import { PUBLIC_POCKETBASE_URL } from '$env/static/public'
+import { env } from '$env/dynamic/public'
+import { browser } from '$app/environment'
 
 const sanitizedPocketBaseUrl = (() => {
-	const rawValue = PUBLIC_POCKETBASE_URL?.trim()
+	const rawValue = env.PUBLIC_POCKETBASE_URL?.trim()
+	
+	// In browser, if no URL is set, use the current origin (same-origin setup)
 	if (!rawValue) {
+		if (browser) {
+			return window.location.origin
+		}
 		throw new Error(
 			'PUBLIC_POCKETBASE_URL is not defined. Set it in your environment to point at the PocketBase service.'
 		)

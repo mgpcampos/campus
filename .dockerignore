@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+
+# Build output (rebuilt in Docker)
+build/
+.svelte-kit/
+
+# PocketBase data (mounted as volume)
+pb_data/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Local development files
+.env
+.env.*
+!.env.example
+
+# Test files
+*.test.ts
+*.spec.ts
+__tests__/
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Misc
+*.tgz
+.cache/
