@@ -15,8 +15,8 @@ export interface ProfileRecord {
 	id: string
 	user: string
 	displayName: string
-	department: string
-	role: ProfileRole
+	department?: string
+	role?: ProfileRole
 	biography?: string
 	pronouns?: string
 	links?: ProfileLink[]
@@ -74,8 +74,8 @@ export interface PublicationWithMaterial extends PublicationRecord {
 export interface ProfileCreateInput {
 	user: string
 	displayName: string
-	department: string
-	role: ProfileRole
+	department?: string
+	role?: ProfileRole
 	biography?: string
 	pronouns?: string
 	links?: ProfileLink[]

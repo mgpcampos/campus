@@ -35,26 +35,13 @@ export const actions = {
 				name: form.data.name
 			}
 
-			const user = await locals.pb.collection('users').create(userData)
+			await locals.pb.collection('users').create(userData)
 
 			// Automatically log in the user after registration
+			// Note: Academic profile is automatically created by PocketBase hook (pb_hooks/profiles.js)
 			await locals.pb
 				.collection('users')
 				.authWithPassword(form.data.email, form.data.password)
-
-			// Automatically create academic profile for the new user
-			try {
-				await locals.pb.collection('profiles').create({
-					user: user.id,
-					displayName: form.data.name,
-					role: 'student',
-					department: '',
-					biography: ''
-				})
-			} catch (profileError) {
-				// Log error but don't block registration
-				console.error('Failed to create profile:', profileError)
-			}
 
 			throw redirect(302, '/feed')
 		} catch (error) {

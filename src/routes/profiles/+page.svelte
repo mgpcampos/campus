@@ -8,7 +8,7 @@
 	interface Profile {
 		id: string
 		displayName: string
-		role: string
+		role?: string
 		department?: string
 		biography?: string
 		publicationCount?: number
@@ -70,7 +70,9 @@
 						<Card.Title class="line-clamp-1">{profile.displayName}</Card.Title>
 						<Card.Description>
 							<div class="space-y-1">
-								<p class="capitalize">{profile.role}</p>
+								{#if profile.role}
+									<p class="capitalize">{profile.role}</p>
+								{/if}
 								{#if profile.department}
 									<p class="text-xs">{profile.department}</p>
 								{/if}

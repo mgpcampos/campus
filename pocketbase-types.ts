@@ -331,12 +331,12 @@ export enum ProfilesRoleOptions {
 export type ProfilesRecord<Tlinks = unknown> = {
 	biography?: string
 	created?: IsoDateString
-	department: string
+	department?: string
 	displayName: string
 	id: string
 	links?: null | Tlinks
 	pronouns?: string
-	role: ProfilesRoleOptions
+	role?: ProfilesRoleOptions
 	updated?: IsoDateString
 	user: RecordIdString
 }

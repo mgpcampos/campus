@@ -40,9 +40,11 @@
 				<div class="flex items-start justify-between">
 					<div class="flex-1">
 						<h1 class="text-3xl font-bold text-gray-900">{profile.displayName}</h1>
-						<p class="mt-2 text-lg text-gray-600">
-							{profile.role.charAt(0).toUpperCase() + profile.role.slice(1)}, {profile.department}
-						</p>
+						{#if profile.role || profile.department}
+							<p class="mt-2 text-lg text-gray-600">
+								{#if profile.role}{profile.role.charAt(0).toUpperCase() + profile.role.slice(1)}{/if}{#if profile.role && profile.department}, {/if}{#if profile.department}{profile.department}{/if}
+							</p>
+						{/if}
 
 						{#if profile.pronouns}
 							<p class="mt-1 text-sm text-gray-500">({profile.pronouns})</p>
