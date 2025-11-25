@@ -140,7 +140,7 @@
 								name="description"
 								bind:value={description}
 								rows={5}
-								placeholder="Describe what this space is about..."
+								placeholder={t('spacesManage.descriptionPlaceholder')}
 								disabled={isSubmitting}
 							/>
 							<p class="text-xs text-muted-foreground">

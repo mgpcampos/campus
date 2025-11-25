@@ -313,6 +313,7 @@
 		"slugLabel": "Identificador (URL)",
 		"slugHelper": "Este será o endereço do seu espaço",
 		"descriptionLabel": "Descrição",
+		"descriptionPlaceholder": "Descreva do que se trata este espaço...",
 		"avatarLabel": "Imagem do espaço",
 		"publicLabel": "Espaço público",
 		"createButton": "Criar Espaço"
@@ -320,6 +321,7 @@
 	"spacesManage": {
 		"heading": "Gerenciar Espaço",
 		"descriptionLabel": "Descrição",
+		"descriptionPlaceholder": "Descreva do que se trata este espaço...",
 		"saveButton": "Salvar Alterações"
 	},
 	"spaceDetail": {

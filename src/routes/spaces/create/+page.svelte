@@ -7,7 +7,6 @@
 	import * as Card from '$lib/components/ui/card/index.js'
 	import { Input } from '$lib/components/ui/input/index.js'
 	import { Label } from '$lib/components/ui/label/index.js'
-	import { Switch } from '$lib/components/ui/switch/index.js'
 	import { Textarea } from '$lib/components/ui/textarea/index.js'
 	import { t } from '$lib/i18n'
 	import type { PageProps } from './$types'
@@ -17,7 +16,6 @@
 	let name = $state('')
 	let slug = $state('')
 	let description = $state('')
-	let isPublic = $state(true)
 	let avatarFile = $state<File | null>(null)
 	let avatarPreview = $state<string | null>(null)
 	let isSubmitting = $state(false)
@@ -93,7 +91,7 @@
 						name="name"
 						bind:value={name}
 						required
-						placeholder="My Awesome Space"
+						placeholder="Instituto Federal de São Paulo"
 						disabled={isSubmitting}
 					/>
 				</div>
@@ -105,13 +103,13 @@
 						name="slug"
 						bind:value={slug}
 						required
-						placeholder="my-awesome-space"
+						placeholder="ifsp"
 						pattern="[a-z0-9-]+"
 						disabled={isSubmitting}
 					/>
 					<p class="text-xs text-muted-foreground">
 						{t('spacesCreate.slugHelper')}
-						<code class="rounded bg-muted px-1 py-0.5">/spaces/{slug || 'your-slug'}</code>
+						<code class="rounded bg-muted px-1 py-0.5">/spaces/{slug || ''}</code>
 					</p>
 				</div>
 
@@ -122,7 +120,7 @@
 						name="description"
 						bind:value={description}
 						rows={4}
-						placeholder="Describe what this space is about..."
+						placeholder={t('spacesCreate.descriptionPlaceholder')}
 						disabled={isSubmitting}
 					/>
 					<p class="text-xs text-muted-foreground">
@@ -169,18 +167,6 @@
 							</div>
 						</div>
 					{/if}
-				</div>
-
-				<div class="flex items-center justify-between rounded-lg border p-4">
-					<div class="space-y-0.5">
-						<Label for="isPublic" class="text-base">
-							{t('spacesCreate.publicLabel')}
-						</Label>
-						<p class="text-sm text-muted-foreground">
-							Public spaces can be discovered and joined by anyone
-						</p>
-					</div>
-					<Switch id="isPublic" name="isPublic" bind:checked={isPublic} disabled={isSubmitting} />
 				</div>
 
 				<div class="flex gap-3">
