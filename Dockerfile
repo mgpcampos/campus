@@ -28,8 +28,9 @@ RUN npm install
 
 # Copy source and build
 COPY . .
-# Provide placeholder URL for build - actual URL is resolved at runtime via dynamic env
-ENV PUBLIC_POCKETBASE_URL=http://localhost:8090
+# Build the application - PocketBase URL is determined at runtime:
+# - Browser: uses same-origin (Caddy proxies /api/* to PocketBase)
+# - Server: uses INTERNAL_POCKETBASE_URL env var
 RUN npm run build
 
 # ------------------------------------------------------------------------------
