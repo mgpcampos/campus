@@ -1,4 +1,4 @@
-import { PUBLIC_POCKETBASE_URL } from '$env/static/public'
+import { browser } from '$app/environment'
 
 /**
  * Default PocketBase URL - Railway hosted instance.
@@ -7,21 +7,27 @@ import { PUBLIC_POCKETBASE_URL } from '$env/static/public'
 const DEFAULT_POCKETBASE_URL = 'https://rede-campus.up.railway.app'
 
 /**
- * Get the PocketBase URL based on the runtime environment.
+ * Get the PocketBase URL.
  * 
- * Uses PUBLIC_POCKETBASE_URL environment variable if set, otherwise defaults to Railway instance.
- * This ensures both local development and production use the same PocketBase backend.
+ * By default, uses the Railway-hosted PocketBase instance for both local and production.
+ * This ensures data consistency across all environments.
+ * 
+ * Server-side can override via POCKETBASE_URL environment variable if needed.
  */
 const sanitizedPocketBaseUrl = (() => {
-	// Use the public env variable if set, otherwise default to Railway instance
-	const configuredUrl = PUBLIC_POCKETBASE_URL || DEFAULT_POCKETBASE_URL
+	let configuredUrl = DEFAULT_POCKETBASE_URL
+	
+	// Server-side: allow override via environment variable
+	if (!browser && typeof process !== 'undefined' && process.env?.POCKETBASE_URL) {
+		configuredUrl = process.env.POCKETBASE_URL
+	}
 	
 	let parsed
 	try {
 		parsed = new URL(configuredUrl)
 	} catch (cause) {
 		throw new Error(
-			`PUBLIC_POCKETBASE_URL must be a valid absolute URL. Received: ${configuredUrl}`,
+			`POCKETBASE_URL must be a valid absolute URL. Received: ${configuredUrl}`,
 			{ cause }
 		)
 	}
