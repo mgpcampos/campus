@@ -10,11 +10,17 @@
  */
 
 // Hook: Automatically create profile after user creation
+// Listen to all record creations and filter for users collection internally
 onRecordAfterCreateSuccess((e) => {
-	// Only handle users collection
-	if (e.record.collection().name !== 'users') return;
+	const collectionName = e.record.collection().name;
+	
+	// Only handle users collection (auth collection)
+	if (collectionName !== 'users') {
+		return;
+	}
 
 	const user = e.record;
+	console.log(`[profiles.js] User created: ${user.id}, attempting to create profile...`);
 
 	// Check if profile already exists for this user
 	try {
@@ -24,11 +30,12 @@ onRecordAfterCreateSuccess((e) => {
 		);
 
 		if (existingProfile) {
-			console.log(`Profile already exists for user ${user.id}`);
+			console.log(`[profiles.js] Profile already exists for user ${user.id}`);
 			return;
 		}
 	} catch (err) {
-		// No existing profile found, which is expected
+		// No existing profile found, which is expected for new users
+		console.log(`[profiles.js] No existing profile found for user ${user.id}, creating new one...`);
 	}
 
 	// Create the academic profile with registration-available fields only
@@ -41,8 +48,8 @@ onRecordAfterCreateSuccess((e) => {
 		});
 
 		$app.save(profile);
-		console.log(`Created profile for user ${user.id}`);
+		console.log(`[profiles.js] Successfully created profile for user ${user.id}`);
 	} catch (err) {
-		console.error(`Failed to create profile for user ${user.id}:`, err);
+		console.error(`[profiles.js] Failed to create profile for user ${user.id}:`, err);
 	}
-}, 'users');
+});
