@@ -71,7 +71,7 @@
 		<h1 class="text-3xl font-bold">{t('spaces.heading')}</h1>
 		<Button href="/spaces/create">
 			<Plus class="mr-2 h-4 w-4" />
-			Create Space
+			{t('spaces.createSpaceButton')}
 		</Button>
 	</div>
 
@@ -106,7 +106,7 @@
 				{#if search.trim().length === 0}
 					<Button href="/spaces/create" class="mt-4">
 						<Plus class="mr-2 h-4 w-4" />
-						Create the first space
+						{t('spaces.createFirstSpace')}
 					</Button>
 				{/if}
 			</Card.Content>
