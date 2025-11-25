@@ -1,27 +1,27 @@
-import { browser } from '$app/environment'
+import { PUBLIC_POCKETBASE_URL } from '$env/static/public'
+
+/**
+ * Default PocketBase URL - Railway hosted instance.
+ * Both local and remote frontends connect to the same backend for data consistency.
+ */
+const DEFAULT_POCKETBASE_URL = 'https://rede-campus.up.railway.app'
 
 /**
  * Get the PocketBase URL based on the runtime environment.
  * 
- * - Browser: Always uses same-origin (window.location.origin) since Caddy proxies /api/* to PocketBase
- * - Server: Uses INTERNAL_POCKETBASE_URL env var (defaults to http://127.0.0.1:8090)
+ * Uses PUBLIC_POCKETBASE_URL environment variable if set, otherwise defaults to Railway instance.
+ * This ensures both local development and production use the same PocketBase backend.
  */
 const sanitizedPocketBaseUrl = (() => {
-	// In browser, always use same-origin since Caddy proxies /api/* to PocketBase
-	if (browser) {
-		return window.location.origin
-	}
-	
-	// Server-side: use internal URL for direct communication with PocketBase
-	// This is set in docker-entrypoint.sh and defaults to localhost:8090
-	const internalUrl = process.env.INTERNAL_POCKETBASE_URL || 'http://127.0.0.1:8090'
+	// Use the public env variable if set, otherwise default to Railway instance
+	const configuredUrl = PUBLIC_POCKETBASE_URL || DEFAULT_POCKETBASE_URL
 	
 	let parsed
 	try {
-		parsed = new URL(internalUrl)
+		parsed = new URL(configuredUrl)
 	} catch (cause) {
 		throw new Error(
-			`INTERNAL_POCKETBASE_URL must be a valid absolute URL. Received: ${internalUrl}`,
+			`PUBLIC_POCKETBASE_URL must be a valid absolute URL. Received: ${configuredUrl}`,
 			{ cause }
 		)
 	}
