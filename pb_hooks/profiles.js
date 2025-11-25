@@ -4,12 +4,9 @@
  * Profiles Collection Hooks
  * Automatically creates an academic profile when a new user is created
  * 
- * Only uses fields available from user registration:
- * - user (relation to the created user)
- * - displayName (from user's name field)
- * 
- * All other profile fields (department, role, biography, etc.) are optional
- * and can be filled in later by the user.
+ * Profile fields match user registration fields:
+ * - user: relation to the created user
+ * - displayName: from user's name field
  */
 
 // Hook: Automatically create profile after user creation
@@ -34,16 +31,13 @@ onRecordAfterCreateSuccess((e) => {
 		// No existing profile found, which is expected
 	}
 
-	// Create the academic profile with only registration-available fields
-	// All other fields are optional and will use their default values
+	// Create the academic profile with registration-available fields only
 	try {
 		const profilesCollection = $app.findCollectionByNameOrId('profiles');
 
 		const profile = new Record(profilesCollection, {
 			user: user.id,
 			displayName: user.get('name') || user.get('username') || 'User'
-			// department, role, biography, pronouns, links are all optional
-			// and will be set by the user later in their profile settings
 		});
 
 		$app.save(profile);

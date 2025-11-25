@@ -1,7 +1,7 @@
 /// <reference path="../pb_data/types.d.ts" />
 migrate((app) => {
   // Create profiles for existing users who don't have one
-  // Only uses fields available from user registration (user relation + displayName)
+  // Profile fields match user registration: user relation + displayName
   const users = app.findRecordsByFilter('users', '', '', 0, null)
   const profilesCollection = app.findCollectionByNameOrId('profiles')
 
@@ -21,11 +21,10 @@ migrate((app) => {
     }
 
     try {
-      // Create profile with only registration-available fields
+      // Create profile with registration-available fields only
       const profile = new Record(profilesCollection, {
         user: user.id,
         displayName: user.get('name') || user.get('username') || 'User'
-        // All other fields are optional and left for user to fill later
       })
 
       app.save(profile)
