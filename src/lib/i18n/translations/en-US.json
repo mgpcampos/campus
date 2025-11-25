@@ -446,6 +446,7 @@
 		"pageTitle": "Profiles",
 		"heading": "Community Members",
 		"subtitle": "Meet the Campus members",
+		"publications": "{{count}} publications",
 		"viewProfile": "View Profile",
 		"editProfileButton": "Edit Profile",
 		"aboutHeading": "About",

@@ -446,6 +446,7 @@
 		"pageTitle": "Perfis",
 		"heading": "Membros da Comunidade",
 		"subtitle": "Conheça os membros do Campus",
+		"publications": "{{count}} publicações",
 		"viewProfile": "Ver Perfil",
 		"editProfileButton": "Editar Perfil",
 		"aboutHeading": "Sobre",

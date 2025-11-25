@@ -33,10 +33,7 @@
 	<div class="flex h-14 items-center justify-between gap-4 px-4">
 		<!-- Logo/Brand -->
 		<a href="/" class="flex items-center space-x-2">
-			<div class="flex h-8 w-8 items-center justify-center rounded-full bg-primary">
-				<span class="text-lg font-bold text-primary-foreground">C</span>
-			</div>
-			<span class="text-xl font-bold text-foreground">{t('common.appName')}</span>
+			<img src="/favicon.svg" alt="Campus" class="h-8 w-8" />
 		</a>
 
 		<!-- Actions -->
