@@ -2,15 +2,39 @@
 # Listens on Railway's PORT and routes to internal services
 
 :{$PORT:8080} {
-    # PocketBase API and Admin UI
-    handle /api/* {
+    # PocketBase native API endpoints
+    # These go directly to PocketBase
+    handle /api/collections/* {
         reverse_proxy 127.0.0.1:8090
     }
+    handle /api/realtime {
+        reverse_proxy 127.0.0.1:8090
+    }
+    handle /api/files/* {
+        reverse_proxy 127.0.0.1:8090
+    }
+    handle /api/admins/* {
+        reverse_proxy 127.0.0.1:8090
+    }
+    handle /api/settings/* {
+        reverse_proxy 127.0.0.1:8090
+    }
+    handle /api/logs/* {
+        reverse_proxy 127.0.0.1:8090
+    }
+    handle /api/backups/* {
+        reverse_proxy 127.0.0.1:8090
+    }
+    handle /api/health {
+        reverse_proxy 127.0.0.1:8090
+    }
+
+    # PocketBase Admin UI
     handle /_/* {
         reverse_proxy 127.0.0.1:8090
     }
 
-    # SvelteKit handles everything else
+    # SvelteKit handles everything else (including /api/posts, /api/events, etc.)
     handle {
         reverse_proxy 127.0.0.1:3000
     }
