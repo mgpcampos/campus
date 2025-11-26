@@ -3,18 +3,20 @@
 	import { onMount } from 'svelte'
 	import { enhance } from '$app/forms'
 	import { invalidateAll } from '$app/navigation'
+	import CalendarGrid from '$lib/components/ui/CalendarGrid.svelte'
 	import { t } from '$lib/i18n'
 	import type { EventRecord } from '../../types/events'
 	import type { PageData } from './$types'
 
-	export let data: PageData
+	let { data }: { data: PageData } = $props()
 
-	let showCreateModal = false
-	let selectedEvent: EventRecord | null = null
-	let isSubmitting = false
-	let modalElement: HTMLElement | null = null
-	let previousFocus: HTMLElement | null = null
-	let liveRegionMessage = ''
+	let showCreateModal = $state(false)
+	let selectedEvent: EventRecord | null = $state(null)
+	let selectedDate = $state(new Date())
+	let isSubmitting = $state(false)
+	let modalElement: HTMLElement | null = $state(null)
+	let previousFocus: HTMLElement | null = $state(null)
+	let liveRegionMessage = $state('')
 	const headingFormatter = new Intl.DateTimeFormat(undefined, {
 		weekday: 'long',
 		month: 'long',
@@ -159,7 +161,30 @@
 		)
 	}
 
-	$: groupedEvents = groupEventsByDate(data.events)
+	// Get events for the selected date
+	function getEventsForSelectedDate(events: EventRecord[], date: Date): EventRecord[] {
+		const dateStr = date.toDateString()
+		return events.filter((event) => {
+			const eventDate = new Date(event.start)
+			return eventDate.toDateString() === dateStr
+		})
+	}
+
+	// Handle date selection from calendar
+	function handleDateSelect(date: Date) {
+		selectedDate = date
+	}
+
+	// Handle event click from calendar
+	function handleEventClick(event: { id: string; title: string; start: string; end: string }) {
+		const foundEvent = data.events.find((e) => e.id === event.id)
+		if (foundEvent) {
+			selectedEvent = foundEvent
+		}
+	}
+
+	let groupedEvents = $derived(groupEventsByDate(data.events))
+	let selectedDateEvents = $derived(getEventsForSelectedDate(data.events, selectedDate))
 </script>
 
 <svelte:head>
@@ -177,69 +202,83 @@
 		<button
 			onclick={openCreateModal}
 			class="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-			aria-label="Create new event"
+			aria-label={t('calendar.createEvent')}
 		>
 			{t('calendar.createEvent')}
 		</button>
 	</div>
 
-	{#if data.events.length === 0}
-		<div class="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
-			<p class="text-gray-600">{t('calendar.noEvents')}</p>
+	<!-- Calendar Grid and Events Panel -->
+	<div class="grid gap-6 lg:grid-cols-3">
+		<!-- Calendar Grid - takes 2 columns on large screens -->
+		<div class="lg:col-span-2">
+			<CalendarGrid
+				events={data.events.map((e) => ({
+					id: e.id,
+					title: e.title,
+					start: e.start,
+					end: e.end
+				}))}
+				bind:selectedDate
+				onDateSelect={handleDateSelect}
+				onEventClick={handleEventClick}
+			/>
 		</div>
-	{:else}
-		<div class="space-y-6" role="feed" aria-label="Calendar events">
-			{#each groupedEvents as [date, events], groupIndex}
-				<section aria-labelledby="date-heading-{groupIndex}">
-					<h2 id="date-heading-{groupIndex}" class="mb-3 text-xl font-semibold text-gray-900">
-						{formatDateHeading(date)}
-					</h2>
+
+		<!-- Selected Date Events Panel -->
+		<div class="lg:col-span-1">
+			<div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+				<h2 class="mb-4 text-lg font-semibold">
+					{t('calendar.selectedDateEvents')}
+				</h2>
+				<p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+					{formatDateHeading(selectedDate.toDateString())}
+				</p>
+
+				{#if selectedDateEvents.length === 0}
+					<p class="text-gray-500 dark:text-gray-400">{t('calendar.noEvents')}</p>
+				{:else}
 					<div class="space-y-3">
-						{#each events as event}
+						{#each selectedDateEvents as event}
 							<article
-								class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
+								class="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-600 dark:bg-gray-700"
 								aria-labelledby="event-title-{event.id}"
 							>
-								<div class="flex items-start justify-between">
-									<div class="flex-1">
-										<h3 id="event-title-{event.id}" class="text-lg font-semibold text-gray-900">
-											{event.title}
-										</h3>
-										<p class="text-sm text-gray-600">
-											{formatEventRange(event.start, event.end)}
-										</p>
-										{#if event.description}
-											<p class="mt-2 text-gray-700">{event.description}</p>
-										{/if}
-									</div>
+								<h3 id="event-title-{event.id}" class="font-semibold text-gray-900 dark:text-gray-100">
+									{event.title}
+								</h3>
+								<p class="text-sm text-gray-600 dark:text-gray-400">
+									{formatEventRange(event.start, event.end)}
+								</p>
+								{#if event.description}
+									<p class="mt-2 text-sm text-gray-700 dark:text-gray-300">{event.description}</p>
+								{/if}
 
-									<div class="ml-4 flex flex-col gap-2">
-										{#if isCreator(event)}
-											<form
-												method="POST"
-												action="?/deleteEvent"
-												use:enhance={handleDeleteSubmit(event.title)}
-											>
-												<input type="hidden" name="eventId" value={event.id} />
-												<button
-													type="submit"
-													disabled={isSubmitting}
-													class="rounded border border-red-300 px-3 py-1 text-sm text-red-700 hover:bg-red-50 focus:ring-2 focus:ring-red-500 focus:outline-none disabled:opacity-50"
-													aria-label="Delete {event.title}"
-												>
-													Delete
-												</button>
-											</form>
-										{/if}
-									</div>
-								</div>
+								{#if isCreator(event)}
+									<form
+										method="POST"
+										action="?/deleteEvent"
+										use:enhance={handleDeleteSubmit(event.title)}
+										class="mt-2"
+									>
+										<input type="hidden" name="eventId" value={event.id} />
+										<button
+											type="submit"
+											disabled={isSubmitting}
+											class="rounded border border-red-300 px-2 py-1 text-xs text-red-700 hover:bg-red-50 focus:ring-2 focus:ring-red-500 focus:outline-none disabled:opacity-50 dark:border-red-600 dark:text-red-400 dark:hover:bg-red-900/20"
+											aria-label="Delete {event.title}"
+										>
+											{t('common.delete')}
+										</button>
+									</form>
+								{/if}
 							</article>
 						{/each}
 					</div>
-				</section>
-			{/each}
+				{/if}
+			</div>
 		</div>
-	{/if}
+	</div>
 </div>
 
 <!-- Create Event Modal -->

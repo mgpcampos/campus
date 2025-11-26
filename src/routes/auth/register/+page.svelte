@@ -5,6 +5,7 @@
 	import { t } from '$lib/i18n'
 	import { getErrorMessage } from '$lib/utils/errors.ts'
 	import { registerSchema } from '$lib/utils/validation.js'
+	import { translateValidationError } from '$lib/utils/validation-i18n'
 	import { createClientFormOptions } from '$lib/validation'
 
 	let { data } = $props()
@@ -15,6 +16,28 @@
 		email: 'register-email-error',
 		password: 'register-password-error',
 		passwordConfirm: 'register-password-confirm-error'
+	}
+
+	// Helper function to get translated error message
+	type SuperFormError = string | string[] | { _errors?: string[] } | undefined
+	function getTranslatedError(errorValue: SuperFormError): string | undefined {
+		if (!errorValue) return undefined
+		// Handle superforms error structure which may have _errors array
+		if (
+			typeof errorValue === 'object' &&
+			!Array.isArray(errorValue) &&
+			errorValue._errors &&
+			Array.isArray(errorValue._errors)
+		) {
+			return errorValue._errors.map(translateValidationError).join(', ')
+		}
+		if (Array.isArray(errorValue)) {
+			return errorValue.map(translateValidationError).join(', ')
+		}
+		if (typeof errorValue === 'string') {
+			return translateValidationError(errorValue)
+		}
+		return undefined
 	}
 
 	const { form, errors, enhance, submitting } = superForm(data.form, {
@@ -96,7 +119,7 @@
 						oninput={() => (generalError = '')}
 					/>
 					{#if $errors.name}
-						<p class="mt-1 text-sm text-red-600" id={errorIds.name} role="alert">{$errors.name}</p>
+						<p class="mt-1 text-sm text-red-600" id={errorIds.name} role="alert">{getTranslatedError($errors.name)}</p>
 					{/if}
 				</div>
 
@@ -118,7 +141,7 @@
 					/>
 					{#if $errors.username}
 						<p class="mt-1 text-sm text-red-600" id={errorIds.username} role="alert">
-							{$errors.username}
+							{getTranslatedError($errors.username)}
 						</p>
 					{/if}
 				</div>
@@ -141,7 +164,7 @@
 					/>
 					{#if $errors.email}
 						<p class="mt-1 text-sm text-red-600" id={errorIds.email} role="alert">
-							{$errors.email}
+							{getTranslatedError($errors.email)}
 						</p>
 					{/if}
 				</div>
@@ -164,7 +187,7 @@
 					/>
 					{#if $errors.password}
 						<p class="mt-1 text-sm text-red-600" id={errorIds.password} role="alert">
-							{$errors.password}
+							{getTranslatedError($errors.password)}
 						</p>
 					{/if}
 				</div>
@@ -190,7 +213,7 @@
 					/>
 					{#if $errors.passwordConfirm}
 						<p class="mt-1 text-sm text-red-600" id={errorIds.passwordConfirm} role="alert">
-							{$errors.passwordConfirm}
+							{getTranslatedError($errors.passwordConfirm)}
 						</p>
 					{/if}
 				</div>

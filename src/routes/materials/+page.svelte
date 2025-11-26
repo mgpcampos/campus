@@ -123,7 +123,7 @@
 		</Dialog.Root>
 	</div>
 
-	<form method="GET" use:searchEnhance class="mb-6" role="search" aria-label="Search materials">
+	<form method="GET" use:searchEnhance class="mb-6" role="search" aria-label={t('materials.searchPlaceholder')}>
 		<div class="flex gap-2">
 			<div class="relative flex-1">
 				<Search class="absolute top-3 left-3 h-4 w-4 text-muted-foreground" aria-hidden="true" />
@@ -132,7 +132,7 @@
 					bind:value={$searchForm.q}
 					placeholder={t('materials.searchPlaceholder')}
 					class="pl-9"
-					aria-label="Search materials by keyword"
+					aria-label={t('materials.searchPlaceholder')}
 				/>
 			</div>
 			<Button type="submit">{t('materials.searchButton')}</Button>

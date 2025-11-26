@@ -5,6 +5,7 @@
 	import { t } from '$lib/i18n'
 	import { getErrorMessage } from '$lib/utils/errors.ts'
 	import { loginSchema } from '$lib/utils/validation.js'
+	import { translateValidationError } from '$lib/utils/validation-i18n'
 	import { createClientFormOptions } from '$lib/validation'
 	import type { PageData } from './$types'
 
@@ -111,18 +112,18 @@
 
 	const emailErrorText = $derived.by(() => {
 		const serverError = coerceErrorMessage($errors.email)
-		if (serverError) return serverError
+		if (serverError) return translateValidationError(serverError)
 		const message = clientValidation.errors.email
 		if (!message) return ''
-		return attemptedSubmit || touched.email ? message : ''
+		return attemptedSubmit || touched.email ? translateValidationError(message) : ''
 	})
 
 	const passwordErrorText = $derived.by(() => {
 		const serverError = coerceErrorMessage($errors.password)
-		if (serverError) return serverError
+		if (serverError) return translateValidationError(serverError)
 		const message = clientValidation.errors.password
 		if (!message) return ''
-		return attemptedSubmit || touched.password ? message : ''
+		return attemptedSubmit || touched.password ? translateValidationError(message) : ''
 	})
 
 	const enhanceSubmit: typeof enhance = (formElement, options) =>

@@ -16,9 +16,9 @@
 			<p class="whitespace-pre-line text-gray-800">{profile.bio}</p>
 		{/if}
 		<div class="mt-4 flex gap-4 text-sm text-gray-600">
-			<div><strong>{memberships.spaces.length}</strong> Spaces</div>
-			<div><strong>{memberships.groups.length}</strong> Groups</div>
-			<div><strong>{posts.totalItems}</strong> Posts</div>
+			<div><strong>{memberships.spaces.length}</strong> {t('profileDetail.spacesCount')}</div>
+			<div><strong>{memberships.groups.length}</strong> {t('profileDetail.groupsCount')}</div>
+			<div><strong>{posts.totalItems}</strong> {t('profileDetail.postsCount')}</div>
 		</div>
 	</section>
 
@@ -30,7 +30,7 @@
 			<div>
 				<h3 class="mb-2 font-medium">{t('profileDetail.spacesSubheading')}</h3>
 				{#if memberships.spaces.length === 0}
-					<p class="text-sm text-gray-500">No spaces joined.</p>
+					<p class="text-sm text-gray-500">{t('profileDetail.noSpacesJoined')}</p>
 				{:else}
 					<ul class="space-y-1">
 						{#each memberships.spaces as s}
@@ -44,7 +44,7 @@
 			<div>
 				<h3 class="mb-2 font-medium">{t('profileDetail.groupsSubheading')}</h3>
 				{#if memberships.groups.length === 0}
-					<p class="text-sm text-gray-500">No groups joined.</p>
+					<p class="text-sm text-gray-500">{t('profileDetail.noGroupsJoined')}</p>
 				{:else}
 					<ul class="space-y-1">
 						{#each memberships.groups as g}
@@ -66,7 +66,7 @@
 			{t('profileDetail.recentPostsHeading')}
 		</h2>
 		{#if posts.items.length === 0}
-			<p class="text-sm text-gray-500">No posts yet.</p>
+			<p class="text-sm text-gray-500">{t('profileDetail.noPostsYet')}</p>
 		{:else}
 			<ul class="divide-y">
 				{#each posts.items as p}
@@ -88,7 +88,7 @@
 				<div class="mt-4">
 					<a
 						class="inline-block rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
-						href={`?page=${posts.page + 1}`}>Load more</a
+						href={`?page=${posts.page + 1}`}>{t('profileDetail.loadMore')}</a
 					>
 				</div>
 			{/if}

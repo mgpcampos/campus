@@ -365,7 +365,14 @@
 		"heading": "Event Calendar",
 		"noEvents": "No events on this date",
 		"createEvent": "Create Event",
-		"eventCreated": "Event created successfully"
+		"eventCreated": "Event created successfully",
+		"eventDeleted": "Event \"{title}\" deleted successfully",
+		"previousMonth": "Previous month",
+		"nextMonth": "Next month",
+		"today": "Today",
+		"eventsCount": "events",
+		"more": "more",
+		"selectedDateEvents": "Events for selected date"
 	},
 	"calendarCreate": {
 		"heading": "Create New Event",
@@ -440,7 +447,14 @@
 		"membershipsHeading": "Memberships",
 		"spacesSubheading": "Spaces",
 		"groupsSubheading": "Groups",
-		"recentPostsHeading": "Recent Posts"
+		"recentPostsHeading": "Recent Posts",
+		"spacesCount": "Spaces",
+		"groupsCount": "Groups",
+		"postsCount": "Posts",
+		"noSpacesJoined": "No spaces joined.",
+		"noGroupsJoined": "No groups joined.",
+		"noPostsYet": "No posts yet.",
+		"loadMore": "Load more"
 	},
 	"profiles": {
 		"pageTitle": "Profiles",
@@ -591,6 +605,7 @@
 	"validation": {
 		"required": "This field is required",
 		"email": "Enter a valid email",
+		"emailInvalid": "Please enter a valid email address",
 		"minLength": "Minimum {{min}} characters",
 		"maxLength": "Maximum {{max}} characters",
 		"min": "Minimum value is {{min}}",
@@ -605,7 +620,17 @@
 		"pastDate": "Date must be in the past",
 		"dateRange": "Start date must be before end date",
 		"passwordMatch": "Passwords do not match",
+		"passwordMismatch": "Passwords don't match",
+		"passwordMinLength": "Password must be at least 8 characters long",
+		"passwordRequired": "Password is required",
 		"usernameFormat": "Use only letters, numbers, and underscore",
+		"usernameMinLength": "Username must be at least 3 characters long",
+		"usernameMaxLength": "Username must be no more than 30 characters long",
+		"usernameInvalidChars": "Username can only contain letters, numbers, and underscores",
+		"nameRequired": "Name is required",
+		"nameMaxLength": "Name must be no more than 100 characters",
+		"bioMaxLength": "Bio must be no more than 500 characters",
+		"titleRequired": "Title is required",
 		"fileRequired": "Please select a file",
 		"imageRequired": "Please select an image",
 		"acceptTerms": "You must accept the terms of service"
@@ -752,6 +777,10 @@
 		"discard": "Discard",
 		"leave": "Leave",
 		"stay": "Stay"
+	},
+	"a11y": {
+		"skipToMain": "Skip to main content",
+		"skipToNav": "Skip to navigation"
 	},
 	"languages": {
 		"pt-BR": "Português (Brasil)",

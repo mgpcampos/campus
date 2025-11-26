@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { t } from '$lib/i18n'
+
 	interface SkipLink {
 		href: string
 		label: string
@@ -6,9 +8,8 @@
 
 	let {
 		links = [
-			{ href: '#main-content', label: 'Skip to main content' },
-			{ href: '#navigation', label: 'Skip to navigation' },
-			{ href: '#footer', label: 'Skip to footer' }
+			{ href: '#main-content', label: t('a11y.skipToMain') },
+			{ href: '#navigation', label: t('a11y.skipToNav') }
 		],
 		class: className = ''
 	}: {

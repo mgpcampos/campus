@@ -152,7 +152,7 @@
 						<input
 							type="search"
 							placeholder={t('feed.searchPlaceholder')}
-							aria-label="Search posts"
+							aria-label={t('feed.searchPlaceholder')}
 							class="h-8 w-48 rounded-full border border-input bg-background px-3 pr-8 text-sm placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
 							oninput={handleSearchInput}
 						/>
