@@ -31,19 +31,27 @@ export async function createSpace(data, serviceOptions = /** @type {CreateSpaceO
 		throw new Error('User ID is required to create a space')
 	}
 	
-	const formData = new FormData()
-	formData.append('name', data.name)
-	formData.append('slug', data.slug)
-	// For PocketBase boolean fields in FormData, use the string 'true' or 'false'
-	const isPublicValue = data.isPublic === true ? 'true' : 'false'
-	console.log('[createSpace] Setting isPublic to:', isPublicValue)
-	formData.append('isPublic', isPublicValue)
-	if (data.description) formData.append('description', data.description)
-	if (data.avatar) formData.append('avatar', data.avatar)
-	// owners is multi relation; set current user as owner
-	formData.append('owners', userId)
-	console.log('[createSpace] FormData entries:', [...formData.entries()])
-	const space = await client.collection('spaces').create(formData)
+	// If there's an avatar file, use FormData; otherwise use plain object
+	if (data.avatar) {
+		const formData = new FormData()
+		formData.append('name', data.name)
+		formData.append('slug', data.slug)
+		formData.append('isPublic', data.isPublic ? 'true' : 'false')
+		if (data.description) formData.append('description', data.description)
+		formData.append('avatar', data.avatar)
+		formData.append('owners', userId)
+		return await client.collection('spaces').create(formData)
+	}
+	
+	// Use plain object for JSON request (boolean will be properly handled)
+	const payload = {
+		name: data.name,
+		slug: data.slug,
+		isPublic: Boolean(data.isPublic),
+		description: data.description || '',
+		owners: [userId]
+	}
+	const space = await client.collection('spaces').create(payload)
 
 	// Also create membership record with role owner for convenience queries
 	try {
