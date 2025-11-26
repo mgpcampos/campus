@@ -52,18 +52,18 @@
 </script>
 
 <svelte:head>
-	<title>Manage {space.name} | Campus</title>
+	<title>{t('spacesManage.pageTitle', { name: space.name })}</title>
 </svelte:head>
 
 <div class="container mx-auto max-w-4xl px-4 py-8">
 	<div class="mb-6 flex items-center justify-between">
 		<div>
-			<h1 class="text-3xl font-bold">Manage Space</h1>
+			<h1 class="text-3xl font-bold">{t('spacesManage.heading')}</h1>
 			<p class="text-muted-foreground">{space.name}</p>
 		</div>
 		<Button variant="outline" href="/spaces/{space.slug || space.id}">
 			<ArrowLeft class="mr-2 h-4 w-4" />
-			Back to Space
+			{t('spacesManage.backToSpace')}
 		</Button>
 	</div>
 
@@ -78,7 +78,7 @@
 	{#if form?.success}
 		<Card.Root class="mb-6 border-green-500">
 			<Card.Content class="pt-6">
-				<p class="text-sm text-green-600">Changes saved successfully!</p>
+				<p class="text-sm text-green-600">{t('spacesManage.changesSaved')}</p>
 			</Card.Content>
 		</Card.Root>
 	{/if}
@@ -87,19 +87,19 @@
 		<Tabs.List class="grid w-full grid-cols-2">
 			<Tabs.Trigger value="general" class="flex items-center gap-2">
 				<Settings class="h-4 w-4" />
-				General
+				{t('spacesManage.tabGeneral')}
 			</Tabs.Trigger>
 			<Tabs.Trigger value="members" class="flex items-center gap-2" disabled>
 				<Users class="h-4 w-4" />
-				Members
+				{t('spacesManage.tabMembers')}
 			</Tabs.Trigger>
 		</Tabs.List>
 
 		<Tabs.Content value="general">
 			<Card.Root>
 				<Card.Header>
-					<Card.Title>Space Settings</Card.Title>
-					<Card.Description>Update your space information and settings</Card.Description>
+					<Card.Title>{t('spacesManage.settingsTitle')}</Card.Title>
+					<Card.Description>{t('spacesManage.settingsDescription')}</Card.Description>
 				</Card.Header>
 				<Card.Content>
 					<form
@@ -121,16 +121,16 @@
 						}}
 					>
 						<div class="space-y-2">
-							<Label for="name">Name</Label>
+							<Label for="name">{t('spacesManage.nameLabel')}</Label>
 							<Input
 								id="name"
 								name="name"
 								bind:value={name}
-								placeholder="Space name"
+								placeholder={t('spacesManage.namePlaceholder')}
 								disabled={role !== 'owner' || isSubmitting}
 							/>
 							{#if role !== 'owner'}
-								<p class="text-xs text-muted-foreground">Only owners can change the space name</p>
+								<p class="text-xs text-muted-foreground">{t('spacesManage.nameOwnerOnly')}</p>
 							{/if}
 						</div>
 
@@ -145,18 +145,18 @@
 								disabled={isSubmitting}
 							/>
 							<p class="text-xs text-muted-foreground">
-								{description.length} / 1000 characters
+								{t('spacesManage.characterCount', { count: description.length })}
 							</p>
 						</div>
 
 						<div class="space-y-4">
-							<Label>Space Avatar</Label>
+							<Label>{t('spacesManage.avatarLabel')}</Label>
 
 							{#if avatarPreview}
 								<div class="flex items-center gap-4">
 									<img
 										src={avatarPreview}
-										alt="Space avatar"
+										alt={t('spacesManage.avatarAlt')}
 										class="h-20 w-20 rounded-full object-cover"
 									/>
 									<div class="flex flex-col gap-2">
@@ -167,10 +167,10 @@
 											onclick={clearAvatar}
 											disabled={isSubmitting}
 										>
-											Change Avatar
+											{t('spacesManage.changeAvatar')}
 										</Button>
 										{#if avatarFile}
-											<p class="text-xs text-muted-foreground">New image selected</p>
+											<p class="text-xs text-muted-foreground">{t('spacesManage.newImageSelected')}</p>
 										{/if}
 									</div>
 								</div>
@@ -189,7 +189,7 @@
 											disabled={isSubmitting}
 											class="cursor-pointer"
 										/>
-										<p class="mt-1 text-xs text-muted-foreground">PNG, JPG, GIF up to 5MB</p>
+										<p class="mt-1 text-xs text-muted-foreground">{t('spacesManage.avatarFileInfo')}</p>
 									</div>
 								</div>
 							{/if}
@@ -198,9 +198,9 @@
 						{#if role === 'owner'}
 							<div class="flex items-center justify-between rounded-lg border p-4">
 								<div class="space-y-0.5">
-									<Label for="isPublic" class="text-base">Public Space</Label>
+									<Label for="isPublic" class="text-base">{t('spacesManage.publicLabel')}</Label>
 									<p class="text-sm text-muted-foreground">
-										Allow anyone to discover and join this space
+										{t('spacesManage.publicDescription')}
 									</p>
 								</div>
 								<Switch
@@ -216,7 +216,7 @@
 							<Button type="submit" disabled={isSubmitting}>
 								{#if isSubmitting}
 									<Loader2 class="mr-2 h-4 w-4 animate-spin" />
-									Saving...
+									{t('spacesManage.saving')}
 								{:else}
 									<Save class="mr-2 h-4 w-4" />
 									{t('spacesManage.saveButton')}
@@ -231,12 +231,12 @@
 		<Tabs.Content value="members">
 			<Card.Root>
 				<Card.Header>
-					<Card.Title>Members</Card.Title>
-					<Card.Description>Manage space members and permissions (coming soon)</Card.Description>
+					<Card.Title>{t('spacesManage.membersTitle')}</Card.Title>
+					<Card.Description>{t('spacesManage.membersDescription')}</Card.Description>
 				</Card.Header>
 				<Card.Content>
 					<p class="text-sm text-muted-foreground">
-						Member management features will be available in a future update.
+						{t('spacesManage.membersComingSoon')}
 					</p>
 				</Card.Content>
 			</Card.Root>

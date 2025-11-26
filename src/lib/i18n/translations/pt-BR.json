@@ -321,10 +321,32 @@
 		"createButton": "Criar Espaço"
 	},
 	"spacesManage": {
+		"pageTitle": "Gerenciar {name} | Campus",
 		"heading": "Gerenciar Espaço",
+		"backToSpace": "Voltar ao Espaço",
+		"changesSaved": "Alterações salvas com sucesso!",
+		"tabGeneral": "Geral",
+		"tabMembers": "Membros",
+		"settingsTitle": "Configurações do Espaço",
+		"settingsDescription": "Atualize as informações e configurações do espaço",
+		"nameLabel": "Nome",
+		"namePlaceholder": "Nome do espaço",
+		"nameOwnerOnly": "Somente proprietários podem alterar o nome do espaço",
 		"descriptionLabel": "Descrição",
 		"descriptionPlaceholder": "Descreva do que se trata este espaço...",
-		"saveButton": "Salvar Alterações"
+		"characterCount": "{count} / 1000 caracteres",
+		"avatarLabel": "Avatar do Espaço",
+		"avatarAlt": "Avatar do espaço",
+		"changeAvatar": "Alterar Avatar",
+		"newImageSelected": "Nova imagem selecionada",
+		"avatarFileInfo": "PNG, JPG, GIF até 5MB",
+		"publicLabel": "Espaço Público",
+		"publicDescription": "Permitir que qualquer pessoa descubra e participe deste espaço",
+		"saving": "Salvando...",
+		"saveButton": "Salvar Alterações",
+		"membersTitle": "Membros",
+		"membersDescription": "Gerenciar membros e permissões do espaço (em breve)",
+		"membersComingSoon": "Os recursos de gerenciamento de membros estarão disponíveis em uma atualização futura."
 	},
 	"spaceDetail": {
 		"postsHeading": "Publicações",
