@@ -227,31 +227,31 @@
 
 		<!-- Selected Date Events Panel -->
 		<div class="lg:col-span-1">
-			<div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+			<div class="rounded-lg border border-border bg-card p-4 shadow-sm">
 				<h2 class="mb-4 text-lg font-semibold">
 					{t('calendar.selectedDateEvents')}
 				</h2>
-				<p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+				<p class="mb-4 text-sm text-muted-foreground">
 					{formatDateHeading(selectedDate.toDateString())}
 				</p>
 
 				{#if selectedDateEvents.length === 0}
-					<p class="text-gray-500 dark:text-gray-400">{t('calendar.noEvents')}</p>
+					<p class="text-muted-foreground">{t('calendar.noEvents')}</p>
 				{:else}
 					<div class="space-y-3">
 						{#each selectedDateEvents as event}
 							<article
-								class="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-600 dark:bg-gray-700"
+								class="rounded-lg border border-border bg-muted p-3"
 								aria-labelledby="event-title-{event.id}"
 							>
-								<h3 id="event-title-{event.id}" class="font-semibold text-gray-900 dark:text-gray-100">
+								<h3 id="event-title-{event.id}" class="font-semibold text-foreground">
 									{event.title}
 								</h3>
-								<p class="text-sm text-gray-600 dark:text-gray-400">
+								<p class="text-sm text-muted-foreground">
 									{formatEventRange(event.start, event.end)}
 								</p>
 								{#if event.description}
-									<p class="mt-2 text-sm text-gray-700 dark:text-gray-300">{event.description}</p>
+									<p class="mt-2 text-sm text-foreground/80">{event.description}</p>
 								{/if}
 
 								{#if isCreator(event)}
@@ -265,7 +265,7 @@
 										<button
 											type="submit"
 											disabled={isSubmitting}
-											class="rounded border border-red-300 px-2 py-1 text-xs text-red-700 hover:bg-red-50 focus:ring-2 focus:ring-red-500 focus:outline-none disabled:opacity-50 dark:border-red-600 dark:text-red-400 dark:hover:bg-red-900/20"
+											class="rounded border border-destructive/50 px-2 py-1 text-xs text-destructive hover:bg-destructive/10 focus:ring-2 focus:ring-destructive focus:outline-none disabled:opacity-50"
 											aria-label="Delete {event.title}"
 										>
 											{t('common.delete')}
