@@ -2,7 +2,6 @@ import { fail, redirect } from '@sveltejs/kit'
 import { ClientResponseError } from 'pocketbase'
 import { requireAuth } from '$lib/auth.js'
 import { createSpace } from '$lib/services/spaces.js'
-import { normalizeError } from '$lib/utils/errors.ts'
 
 /**
  * Normalize a slug to a URL-safe format.
@@ -86,10 +85,25 @@ export const actions = {
 			if (e && typeof e === 'object' && 'status' in e && e.status === 303) {
 				throw e // Re-throw redirects
 			}
-			const normalized = normalizeError(e, { context: 'createSpace' })
-			return fail(normalized.status || 500, {
-				error: normalized.devMessage || normalized.userMessage,
-				retryable: normalized.retryable,
+			// Extract detailed error from PocketBase
+			let errorMessage = 'Unknown error'
+			if (e instanceof ClientResponseError) {
+				const responseData = e.response?.data
+				if (responseData && typeof responseData === 'object') {
+					// Extract field-level errors
+					const fieldErrors = Object.entries(responseData)
+						.map(([field, err]) => `${field}: ${err?.message || JSON.stringify(err)}`)
+						.join('; ')
+					errorMessage = fieldErrors || e.message
+				} else {
+					errorMessage = e.message
+				}
+			} else if (e instanceof Error) {
+				errorMessage = e.message
+			}
+			return fail(400, {
+				error: errorMessage,
+				retryable: false,
 				values: { name, slug, description, isPublic }
 			})
 		}
