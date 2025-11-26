@@ -1,13 +1,7 @@
 <script lang="ts">
+	import { page } from '$app/state'
 	import { config } from '$lib/config.js'
 	import { t } from '$lib/i18n'
-
-	let { data } = $props<{
-		data: {
-			error: Error & { status?: number; message?: string }
-			status?: number
-		}
-	}>()
 
 	function clampStatus(value: number | undefined, fallback: number): number {
 		const numericValue = typeof value === 'number' && Number.isFinite(value) ? value : fallback
@@ -20,27 +14,31 @@
 		return `ERR-${timestamp}-${random}`.toUpperCase()
 	}
 
-	const error = data?.error
-	const status = clampStatus(data?.status ?? error?.status, 500)
+	const status = $derived(clampStatus(page.status, 500))
+	const error = $derived(page.error as (Error & { message?: string }) | null)
 	const errorId = generateErrorId()
 	const timestamp = new Date().toISOString()
 
-	const isNotFound = status === 404
-	const title = isNotFound ? t('errors.pageNotFoundTitle') : t('errors.unexpectedErrorTitle')
-	const description = isNotFound
-		? t('errors.pageNotFoundDescription')
-		: t('errors.unexpectedErrorDescription')
+	const isNotFound = $derived(status === 404)
+	const title = $derived(
+		isNotFound ? t('errors.pageNotFoundTitle') : t('errors.unexpectedErrorTitle')
+	)
+	const description = $derived(
+		isNotFound ? t('errors.pageNotFoundDescription') : t('errors.unexpectedErrorDescription')
+	)
 
 	// Log error details for debugging (only on client)
-	if (typeof window !== 'undefined' && !isNotFound) {
-		console.error('Error Details:', {
-			errorId,
-			status,
-			timestamp,
-			message: error?.message,
-			error
-		})
-	}
+	$effect(() => {
+		if (typeof window !== 'undefined' && !isNotFound) {
+			console.error('Error Details:', {
+				errorId,
+				status,
+				timestamp,
+				message: error?.message,
+				error
+			})
+		}
+	})
 </script>
 
 <svelte:head>

@@ -1,4 +1,4 @@
-import { error, fail } from '@sveltejs/kit'
+import { error, fail, redirect } from '@sveltejs/kit'
 import { superValidate } from 'sveltekit-superforms/server'
 import { z } from 'zod'
 import { validateEventData } from '$lib/server/events/conflicts'
@@ -27,12 +27,12 @@ type RSVPData = z.infer<typeof rsvpSchema>
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	if (!locals.pb.authStore.isValid) {
-		return error(401, 'Authentication required')
+		redirect(302, `/auth/login?redirect=${encodeURIComponent('/calendar')}`)
 	}
 
 	const user = locals.user
 	if (!user) {
-		return error(401, 'User not found in session')
+		redirect(302, `/auth/login?redirect=${encodeURIComponent('/calendar')}`)
 	}
 
 	try {
