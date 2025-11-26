@@ -11,6 +11,7 @@
 	import * as Tabs from '$lib/components/ui/tabs/index.js'
 	import { Textarea } from '$lib/components/ui/textarea/index.js'
 	import { t } from '$lib/i18n'
+	import { pbFileUrl } from '$lib/utils/images.js'
 	import type { PageProps } from './$types'
 
 	let { data, form }: PageProps = $props()
@@ -26,7 +27,7 @@
 	// Show current avatar if exists
 	$effect(() => {
 		if (space.avatar) {
-			avatarPreview = `/api/files/spaces/${space.id}/${space.avatar}`
+			avatarPreview = pbFileUrl('spaces', space.id, space.avatar)
 		}
 	})
 

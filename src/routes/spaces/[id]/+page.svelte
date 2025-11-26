@@ -7,6 +7,7 @@
 	import { Button } from '$lib/components/ui/button/index.js'
 	import * as Card from '$lib/components/ui/card/index.js'
 	import { t } from '$lib/i18n'
+	import { pbFileUrl } from '$lib/utils/images.js'
 	import type { PageProps } from './$types'
 
 	let { data }: PageProps = $props()
@@ -33,7 +34,7 @@
 		joining = false
 	}
 
-	let avatarUrl = $derived(space.avatar ? `/api/files/spaces/${space.id}/${space.avatar}` : null)
+	let avatarUrl = $derived(space.avatar ? pbFileUrl('spaces', space.id, space.avatar) : null)
 </script>
 
 <svelte:head>

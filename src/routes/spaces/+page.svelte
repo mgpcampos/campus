@@ -7,6 +7,7 @@
 	import * as Card from '$lib/components/ui/card/index.js'
 	import { Input } from '$lib/components/ui/input/index.js'
 	import { t } from '$lib/i18n'
+	import { pbFileUrl } from '$lib/utils/images.js'
 	import type { PageData } from './$types'
 
 	type SpaceListItem = {
@@ -56,7 +57,7 @@
 
 	function getAvatarUrl(space: SpaceListItem) {
 		if (space.avatar) {
-			return `/api/files/spaces/${space.id}/${space.avatar}`
+			return pbFileUrl('spaces', space.id, space.avatar)
 		}
 		return null
 	}
