@@ -31,6 +31,8 @@ export async function createSpace(data, serviceOptions = /** @type {CreateSpaceO
 		throw new Error('User ID is required to create a space')
 	}
 	
+	let space
+	
 	// If there's an avatar file, use FormData; otherwise use plain object
 	if (data.avatar) {
 		const formData = new FormData()
@@ -40,18 +42,18 @@ export async function createSpace(data, serviceOptions = /** @type {CreateSpaceO
 		if (data.description) formData.append('description', data.description)
 		formData.append('avatar', data.avatar)
 		formData.append('owners', userId)
-		return await client.collection('spaces').create(formData)
+		space = await client.collection('spaces').create(formData)
+	} else {
+		// Use plain object for JSON request (boolean will be properly handled)
+		const payload = {
+			name: data.name,
+			slug: data.slug,
+			isPublic: Boolean(data.isPublic),
+			description: data.description || '',
+			owners: [userId]
+		}
+		space = await client.collection('spaces').create(payload)
 	}
-	
-	// Use plain object for JSON request (boolean will be properly handled)
-	const payload = {
-		name: data.name,
-		slug: data.slug,
-		isPublic: Boolean(data.isPublic),
-		description: data.description || '',
-		owners: [userId]
-	}
-	const space = await client.collection('spaces').create(payload)
 
 	// Also create membership record with role owner for convenience queries
 	try {
