@@ -35,11 +35,14 @@ export async function createSpace(data, serviceOptions = /** @type {CreateSpaceO
 	formData.append('name', data.name)
 	formData.append('slug', data.slug)
 	// For PocketBase boolean fields in FormData, use the string 'true' or 'false'
-	formData.append('isPublic', String(Boolean(data.isPublic)))
+	const isPublicValue = data.isPublic === true ? 'true' : 'false'
+	console.log('[createSpace] Setting isPublic to:', isPublicValue)
+	formData.append('isPublic', isPublicValue)
 	if (data.description) formData.append('description', data.description)
 	if (data.avatar) formData.append('avatar', data.avatar)
 	// owners is multi relation; set current user as owner
 	formData.append('owners', userId)
+	console.log('[createSpace] FormData entries:', [...formData.entries()])
 	const space = await client.collection('spaces').create(formData)
 
 	// Also create membership record with role owner for convenience queries
