@@ -34,7 +34,8 @@ export async function createSpace(data, serviceOptions = /** @type {CreateSpaceO
 	const formData = new FormData()
 	formData.append('name', data.name)
 	formData.append('slug', data.slug)
-	formData.append('isPublic', data.isPublic ? 'true' : 'false')
+	// For PocketBase boolean fields in FormData, use the string 'true' or 'false'
+	formData.append('isPublic', String(Boolean(data.isPublic)))
 	if (data.description) formData.append('description', data.description)
 	if (data.avatar) formData.append('avatar', data.avatar)
 	// owners is multi relation; set current user as owner
