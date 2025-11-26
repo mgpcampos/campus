@@ -40,20 +40,28 @@ export async function createSpace({
 		throw new Error('Missing required parameters: name, slug, userId, and pb are required')
 	}
 
-	// Always use FormData for consistency
-	const formData = new FormData()
-	formData.append('name', name)
-	formData.append('slug', slug)
-	formData.append('description', description)
-	formData.append('isPublic', isPublic ? 'true' : 'false')
-	formData.append('owners', userId)
+	let space
 
+	// Use FormData only when we have an avatar file
 	if (avatar && avatar.size > 0) {
+		const formData = new FormData()
+		formData.append('name', name)
+		formData.append('slug', slug)
+		formData.append('description', description)
+		formData.append('isPublic', String(isPublic))
+		formData.append('owners', userId)
 		formData.append('avatar', avatar)
+		space = await client.collection('spaces').create(formData)
+	} else {
+		// Use plain object when no file - more reliable for boolean handling
+		space = await client.collection('spaces').create({
+			name,
+			slug,
+			description,
+			isPublic,
+			owners: [userId]
+		})
 	}
-
-	// Create the space
-	const space = await client.collection('spaces').create(formData)
 
 	// Create membership record for the owner
 	try {
