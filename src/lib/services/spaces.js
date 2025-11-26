@@ -27,52 +27,34 @@ function resolveClient(provided) {
  * @param {File} [params.avatar] - Optional avatar file
  * @param {import('pocketbase').default} params.pb - PocketBase client instance
  */
-export async function createSpace({
-	name,
-	slug,
-	userId,
-	description = '',
-	isPublic = true,
-	avatar,
-	pb: client
-}) {
-	if (!name || !slug || !userId || !client) {
-		throw new Error('Missing required parameters: name, slug, userId, and pb are required')
+export async function createSpace({ name, slug, description, avatar, userId, pb }) {
+	if (!name || !slug || !userId || !pb) {
+		throw new Error('name, slug, userId, and pb are required')
 	}
 
-	let space
+	// Build payload - always use FormData for consistency
+	const formData = new FormData()
+	formData.append('name', name)
+	formData.append('slug', slug)
+	formData.append('description', description || '')
+	formData.append('isPublic', 'true')
+	formData.append('owners', userId)
 
-	// Use FormData only when we have an avatar file
-	if (avatar && avatar.size > 0) {
-		const formData = new FormData()
-		formData.append('name', name)
-		formData.append('slug', slug)
-		formData.append('description', description)
-		formData.append('isPublic', String(isPublic))
-		formData.append('owners', userId)
+	if (avatar instanceof File && avatar.size > 0) {
 		formData.append('avatar', avatar)
-		space = await client.collection('spaces').create(formData)
-	} else {
-		// Use plain object when no file - more reliable for boolean handling
-		space = await client.collection('spaces').create({
-			name,
-			slug,
-			description,
-			isPublic,
-			owners: [userId]
-		})
 	}
 
-	// Create membership record for the owner
+	const space = await pb.collection('spaces').create(formData)
+
+	// Create membership record
 	try {
-		await client.collection('space_members').create({
+		await pb.collection('space_members').create({
 			space: space.id,
 			user: userId,
 			role: 'owner'
 		})
-	} catch (membershipError) {
-		// Log but don't fail - space was created successfully
-		console.warn('Failed to create owner membership:', membershipError)
+	} catch (e) {
+		console.warn('Failed to create owner membership:', e)
 	}
 
 	return space

@@ -169,20 +169,6 @@
 					{/if}
 				</div>
 
-				<div class="flex items-center gap-3">
-					<input
-						type="checkbox"
-						id="isPublic"
-						name="isPublic"
-						checked
-						disabled={isSubmitting}
-						class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-					/>
-					<Label for="isPublic" class="cursor-pointer font-normal">
-						{t('spacesCreate.publicLabel')}
-					</Label>
-				</div>
-
 				<div class="flex gap-3">
 					<Button type="submit" disabled={isSubmitting} class="flex-1">
 						{#if isSubmitting}
