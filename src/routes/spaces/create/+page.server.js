@@ -2,7 +2,7 @@ import { fail, redirect } from '@sveltejs/kit'
 import { ClientResponseError } from 'pocketbase'
 import { requireAuth } from '$lib/auth.js'
 import { createSpace } from '$lib/services/spaces.js'
-import { toErrorPayload } from '$lib/utils/errors.ts'
+import { normalizeError } from '$lib/utils/errors.ts'
 
 /**
  * Normalize a slug to a URL-safe format.
@@ -86,10 +86,10 @@ export const actions = {
 			if (e && typeof e === 'object' && 'status' in e && e.status === 303) {
 				throw e // Re-throw redirects
 			}
-			const errorPayload = toErrorPayload(e, { context: 'createSpace' })
-			return fail(errorPayload.status || 500, {
-				error: errorPayload.message,
-				retryable: errorPayload.retryable,
+			const normalized = normalizeError(e, { context: 'createSpace' })
+			return fail(normalized.status || 500, {
+				error: normalized.devMessage || normalized.userMessage,
+				retryable: normalized.retryable,
 				values: { name, slug, description, isPublic }
 			})
 		}
