@@ -88,7 +88,7 @@ export const actions = {
 			// Debug: extract raw PocketBase error message
 			let rawError = 'Unknown error'
 			if (e instanceof ClientResponseError) {
-				rawError = `PB Error: ${e.message} | Data: ${JSON.stringify(e.data)}`
+				rawError = `PB: ${e.message} | Response: ${JSON.stringify(e.response)} | OriginalError: ${JSON.stringify(e.originalError)}`
 			} else if (e instanceof Error) {
 				rawError = `Error: ${e.message}`
 			} else {
