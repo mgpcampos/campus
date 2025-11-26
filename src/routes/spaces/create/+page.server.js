@@ -26,85 +26,113 @@ export function load({ url, locals }) {
 export const actions = {
 	default: async ({ url, request, locals }) => {
 		requireAuth(locals, url.pathname)
-		const data = await request.formData()
 
-		const name = /** @type {string | null} */ (data.get('name'))
-		const slug = /** @type {string | null} */ (data.get('slug'))
-		const description = /** @type {string | null} */ (data.get('description')) || ''
-		const isPublicRaw = data.get('isPublic')
+		// Ensure user is authenticated
+		const userId = locals.user?.id
+		if (!userId) {
+			return fail(401, { error: 'You must be logged in to create a space' })
+		}
+
+		const formData = await request.formData()
+
+		const name = formData.get('name')?.toString().trim() || ''
+		const slugRaw = formData.get('slug')?.toString().trim() || ''
+		const description = formData.get('description')?.toString().trim() || ''
+		const isPublicRaw = formData.get('isPublic')
 		const isPublic = isPublicRaw === 'on' || isPublicRaw === 'true'
-		const avatar = /** @type {File | null} */ (data.get('avatar'))
+		const avatarFile = formData.get('avatar')
+		const avatar = avatarFile instanceof File && avatarFile.size > 0 ? avatarFile : undefined
 
-		if (!name || !slug) {
+		// Validation
+		if (!name) {
 			return fail(400, {
-				error: 'Name and slug are required',
-				values: { name, slug, description, isPublic }
+				error: 'Space name is required',
+				values: { name, slug: slugRaw, description, isPublic }
 			})
 		}
 
-		const normalizedSlug = slugify(slug)
-		if (!normalizedSlug) {
+		if (!slugRaw) {
 			return fail(400, {
-				error: 'Slug must contain letters or numbers and may include dashes.',
-				values: { name, slug, description, isPublic }
+				error: 'Space URL identifier is required',
+				values: { name, slug: slugRaw, description, isPublic }
 			})
 		}
 
+		const slug = slugify(slugRaw)
+		if (!slug) {
+			return fail(400, {
+				error: 'URL identifier must contain letters or numbers',
+				values: { name, slug: slugRaw, description, isPublic }
+			})
+		}
+
+		// Check if slug is already taken
 		try {
-			const safeSlug = normalizedSlug.replaceAll('"', String.raw`\"`)
+			const safeSlug = slug.replaceAll('"', '\\"')
 			await locals.pb.collection('spaces').getFirstListItem(`slug = "${safeSlug}"`)
+			// If we get here, slug exists
 			return fail(400, {
-				error: 'That slug is already in use. Pick another one.',
-				values: { name, slug, description, isPublic }
+				error: 'This URL identifier is already in use. Please choose another.',
+				values: { name, slug: slugRaw, description, isPublic }
 			})
-		} catch (lookupError) {
-			if (!(lookupError instanceof ClientResponseError) || lookupError.status !== 404) {
-				throw lookupError
-			}
-		}
-
-		try {
-			const payload = {
-				name,
-				slug: normalizedSlug,
-				description,
-				isPublic,
-				...(avatar ? { avatar } : {})
-			}
-			const userId = locals.user?.id
-			if (!userId) {
-				return fail(401, {
-					error: 'Authentication required',
-					values: { name, slug, description, isPublic }
+		} catch (err) {
+			// 404 means slug is available - that's what we want
+			if (!(err instanceof ClientResponseError) || err.status !== 404) {
+				// Some other error occurred
+				console.error('Error checking slug availability:', err)
+				return fail(500, {
+					error: 'Failed to verify URL availability. Please try again.',
+					values: { name, slug: slugRaw, description, isPublic }
 				})
 			}
-			const space = await createSpace(payload, { pb: locals.pb, userId })
-			const targetSlug = space.slug || space.id
-			throw redirect(303, `/spaces/${targetSlug}`)
-		} catch (e) {
-			if (e && typeof e === 'object' && 'status' in e && e.status === 303) {
-				throw e // Re-throw redirects
+		}
+
+		// Create the space
+		try {
+			const space = await createSpace({
+				name,
+				slug,
+				description,
+				isPublic,
+				avatar,
+				userId,
+				pb: locals.pb
+			})
+
+			// Redirect to the new space
+			redirect(303, `/spaces/${space.slug || space.id}`)
+		} catch (err) {
+			// Handle redirect (it's thrown, not returned)
+			if (err instanceof Error && 'status' in err && err.status === 303) {
+				throw err
 			}
-			// Extract detailed error from PocketBase
-			let errorMessage = 'Unknown error'
-			if (e instanceof ClientResponseError) {
-				const responseData = e.response?.data
-				if (responseData && typeof responseData === 'object') {
-					// Extract field-level errors
-					const fieldErrors = Object.entries(responseData)
-						.map(([field, err]) => `${field}: ${err?.message || JSON.stringify(err)}`)
+
+			// Extract error message
+			let errorMessage = 'Failed to create space. Please try again.'
+
+			if (err instanceof ClientResponseError) {
+				// Try to get field-specific errors from PocketBase
+				const data = err.response?.data
+				if (data && typeof data === 'object') {
+					const fieldErrors = Object.entries(data)
+						.filter(([_, v]) => v && typeof v === 'object' && 'message' in v)
+						.map(([field, v]) => `${field}: ${v.message}`)
 						.join('; ')
-					errorMessage = fieldErrors || e.message
-				} else {
-					errorMessage = e.message
+					if (fieldErrors) {
+						errorMessage = fieldErrors
+					}
+				} else if (err.message) {
+					errorMessage = err.message
 				}
-			} else if (e instanceof Error) {
-				errorMessage = e.message
+			} else if (err instanceof Error) {
+				errorMessage = err.message
 			}
+
+			console.error('Space creation error:', err)
+
 			return fail(400, {
 				error: errorMessage,
-				retryable: false,
-				values: { name, slug, description, isPublic }
+				values: { name, slug: slugRaw, description, isPublic }
 			})
 		}
 	}

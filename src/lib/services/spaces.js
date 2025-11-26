@@ -15,57 +15,58 @@ function resolveClient(provided) {
 }
 
 /**
- * @typedef {ServiceOptions & { userId?: string }} CreateSpaceOptions
+ * Create a new space and assign owner membership.
+ * This is a simplified, reliable implementation.
+ *
+ * @param {Object} params
+ * @param {string} params.name - Space name
+ * @param {string} params.slug - URL slug
+ * @param {string} params.userId - Owner user ID
+ * @param {string} [params.description] - Optional description
+ * @param {boolean} [params.isPublic] - Whether space is public (defaults to true)
+ * @param {File} [params.avatar] - Optional avatar file
+ * @param {import('pocketbase').default} params.pb - PocketBase client instance
  */
-
-/**
- * Create a new space and assign owner membership
- * @param {{name:string, slug:string, description?:string, isPublic:boolean, avatar?:File}} data
- * @param {CreateSpaceOptions} [serviceOptions]
- */
-export async function createSpace(data, serviceOptions = /** @type {CreateSpaceOptions} */ ({})) {
-	const client = resolveClient(serviceOptions.pb)
-	const userId = serviceOptions.userId ?? client.authStore.model?.id
-	
-	if (!userId) {
-		throw new Error('User ID is required to create a space')
-	}
-	
-	let space
-	
-	// If there's an avatar file, use FormData; otherwise use plain object
-	if (data.avatar) {
-		const formData = new FormData()
-		formData.append('name', data.name)
-		formData.append('slug', data.slug)
-		formData.append('isPublic', data.isPublic ? 'true' : 'false')
-		if (data.description) formData.append('description', data.description)
-		formData.append('avatar', data.avatar)
-		formData.append('owners', userId)
-		space = await client.collection('spaces').create(formData)
-	} else {
-		// Use plain object for JSON request (boolean will be properly handled)
-		const payload = {
-			name: data.name,
-			slug: data.slug,
-			isPublic: Boolean(data.isPublic),
-			description: data.description || '',
-			owners: [userId]
-		}
-		space = await client.collection('spaces').create(payload)
+export async function createSpace({
+	name,
+	slug,
+	userId,
+	description = '',
+	isPublic = true,
+	avatar,
+	pb: client
+}) {
+	if (!name || !slug || !userId || !client) {
+		throw new Error('Missing required parameters: name, slug, userId, and pb are required')
 	}
 
-	// Also create membership record with role owner for convenience queries
+	// Always use FormData for consistency
+	const formData = new FormData()
+	formData.append('name', name)
+	formData.append('slug', slug)
+	formData.append('description', description)
+	formData.append('isPublic', isPublic ? 'true' : 'false')
+	formData.append('owners', userId)
+
+	if (avatar && avatar.size > 0) {
+		formData.append('avatar', avatar)
+	}
+
+	// Create the space
+	const space = await client.collection('spaces').create(formData)
+
+	// Create membership record for the owner
 	try {
 		await client.collection('space_members').create({
 			space: space.id,
 			user: userId,
 			role: 'owner'
 		})
-	} catch (e) {
-		// Ignore if uniqueness constraint races
-		console.warn('Failed to create owner membership', e)
+	} catch (membershipError) {
+		// Log but don't fail - space was created successfully
+		console.warn('Failed to create owner membership:', membershipError)
 	}
+
 	return space
 }
 
