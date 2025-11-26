@@ -15,11 +15,22 @@ function resolveClient(provided) {
 }
 
 /**
+ * @typedef {ServiceOptions & { userId?: string }} CreateSpaceOptions
+ */
+
+/**
  * Create a new space and assign owner membership
  * @param {{name:string, slug:string, description?:string, isPublic:boolean, avatar?:File}} data
+ * @param {CreateSpaceOptions} [serviceOptions]
  */
-export async function createSpace(data, serviceOptions = /** @type {ServiceOptions} */ ({})) {
+export async function createSpace(data, serviceOptions = /** @type {CreateSpaceOptions} */ ({})) {
 	const client = resolveClient(serviceOptions.pb)
+	const userId = serviceOptions.userId ?? client.authStore.model?.id
+	
+	if (!userId) {
+		throw new Error('User ID is required to create a space')
+	}
+	
 	const formData = new FormData()
 	formData.append('name', data.name)
 	formData.append('slug', data.slug)
@@ -27,23 +38,19 @@ export async function createSpace(data, serviceOptions = /** @type {ServiceOptio
 	if (data.description) formData.append('description', data.description)
 	if (data.avatar) formData.append('avatar', data.avatar)
 	// owners is multi relation; set current user as owner
-	if (client.authStore.model?.id) {
-		formData.append('owners', client.authStore.model.id)
-	}
+	formData.append('owners', userId)
 	const space = await client.collection('spaces').create(formData)
 
 	// Also create membership record with role owner for convenience queries
-	if (client.authStore.model?.id) {
-		try {
-			await client.collection('space_members').create({
-				space: space.id,
-				user: client.authStore.model.id,
-				role: 'owner'
-			})
-		} catch (e) {
-			// Ignore if uniqueness constraint races
-			console.warn('Failed to create owner membership', e)
-		}
+	try {
+		await client.collection('space_members').create({
+			space: space.id,
+			user: userId,
+			role: 'owner'
+		})
+	} catch (e) {
+		// Ignore if uniqueness constraint races
+		console.warn('Failed to create owner membership', e)
 	}
 	return space
 }

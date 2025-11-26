@@ -72,7 +72,14 @@ export const actions = {
 				isPublic,
 				...(avatar ? { avatar } : {})
 			}
-			const space = await createSpace(payload, { pb: locals.pb })
+			const userId = locals.user?.id
+			if (!userId) {
+				return fail(401, {
+					error: 'Authentication required',
+					values: { name, slug, description, isPublic }
+				})
+			}
+			const space = await createSpace(payload, { pb: locals.pb, userId })
 			const targetSlug = space.slug || space.id
 			throw redirect(303, `/spaces/${targetSlug}`)
 		} catch (e) {
