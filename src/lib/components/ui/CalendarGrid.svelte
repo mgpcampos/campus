@@ -124,13 +124,13 @@
 	let monthTitle = $derived(monthFormatter.format(currentMonth))
 </script>
 
-<div class="rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800 {className}">
+<div class="rounded-lg border border-border bg-card shadow-sm {className}">
 	<!-- Calendar header with navigation -->
-	<div class="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700">
+	<div class="flex items-center justify-between border-b border-border p-4">
 		<button
 			type="button"
 			onclick={previousMonth}
-			class="rounded-md p-2 hover:bg-gray-100 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:hover:bg-gray-700"
+			class="rounded-md p-2 hover:bg-accent focus:ring-2 focus:ring-ring focus:outline-none"
 			aria-label={t('calendar.previousMonth')}
 		>
 			<ChevronLeft class="h-5 w-5" />
@@ -143,7 +143,7 @@
 			<button
 				type="button"
 				onclick={goToToday}
-				class="rounded-md border border-gray-300 px-3 py-1 text-sm hover:bg-gray-100 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:hover:bg-gray-700"
+				class="rounded-md border border-border px-3 py-1 text-sm hover:bg-accent focus:ring-2 focus:ring-ring focus:outline-none"
 			>
 				{t('calendar.today')}
 			</button>
@@ -152,7 +152,7 @@
 		<button
 			type="button"
 			onclick={nextMonth}
-			class="rounded-md p-2 hover:bg-gray-100 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:hover:bg-gray-700"
+			class="rounded-md p-2 hover:bg-accent focus:ring-2 focus:ring-ring focus:outline-none"
 			aria-label={t('calendar.nextMonth')}
 		>
 			<ChevronRight class="h-5 w-5" />
@@ -160,9 +160,9 @@
 	</div>
 
 	<!-- Weekday headers -->
-	<div class="grid grid-cols-7 border-b border-gray-200 dark:border-gray-700">
+	<div class="grid grid-cols-7 border-b border-border">
 		{#each weekdays as day}
-			<div class="p-2 text-center text-sm font-medium text-gray-500 dark:text-gray-400">
+			<div class="p-2 text-center text-sm font-medium text-muted-foreground">
 				{day}
 			</div>
 		{/each}
@@ -183,17 +183,17 @@
 						selectDate(date)
 					}
 				}}
-				class="relative min-h-24 cursor-pointer border-b border-r border-gray-100 p-1 text-left transition-colors hover:bg-gray-50 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:outline-none dark:border-gray-700 dark:hover:bg-gray-700/50
-					{isCurrentMonth ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'}
-					{selected ? 'ring-2 ring-inset ring-blue-500' : ''}"
+				class="relative min-h-24 cursor-pointer border-b border-r border-border/50 p-1 text-left transition-colors hover:bg-accent focus:z-10 focus:ring-2 focus:ring-inset focus:ring-ring focus:outline-none
+					{isCurrentMonth ? 'bg-card' : 'bg-muted/50'}
+					{selected ? 'ring-2 ring-inset ring-ring' : ''}"
 				aria-label="{date.toLocaleDateString()}{dayEvents.length > 0 ? `, ${dayEvents.length} ${t('calendar.eventsCount')}` : ''}"
 				aria-selected={selected}
 			>
 				<span
 					class="flex h-7 w-7 items-center justify-center rounded-full text-sm
-						{isToday ? 'bg-blue-600 font-semibold text-white' : ''}
-						{!isToday && isCurrentMonth ? 'text-gray-900 dark:text-gray-100' : ''}
-						{!isToday && !isCurrentMonth ? 'text-gray-400 dark:text-gray-500' : ''}"
+						{isToday ? 'bg-primary font-semibold text-primary-foreground' : ''}
+						{!isToday && isCurrentMonth ? 'text-foreground' : ''}
+						{!isToday && !isCurrentMonth ? 'text-muted-foreground' : ''}"
 				>
 					{date.getDate()}
 				</span>
@@ -215,13 +215,13 @@
 										onEventClick(event)
 									}
 								}}
-								class="block w-full cursor-pointer truncate rounded bg-blue-100 px-1 py-0.5 text-left text-xs text-blue-700 hover:bg-blue-200 dark:bg-blue-900/50 dark:text-blue-300 dark:hover:bg-blue-900"
+								class="block w-full cursor-pointer truncate rounded bg-primary/10 px-1 py-0.5 text-left text-xs text-primary hover:bg-primary/20"
 							>
 								{event.title}
 							</div>
 						{/each}
 						{#if dayEvents.length > 2}
-							<span class="text-xs text-gray-500 dark:text-gray-400">
+							<span class="text-xs text-muted-foreground">
 								+{dayEvents.length - 2} {t('calendar.more')}
 							</span>
 						{/if}
