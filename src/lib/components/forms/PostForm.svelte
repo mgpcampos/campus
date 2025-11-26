@@ -516,7 +516,7 @@
 				disabled={disabled || $submitting || hasVideoAttachment}
 				title={hasVideoAttachment
 					? t('postForm.videoBlocksImages') || 'Remove video to add images'
-					: `Add images (up to ${MAX_ATTACHMENTS})`}
+					: t('postForm.addImagesHint', { count: MAX_ATTACHMENTS })}
 			>
 				<ImagePlus class="mr-2 h-4 w-4" aria-hidden="true" />
 				{t('postForm.addImages') || 'Images'}
@@ -531,7 +531,7 @@
 				disabled={disabled || $submitting || hasImageAttachments}
 				title={hasImageAttachments
 					? t('postForm.imagesBlockVideo') || 'Remove images to add video'
-					: 'Add video (up to 5 minutes)'}
+					: t('postForm.addVideoHint')}
 			>
 				<FileVideo class="mr-2 h-4 w-4" aria-hidden="true" />
 				{t('postForm.addVideo') || 'Video'}

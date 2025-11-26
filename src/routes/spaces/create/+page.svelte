@@ -104,7 +104,7 @@
 						bind:value={slug}
 						required
 						placeholder="ifsp"
-						pattern="[a-z0-9-]+"
+						pattern="[a-z0-9\-]+"
 						disabled={isSubmitting}
 					/>
 					<p class="text-xs text-muted-foreground">

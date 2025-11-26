@@ -210,7 +210,9 @@
 		"attachedVideo": "Attached video",
 		"removeAll": "Remove all",
 		"videoBlocksImages": "Remove video to add images",
-		"imagesBlockVideo": "Remove images to add video"
+		"imagesBlockVideo": "Remove images to add video",
+		"addImagesHint": "Add images (up to {{count}})",
+		"addVideoHint": "Add video (up to 5 minutes)"
 	},
 	"posts": {
 		"createPost": "Create post",

@@ -60,6 +60,6 @@ export const config = {
 
 	// Support configuration
 	support: {
-		email: publicEnv.PUBLIC_SUPPORT_EMAIL || 'support@example.com'
+		email: publicEnv.PUBLIC_SUPPORT_EMAIL || null
 	}
 }

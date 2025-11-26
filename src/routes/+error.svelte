@@ -105,7 +105,7 @@
 		{/if}
 	</div>
 
-	{#if !isNotFound}
+	{#if !isNotFound && config.support.email}
 		<p class="text-xs text-muted-foreground">
 			{t('errors.needHelp')}
 			<a class="font-medium text-primary underline" href="mailto:{config.support.email}">
